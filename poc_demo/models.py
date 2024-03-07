@@ -37,7 +37,7 @@ class Users(models.Model):
     password = models.CharField(max_length=100)
     roles   = models.ForeignKey('Roles', on_delete=models.SET_NULL, blank=True, null=True)
     belongs_to =  models.ForeignKey('self', on_delete=models.SET_NULL, blank=True, null=True)
-    status = models.CharField(max_length=30, choices = status_choice)
+    status = models.ForeignKey('Status', on_delete=models.SET_NULL, blank=True, null=True)
     logged_in = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -51,7 +51,7 @@ class Poc_model(models.Model):
     Requested_date = models.DateTimeField(auto_now=True)
     Remarks = models.TextField()
     Timeline = models.DateTimeField(auto_now=True)
-    Status = models.CharField(max_length=30, choices = status_choice)
+    status = models.ForeignKey('Status', on_delete=models.SET_NULL, blank=True, null=True)
     added_by = models.CharField(max_length=30, default='None')
     
 
@@ -63,12 +63,12 @@ class Demo_model(models.Model):
     Requested_date = models.DateTimeField(auto_now=True)
     Remarks = models.TextField()
     Timeline = models.DateTimeField(auto_now=True)
-    Status = models.CharField(max_length=30, choices = status_choice)
+    status = models.ForeignKey('Status', on_delete=models.SET_NULL, blank=True, null=True)
 
 class Product(models.Model):
     Product_name = models.TextField()
     Created_date = models.DateTimeField(auto_now=True)
-    Status = models.CharField(max_length=30, choices = status_choice)
+    status = models.ForeignKey('Status', on_delete=models.SET_NULL, blank=True, null=True)
     added_by = models.CharField(max_length=30, default='None')
 
     def __str__(self):
@@ -77,30 +77,36 @@ class Product(models.Model):
 class Feature(models.Model):
     poc_id = models.ForeignKey('Poc_model', on_delete=models.CASCADE, blank=True, null=True)
     features_list = models.TextField()
-    status = models.CharField(max_length=30, choices = status_choice)
+    status = models.ForeignKey('Status', on_delete=models.SET_NULL, blank=True, null=True)
 
 
 class Demo_feature(models.Model):
     Demo_id = models.ForeignKey('Poc_model', on_delete=models.CASCADE, blank=True, null=True)
     Features_list = models.TextField()
-    Status = models.CharField(max_length=30, choices = status_choice)
+    status = models.ForeignKey('Status', on_delete=models.SET_NULL, blank=True, null=True)
 
 
 class Poc_remark(models.Model):
     poc_id = models.ForeignKey('Poc_model', on_delete=models.CASCADE, blank=True, null=True)
     remarks = models.TextField()
-    status =  models.CharField(max_length=30, choices = status_choice)
+    status =  models.ForeignKey('Status', on_delete=models.SET_NULL, blank=True, null=True)
 
 
 class Demo_remark(models.Model):
     Demo_id = models.ForeignKey('Poc_model', on_delete=models.CASCADE, blank=True, null=True)
     Remarks = models.TextField()
-    Status =  models.CharField(max_length=30, choices = status_choice)
+    status =  models.ForeignKey('Status', on_delete=models.SET_NULL, blank=True, null=True)
 
 
 class Roles(models.Model):
     name = models.CharField(max_length=30)
-    status = models.CharField(max_length=30, choices = status_choice)
+    status = models.ForeignKey('Status', on_delete=models.SET_NULL, blank=True, null=True)
+    added_by = models.CharField(max_length=30)
+    def __str__(self):
+        return self.name
+
+class Status(models.Model):
+    name = models.CharField(max_length=30)
     added_by = models.CharField(max_length=30)
     def __str__(self):
         return self.name

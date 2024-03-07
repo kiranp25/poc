@@ -288,10 +288,9 @@
     
                                         <div class="form-group col-md-12 mb-2">
                                             <select name="status" class="form-control">
-                                                <option value="none" selected="" disabled="">status</option>
-                                                <option value="active">active</option>
-                                                <option value="inactive">inactive</option>
-                                                
+                                              {% for sts in status %}
+                                              <option value="{{sts}}">{{sts}}</option>
+                                              {% endfor %}
                                             </select>
                                         </div>
                                         

@@ -1,10 +1,8 @@
 from django.shortcuts import render, redirect, HttpResponse
-from .models import Users, Product, Roles,Poc_model, Feature, Poc_remark
+from .models import Users, Product, Roles,Poc_model, Feature, Poc_remark, Status
 from django.http import JsonResponse
 
 # Create your views here.
-
-
 
 def dahboard(request):
     context = {'name': 'kp'}
@@ -70,6 +68,9 @@ def view_poc(request):
 
 def add_poc(request):
     all_active_product = Product.objects.all()
+    sts = Status.objects.all()
+    context = {}
+    context['status'] = sts
     product_list = [product for product in all_active_product]
     if request.method == 'POST':
         try:
@@ -80,11 +81,12 @@ def add_poc(request):
             features = request.POST.getlist('features')
             Remark_count = request.POST['Remark_count']
             remarks= request.POST.getlist('remarks')
-            status= request.POST['status'] 
+            # status= request.POST['status'] 
+            status = Status.objects.get(name=request.POST['status'])
             added_by = request.POST['username']
             features_list = ",".join(features)
             remarks_list = ",".join(remarks)
-            new_poc = Poc_model(Customer_name=customer_name,Product_name=product_name,Features=features_list,Remarks=remarks_list,Status=status,added_by=added_by)
+            new_poc = Poc_model(Customer_name=customer_name,Product_name=product_name,Features=features_list,Remarks=remarks_list,status=status,added_by=added_by)
             new_poc.save()
             poc_ref = Poc_model.objects.get(pk=new_poc.id)
             new_feature_list = []
@@ -102,7 +104,7 @@ def add_poc(request):
             print(e)
         
             
-    context = {}
+    
     context['product_list'] = product_list
     return render(request, 'poc_demo/add_poc.html', context)
 
@@ -110,6 +112,7 @@ def add_user(request):
     flow = {"Admin":['Admin', 'Manager', 'Sales'], "Manager": ['Sales'], "Sales": ''}
     user = Users.objects.all()
     roles = Roles.objects.all()
+    sts = Status.objects.all()
     context = {}
     context['users'] = [i.name for i in user]
     user_type_dict = dict()
@@ -119,6 +122,7 @@ def add_user(request):
         user_type_dict[emp.roles].append(emp.name)
     context['user_list'] = user_type_dict
     context['roles'] = roles
+    context['status'] = sts
     if request.method == 'POST':
         print(request.POST)
         result = dict()
@@ -129,7 +133,7 @@ def add_user(request):
             email = request.POST['email']
             username = request.POST['username']
             password = request.POST['password']
-            status = request.POST.get('status')
+            status = Status.objects.get(name=request.POST['status']) # request.POST.get('status')
             new_user = Users(name=user_name,email=email,username=username,password=password,belongs_to=Belongs_to,roles=usertype,status=status)
             new_user.save()
             result['message'] = "successfully user added"
@@ -140,18 +144,20 @@ def add_user(request):
 
 def add_product(request):
     context = dict()
-    
+    sts = Status.objects.all()
+    context['status'] = sts
     if request.method == 'POST':
         print(request.POST)
         result = dict()
         try:
             # Belongs_to = Users.objects.get(name=request.POST['Belongs_to'])
             Product_name = request.POST['product_name']
-            status = request.POST.get('status')
-            new_product = Product(Product_name=Product_name,Status=status,added_by=request.POST['username'])
+            status  = Status.objects.get(name=request.POST['status']) #request.POST.get('status')
+            new_product = Product(Product_name=Product_name,status=status,added_by=request.POST['username'])
             new_product.save()
             # request.session['success_message'] = 'Successfully added!'
         except Exception as e:
+            print(e)
             # request.session['error_message'] = 'not added!'
             error_message = 'not added'
         return redirect('add_product')
@@ -161,13 +167,15 @@ def add_product(request):
 
 def add_role(request):
     context = dict()
+    sts = Status.objects.all()
+    context['status'] = sts
     if request.method == 'POST':
         print(request.POST)
         result = dict()
         try:
             # Belongs_to = Users.objects.get(name=request.POST['Belongs_to'])
             Role_name = request.POST['role_name']
-            status = request.POST.get('status')
+            status = Status.objects.get(name=request.POST['status']) #request.POST.get('status')
             new_role = Roles(name=Role_name,status=status,added_by=request.POST['username'])
             new_role.save()
             # request.session['success_message'] = 'Successfully added!'

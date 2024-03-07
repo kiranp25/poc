@@ -255,15 +255,7 @@
                                        {% csrf_token %}
                                        <div class="form-group col-md-12 mb-2">
                                         <input type="hidden" class="form-control"  value={{request.session.username}} name="username">
-                                        <input type="text" class="form-control" placeholder="product name" name="product_name">
-                                        </div>
-                                        <div class="form-group col-md-12 mb-2">
-                                            <select name="status" class="form-control">
-                                                {% for sts in status %}
-                                                <option value="{{sts}}">{{sts}}</option>
-                                                {% endfor %}
-                                              
-                                            </select>
+                                        <input type="text" class="form-control" placeholder="status name" name="status_name">
                                         </div>
                                         <div class="form-actions col-12 mb-2">
                                             <div class="text-right">
@@ -272,7 +264,6 @@
                                             </div>
                                         </div>
                                     </form>
-    
                                 </div>
                             </div>
                         </div>
