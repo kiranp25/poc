@@ -184,3 +184,21 @@ def add_role(request):
             error_message = 'not added'
         return redirect('add_role')
     return render(request, 'poc_demo/add_roles.html', context)
+
+def add_status(request):
+    context = dict()
+    if request.method == 'POST':
+        print(request.POST)
+        result = dict()
+        try:
+            # Belongs_to = Users.objects.get(name=request.POST['Belongs_to'])
+            sts = request.POST['status_name']
+            new_sts = Status(name=sts,added_by=request.POST['username'])
+            new_sts.save()
+            # request.session['success_message'] = 'Successfully added!'
+        except Exception as e:
+            # request.session['error_message'] = 'not added!'
+            error_message = 'not added'
+            print(e)
+        return redirect('add_status')
+    return render(request, 'poc_demo/add_status.html', context)
