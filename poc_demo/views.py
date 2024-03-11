@@ -1,6 +1,9 @@
 from django.shortcuts import render, redirect, HttpResponse
 from .models import Users, Product, Roles,Poc_model, Feature, Poc_remark, Status
 from django.http import JsonResponse
+from django.core.paginator import Paginator
+from django.db.models import Q
+
 
 # Create your views here.
 
@@ -74,6 +77,7 @@ def add_poc(request):
     product_list = [product for product in all_active_product]
     if request.method == 'POST':
         try:
+            print(request.POST)
             customer_name = request.POST['CustomerName']
             # product_name = request.POST['product_name']
             product_name = Product.objects.get(Product_name=request.POST['product_name'])
@@ -84,17 +88,18 @@ def add_poc(request):
             # status= request.POST['status'] 
             status = Status.objects.get(name=request.POST['status'])
             added_by = request.POST['username']
+            Timeline = request.POST['timeline']
             features_list = ",".join(features)
             remarks_list = ",".join(remarks)
-            new_poc = Poc_model(Customer_name=customer_name,Product_name=product_name,Features=features_list,Remarks=remarks_list,status=status,added_by=added_by)
+            new_poc = Poc_model(Customer_name=customer_name,Product_name=product_name,status=status,added_by=added_by,Timeline=Timeline)
             new_poc.save()
             poc_ref = Poc_model.objects.get(pk=new_poc.id)
             new_feature_list = []
             for feture in features:
-                new_feature_list.append({'poc_id': poc_ref, 'features_list':feture, 'status':status})
+                new_feature_list.append({'poc_id': poc_ref, 'features_list':feture, 'status':status, 'added_by': added_by})
             new_remarks_list = []
             for remark in remarks:
-                new_remarks_list.append({'poc_id': poc_ref, 'remarks': remark, 'status':status})
+                new_remarks_list.append({'poc_id': poc_ref, 'remarks': remark, 'status':status, 'added_by': added_by})
             # new_fetures = Feature()
             Feature.objects.bulk_create([Feature(**data) for data in new_feature_list])
             # new_remarks = Poc_remark()
@@ -202,3 +207,71 @@ def add_status(request):
             print(e)
         return redirect('add_status')
     return render(request, 'poc_demo/add_status.html', context)
+
+
+def view_poc(request):
+    all_active_product = Poc_model.objects.prefetch_related('poc_remark_set', 'feature_set').all()    
+    for data in all_active_product:
+        for remark in data.poc_remark_set.all():
+            print("- Remark:", remark.remarks)
+        
+        for feture in data.feature_set.all():
+            print("- Features:", feture.features_list)
+
+
+    search_query = request.GET.get('search', '')
+    if search_query:
+        if search_query:
+            all_active_product = all_active_product.filter(
+            Q(Customer_name__icontains=search_query) |
+            Q(Requested_date__icontains=search_query) |
+            Q(Timeline__icontains=search_query) |
+            Q(added_by__icontains=search_query)
+        )
+    paginator = Paginator(all_active_product, 10)
+    page_number = request.GET.get('page')
+    page = paginator.get_page(page_number)    
+    context = {'paginator': paginator, 'page': page}
+    context["data"] = all_active_product   
+    context['search_query'] = search_query              
+    
+    
+    if request.method == 'POST':
+        try:
+            Remark_count = request.POST['Remark_count']
+            remarks= request.POST.getlist('remarks')
+            # status= request.POST['status'] 
+            added_by = request.POST['username']
+            rid = request.POST['row_remark_id']
+            get_poc = Poc_model.objects.get(pk=rid)
+            # get_poc.Remarks += remarks_list
+            # get_poc.Remarks = ",".join(get_poc.Remarks.split(',') + remarks)
+            # # print(remarks_list)
+            # get_poc.save()
+            new_remarks_list = []
+            for remark in remarks:
+                new_remarks_list.append({'poc_id': get_poc, 'remarks': remark, 'status':get_poc.status, 'added_by': added_by})
+            # new_remarks = Poc_remark()
+            Poc_remark.objects.bulk_create([Poc_remark(**data) for data in new_remarks_list])
+            return redirect('view_poc')
+        except Exception as e:
+            print(e)
+    return render(request, 'poc_demo/view_poc.html', context)
+
+
+
+def update_sts(request):
+    if request.method == 'POST':
+        try:
+            print("###########")
+            print(request.POST)
+            sts_id = request.POST['sts_id']
+            status = request.POST['status']
+            added_by = request.POST['username']
+            Feature.objects.filter(pk=sts_id).update(status=status,added_by=added_by)
+  
+            return HttpResponse('<h2> form submitted.</h2>') #just for testing purpose you can remove it.
+        except Exception as e:
+            return HttpResponse(f'<h2> form not submitted.</h2> {e}')
+
+

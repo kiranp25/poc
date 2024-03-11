@@ -10,6 +10,9 @@ urlpatterns = [
     path('add_status/',views.add_status, name='add_status'),
     path('add_product/',views.add_product, name='add_product'),
     path('get_data_for/<str:usertype>/', views.get_data_for, name='get_data_for'),
+    path('view_poc/',views.view_poc, name='view_poc'),
+    path('update_sts/',views.update_sts, name='update_sts'),
+    
     # path('flush_message/', views.flush_message, name='flush_message'),
 ]
 

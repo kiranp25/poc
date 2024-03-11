@@ -36,6 +36,7 @@
                                         <div class="form-group col-md-12 mb-2">
                                           <input type="hidden" class="form-control" value={{request.session.username}} name="username">
                                             <input type="text" class="form-control" placeholder="Customer Name" name="CustomerName">
+
                                         </div>
                                         <div class="form-group col-md-12 mb-2">
                                           
@@ -69,17 +70,21 @@
                                             <div id = "repeater-group_remark" data-repeater-list="repeater-group">
                                                 <div class="input-group mb-1" id = "remark_1">
                                                     <input type="text" placeholder="Remark" class="form-control" id="example-Remark-input_1" name="remarks">
-                                                    <span class="input-group-append" id="button-Remark_addon_1">
+                                                    <!-- <span class="input-group-append" id="button-Remark_addon_1">
                                                         <button class="btn btn-danger" type="button" id = "remove_Remark_1" data-repeater-delete onclick="removeDiv(this)"><i class="ft-x"></i></button>
-                                                    </span>
+                                                    </span> -->
                                                 </div>
                                             </div>
     
-                                            <button type="button" id = 'add_new_remark' data-repeater-create class="btn btn-primary">
+                                            <!-- <button type="button" id = 'add_new_remark' data-repeater-create class="btn btn-primary">
                                                 <i class="ft-plus"></i> Add new Remark
-                                            </button>
+                                            </button> -->
                                         </div>
-    
+                                        <div class="form-group col-md-12 mb-2">
+                                            <label for="timeline">Timeline</label>
+                                            <input type="date"  class="form-control" id="timeline" min="{% now 'Y-m-d' %}" name="timeline">
+                                        </div>
+                                        
     
                                         <div class="form-group col-md-12 mb-2">
                                             <select name="status" class="form-control">
