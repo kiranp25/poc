@@ -1,0 +1,89 @@
+
+
+{% extends "poc_demo/base.html" %}
+
+{% block poc_content %}
+  
+  {% load static %}
+
+    <div class="app-content content">
+      <div class="content-wrapper">
+        <div class="content-header row">
+        </div>
+        <div class="content-body">
+          {% if message %}     
+          <p>{{ message }}</p>
+          {% endif %}
+          {% if result %}     
+          <p>{{ result }}</p>
+          {% endif %}
+
+            <div class="card">
+              <div class="card-body">
+                {% if messages %}
+                <div class="messages text-center">
+                {% for message in messages %}
+                <h4 {% if message.extra_tags %} class="alert alert-{{ message.extra_tags }}"{% else %} 
+                class="alert alert-{{ message.tags }}"{% endif %}
+                >{{ message }}</h4>
+                {% endfor %}
+                </div>
+                {% endif %}
+                
+                                    
+                                    
+
+                <div class="text-center"><h1>Status List</h1>
+                </div>
+                <section id="form-control-repeater">
+                
+<div class="container">
+  <table class="table table-striped table-bordered">
+    <thead>
+      <tr>
+        <th scope="col">Name</th>
+        <th scope="col">Created At</th>
+        <th scope="col">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if status %}
+      {% for sts in status %}
+      <tr>
+        <td>{{ sts.name }}</td>
+        <td>{{ sts.created_at }}</td>
+        <td>
+          <a href="{% url 'edit_status' sts.id %}" class="btn btn-primary btn-sm">Edit</a>
+          <a href="#" onclick="return confirmDelete('{% url 'delete_status' sts.id %}')" class="btn btn-danger btn-sm ms-1">Delete</a>
+        </td>
+      </tr>
+      {% endfor %}
+      {% else %}
+                      <tr><td colspan="3">data not found</td></tr>
+                      {% endif %}
+    </tbody>
+  </table>
+</div>
+                </section>
+                
+              
+              </div>
+                </div>
+
+        </div>
+      </div>
+    </div>
+    <!-- ////////////////////////////////////////////////////////////////////////////-->
+    {%endblock %}
+
+    
+    {% block js %}  
+    <script>
+      function confirmDelete(url) {
+        if (confirm('Are you sure you want to delete?')) {
+          window.location.href = url; // Redirect to delete URL if confirmed
+        }
+      }
+      </script>
+    {% endblock %}
+

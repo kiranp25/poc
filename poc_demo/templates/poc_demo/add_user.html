@@ -41,17 +41,22 @@
                                     <form class="row" method="post">
 
                                        {% csrf_token %}
-                                       <div class="form-group col-md-12 mb-2">
-                                        <input type="text" class="form-control" placeholder="name" name="name">
+                                       <div class="form-group col-md-6 mb-2">
+
+                                        <input type="text" class="form-control" placeholder="First_Name" name="first_name">
+                                        </div>
+                                        <div class="form-group col-md-6 mb-2">
+                                          
+                                        <input type="text" class="form-control" placeholder="Last_Name" name="last_name">
                                     </div>
                                     <div class="form-group col-md-12 mb-2">
-                                      <input type="email" class="form-control" placeholder="email" name="email">
+                                      <input type="email" class="form-control" placeholder="Email" name="email">
                                   </div>
                                         <div class="form-group col-md-12 mb-2">
-                                            <input type="text" class="form-control" placeholder="username" name="username">
+                                            <input type="text" class="form-control" placeholder="Username" name="username">
                                         </div>
                                         <div class="form-group col-md-12 mb-2">
-                                          <input type="password" class="form-control" placeholder="password" name="password">
+                                          <input type="password" class="form-control" placeholder="Password" name="password">
                                       </div>
                                         <div class="form-group col-md-12 mb-2">
                                           
@@ -75,12 +80,11 @@
     
                                         <div class="form-group col-md-12 mb-2">
                                             <select name="status" class="form-control">
-                                              {% for sts in status %}
-                                              <option value="{{sts}}">{{sts}}</option>
+                                              {% for id,sts in status %}
+                                              <option value="{{id}}">{{sts}}</option>
                                               {% endfor %}
                                             </select>
                                         </div>
-                                        
                                         <div class="form-actions col-12 mb-2">
                                             <div class="text-right">
                                                 <button type="submit" class="btn btn-primary">Submit <i class="ft-thumbs-up position-right"></i></button>
@@ -95,6 +99,12 @@
                         </div>
                     </div>
                 </section>
+                {% if messages %}
+                            <p></p>
+                            {% for msg in messages %}
+                            <p>{{ msg }}</p>
+                            {% endfor %}
+                            {% endif %}
 
         
                 </div>
@@ -118,18 +128,21 @@
           .then(response => response.json())
           .then(data => {
             let text =''
-            console.log(data['list_of'], data.length);
+           
+            // console.log(data['list_of'].length);
+            const objectLength = Object.keys(data['list_of']).length;
+           if(objectLength > 0){
+            for(datas in data['list_of'])
+            {
+              console.log(data['list_of'][datas]);
+              text = text + "<option value = '"+datas+"'>"+ data['list_of'][datas] +"</option>";
+            }
+           }
+          else{
+              text = text + "<option value = 'no data found' disabled>no data found </option>";    
+          }
             if (data['error']){
               user_opion.innerHTML = data['error']; 
-            }
-            if (data['list_of'].length > 0){
-              for (let i = 0; i < data['list_of'].length; i++) {
-                console.log("<option value = '"+data['list_of'][i]+"'>"+ data['list_of'][i] +"</option>");  
-                text = text + "<option value = '"+data['list_of'][i]+"'>"+ data['list_of'][i] +"</option>";
-              }
-            }
-            else{
-              text = text + "<option value = 'no data found' disabled>no data found </option>";
             }
             user_opion.innerHTML = text;
           });

@@ -50,7 +50,7 @@
 
                                        {% csrf_token %}
                                        <div class="form-group col-md-12 mb-2">
-                                        <input type="hidden" class="form-control"  value={{request.session.username}} name="username">
+                                        <input type="hidden" class="form-control"  value={{request.user.email}} name="username">
                                         <input type="text" class="form-control" placeholder="status name" name="status_name">
                                         </div>
                                         <div class="form-actions col-12 mb-2">
@@ -66,6 +66,12 @@
                         </div>
                     </div>
                 </section>
+                {% if messages %}
+                <p></p>
+                {% for msg in messages %}
+                <p>{{ msg }}</p>
+                {% endfor %}
+                {% endif %}
                 </div>
         </div>
       </div>

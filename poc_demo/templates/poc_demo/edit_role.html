@@ -1,0 +1,72 @@
+
+
+{% extends "poc_demo/base.html" %}
+
+{% block poc_content %}
+  
+  {% load static %}
+
+    <div class="app-content content">
+      <div class="content-wrapper">
+        <div class="content-header row">
+        </div>
+        <div class="content-body">
+          {% if message %}     
+          <p>{{ message }}</p>
+          {% endif %}
+          {% if result %}     
+          <p>{{ result }}</p>
+          {% endif %}
+
+            <div class="card">
+                <!-- Form control repeater section start -->        
+                
+              <section id="form-control-repeater" class="container-fluid py-4">
+                <h1 class="text-center mb-4">Edit Status - {{ role.name }}</h1>
+              
+                <form class="row g-3 needs-validation" method="post" novalidate>
+                  {% csrf_token %}
+              
+                  <div class="col-12">
+                    <input type="hidden" class="form-control"  value={{request.user.email}} name="username">
+                    <input type="hidden" class="form-control"  value={{role.id}} name="role_id">
+                    
+                  </div>  
+                  <div class="col-lg-4">
+                    <label for="status" class="form-label">Role</label>
+                    <input type="text" class="form-control" placeholder="role name" name="role_name" value="{{role.name}}">
+                    <div class="invalid-feedback">Please provide a valid status.</div>  
+                  </div>  
+                  <div class="col-lg-4">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" class="form-control" required>
+                      {% for id, sts in status %}
+                      <option value="{{ id }}" {% if role.status == id %} selected {% endif %}>{{ sts }}</option>
+                      {% endfor %}
+
+                      
+                    </select>
+                    <div class="invalid-feedback">
+                      Please select a status.
+                    </div>
+                  </div>
+
+                  <div class="col-12 text-center mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">Save Changes <i class="ft-thumbs-up position-right"></i></button>
+                  </div>
+                </form>
+              </section>
+                           {% if messages %}
+                            <p></p>
+                            {% for msg in messages %}
+                            <p>{{ msg }}</p>
+                            {% endfor %}
+                            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {%endblock %}
+    {% block js %}  
+    {% endblock %}
+

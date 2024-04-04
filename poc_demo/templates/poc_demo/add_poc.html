@@ -2,7 +2,48 @@
 {% extends "poc_demo/base.html" %}
 
 {% block poc_content %}  
-  {% load static %}
+<!-- .cool-form {
+  background: #f0f0f0; /* Light gray background */
+  border-radius: 10px; /* Rounded corners */
+  padding: 20px; /* Inner padding */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05); /* Subtle shadow */
+}
+
+.cool-form label {
+  color: #888; /* Lighter label text color */
+  font-weight: bold; /* Bold labels */
+}
+
+.cool-form .form-control {
+  border-radius: 5px; /* Rounded input fields */
+} -->
+{% load static %}
+  <style>
+
+    .cool-form .btn-primary {
+      background-color: #388e3c; /* Green submit button */
+      border-color: #388e3c; /* Green border */
+      transition: all 0.2s ease-in-out; /* Smooth button hover effect */
+    }
+
+    .cool-form .btn-primary:hover {
+      background-color: #2e7d32; /* Darker green on hover */
+    }
+
+    .cool-form .btn-danger {
+      background-color: #d9534f; /* Red remove button */
+      border-color: #d9534f; /* Red border */
+      transition: all 0.2s ease-in-out; /* Smooth button hover effect */
+    }
+
+    .cool-form .btn-danger:hover {
+      background-color: #c9302c; /* Darker red on hover */
+    }
+
+    .repeater-group .input-group {
+      margin-bottom: 10px; /* Spacing between repeated groups */
+    }
+  </style>
       <div class="app-content content">
       <div class="content-wrapper">
         <div class="content-header row">
@@ -17,90 +58,102 @@
                           <div class="card">
                             <div class="card-header">
                                 <h4 class="card-title" id="tel-repeater">Add Poc</h4>
-                                <a class="heading-elements-toggle"><i class="ft-ellipsis-h font-medium-3"></i></a>
-                                <div class="heading-elements">
-                                    <ul class="list-inline mb-0">
-                                        <li><a data-action="collapse"><i class="ft-minus"></i></a></li>
-                                        <li><a data-action="reload"><i class="ft-rotate-cw"></i></a></li>
-                                        <li><a data-action="expand"><i class="ft-maximize"></i></a></li>
-                                        <!-- <li><a data-action="close"><i class="ft-x"></i></a></li> -->
-                                    </ul>
-                                </div>
+                   
                             </div>
-                            <div class="card-content collapse show">
-                                <div class="card-body">
-    
-                                    <form method="post">
-                                      {% csrf_token %}
-                                      
-                                        <div class="form-group col-md-12 mb-2">
-                                          <input type="hidden" class="form-control" value={{request.session.username}} name="username">
-                                            <input type="text" class="form-control" placeholder="Customer Name" name="CustomerName">
+                            <div class="card-body">
 
-                                        </div>
-                                        <div class="form-group col-md-12 mb-2">
-                                          
-                                            <select name="product_name" class="form-control">
-                                                <option value="none" selected="" disabled="">product name</option>
-                                                {% for product in product_list %}
-                                                <option value="{{product}}">{{product}}</option>
-                                                {% endfor %}
-                                              
-                                            </select>
-                                        </div>
-                                            
-                                        <div class="form-group col-12 mb-2 features-repeater" id = 'features-repeater'>
-                                          <input type="hidden" id="feature_count" name="feature_count">
-                                            <div id = "repeater-group_feature" data-repeater-list="repeater-group">
-                                                <div class="input-group mb-1" id = "feture_1">
-                                                    <input type="text" placeholder="Features" class="form-control" name="features" id="example-Features-input_1">
-                                                    <span class="input-group-append" id="button-addon_1">
-                                                        <button class="btn btn-danger" type="button" id = "remove_feture_1" data-repeater-delete onclick="removeDiv(this)"><i class="ft-x"></i></button>
-                                                    </span>
-                                                </div>
-                                            </div>
-    
-                                            <button type="button" id = 'add_new_feature' data-repeater-create class="btn btn-primary">
-                                                <i class="ft-plus"></i> Add new Features
-                                            </button>
-                                        </div>
-    
-                                        <div class="form-group col-12 mb-2 Remark-repeater" id = 'Remark-repeater'>
-                                          <input type="hidden" id="Remark_count" name="Remark_count">
-                                            <div id = "repeater-group_remark" data-repeater-list="repeater-group">
-                                                <div class="input-group mb-1" id = "remark_1">
-                                                    <input type="text" placeholder="Remark" class="form-control" id="example-Remark-input_1" name="remarks">
-                                                    <!-- <span class="input-group-append" id="button-Remark_addon_1">
-                                                        <button class="btn btn-danger" type="button" id = "remove_Remark_1" data-repeater-delete onclick="removeDiv(this)"><i class="ft-x"></i></button>
-                                                    </span> -->
-                                                </div>
-                                            </div>
-    
-                                            <!-- <button type="button" id = 'add_new_remark' data-repeater-create class="btn btn-primary">
-                                                <i class="ft-plus"></i> Add new Remark
-                                            </button> -->
-                                        </div>
-                                        <div class="form-group col-md-12 mb-2">
-                                            <label for="timeline">Timeline</label>
-                                            <input type="date"  class="form-control" id="timeline" min="{% now 'Y-m-d' %}" name="timeline">
-                                        </div>
-                                        
-    
-                                        <div class="form-group col-md-12 mb-2">
-                                            <select name="status" class="form-control">
-                                              {% for sts in status %}
-                                              <option value="{{sts}}">{{sts}}</option>
-                                              {% endfor %}
-                                            </select>
-                                        </div>
-                                        
-                                        <div class="form-actions col-12 mb-2">
-                                            <div class="text-right">
-                                                <button type="submit" class="btn btn-primary">Submit <i class="ft-thumbs-up position-right"></i></button>
-                                                <button type="reset" class="btn btn-warning">Reset <i class="ft-refresh-cw position-right"></i></button>
-                                            </div>
-                                        </div>
-                                    </form>
+                                  <div class="card-content">
+
+                                  <!-- Floating Labels Form -->
+              <form class="row g-3 cool-form" method="post">
+                {% csrf_token %}     
+                <div class="col-md-12">
+                  <input type="hidden" class="form-control" value={{request.user.email}} name="username">
+                  <div class="form-floating">
+                    <input type="text" class="form-control" id="floatingCustomerName" name="CustomerName" placeholder="Customer Name">
+                    <label for="floatingCustomerName">Customer Name</label>
+
+                  </div>
+                  </div>
+
+                  <div class="col-md-12">
+                    <div class="form-floating mb-3">
+                      <select class="form-select" name="product_name" id="product_name" aria-label="product_name">
+                        <option value="" selected disabled></option>
+                        {% for product in product_list %}
+
+                        <option value="{{product}}">{{product}}</option>
+                        {% endfor %}
+                      </select>
+                      <label for="product_name">Product Name</label>
+                    </div>
+                  </div>
+
+                <div class="col-md-12">
+                  <div class="col-md-12 Remark-repeater" id = 'Remark-repeater'>
+                    <input type="hidden" id="Remark_count" name="Remark_count">
+                    <div id = "repeater-group_remark" data-repeater-list="repeater-group">
+                      <div class="form-floating" class="input-group mb-1" id = "remark_1">
+                        <input type="text" placeholder="Remark" class="form-control" id="example-Remark-input_1" name="remarks">
+                        <label for="example-Remark-input_1">Remark</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <input type="date"  class="form-control" id="timeline" min="{% now 'Y-m-d' %}" name="timeline">
+                    <label for="timeline">POC Timeline</label>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="form-floating mb-3">
+                    <select class="form-select" name="status" id="status" aria-label="status">
+                      <option value="" selected disabled></option>
+                      {% for sts in status %}
+                      <option value="{{sts}}">{{sts}}</option>
+                      {% endfor %}
+                    </select>
+                    <label for="product_name">Status</label>
+                  </div>
+                </div>
+
+                <div class="col-md-12">
+                <div class="fmb-3 features-repeater" id="features-repeater">
+                  <input type="hidden" id="feature_count" name="feature_count">
+                
+                  <div id="repeater-group_feature" data-repeater-list="repeater-group">
+                    <div class="input-group mb-1" id="feture_1">
+                      
+                      <input type="hidden" name="Feature_ids" id="Feature_ids_1" value="1">
+                      <div class='form-floating'>
+                      <input type="text" placeholder="Features" class="form-control me-1 " name="features_1" id="example-Features-input_1">
+                      <label for="example-Features-input_1" class="col-form-label">Feature</label>
+                    </div>
+                      <div class='form-floating'>
+                        <input type="date" class="form-control ms-1" id="timeline_1" min="{% now 'Y-m-d' %}" name="timeline_1">
+                        <label for="timeline_1" class="col-form-label"> Feture Timeline </label>  
+                      </div>
+                      <span class="input-group-append ms-2" id="button-addon_1">
+                        <button class="btn btn-danger mt-2" type="button" id="remove_feture_1" data-repeater-delete onclick="removeDiv(this)">
+                          <i class="ri-delete-bin-6-line"></i> 
+                        </button>
+                      </span>
+                    </div>
+                  </div>
+                
+                  <button type="button" id="add_new_feature" data-repeater-create class="btn btn-primary mt-2">
+                    <i class=" ri-add-line"></i> Add new Feature
+                  </button>
+                </div>
+                </div>
+            
+                <div class="text-center">
+                  <button type="submit" class="btn btn-primary"><i class="ft-thumbs-up position-right"></i>Submit</button>
+                  <button type="reset" class="btn btn-secondary"><i class="ft-refresh-cw position-right"></i>Reset</button>
+                </div>
+              </form><!-- End floating Labels Form -->
     
                                 </div>
                             </div>
@@ -108,6 +161,13 @@
                         </div>
                     </div>
                 </section>
+                {% if messages %}
+                <p></p>
+                {% for msg in messages %}
+                <p>{{ msg }}</p>
+                {% endfor %}
+                {% endif %}
+
         
                 </div>
 
@@ -136,11 +196,20 @@ document.getElementById("add_new_feature").addEventListener("click", function ()
   var newFeatureDiv = document.createElement("div");
   newFeatureDiv.className = "input-group mb-1";
   newFeatureDiv.id = `feture_${Features_count}`;
-  newFeatureDiv.innerHTML = `<input type="text" placeholder="Features" class="form-control" 
-                          id="example-Features-input_${Features_count}" name="features"><span class="input-group-append" 
-                          id="button-addon_${Features_count}"><button class="btn btn-danger" type="button" 
-                          id = "remove_feture_${Features_count}" data-repeater-delete onclick="removeDiv(this)"><i class="ft-x"></i></button>
+  newFeatureDiv.innerHTML = `<input type="hidden" name="Feature_ids" id="Feature_ids_${Features_count}" value="${Features_count}">
+                        <div class="form-floating">
+                        <input type="text" placeholder="Features" class="form-control me-1" 
+                          id="example-Features-input_${Features_count}" name="features_${Features_count}">
+                          <label for="example-Features-input_${Features_count}" class="col-form-label">Feature</label></div>
+                          <div class="form-floating">
+                          <input type="date" class="form-control ms-1" id="timeline_${Features_count}" min="{% now 'Y-m-d' %}" name="timeline_${Features_count}">
+                          <label for="timeline_${Features_count}" class="col-form-label">Feture Timeline </label>
+                          </div>
+                          <span class="input-group-append ms-2" 
+                          id="button-addon_${Features_count}"><button class="btn btn-danger mt-2" type="button" 
+                          id = "remove_feture_${Features_count}" data-repeater-delete onclick="removeDiv(this)"><i class="ri-delete-bin-6-line"></i></button>
                            </span>`;
+
   document.getElementById("repeater-group_feature").appendChild(newFeatureDiv);
   });
 var Remark_count = 1

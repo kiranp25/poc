@@ -1,0 +1,138 @@
+
+
+{% extends "poc_demo/base.html" %}
+
+{% block poc_content %}
+  
+  {% load static %}
+
+    <div class="app-content content">
+      <div class="content-wrapper">
+        <div class="content-header row">
+        </div>
+        <div class="content-body">
+          {% if message %}     
+          <p>{{ message }}</p>
+          {% endif %}
+          {% if result %}     
+          <p>{{ result }}</p>
+          {% endif %}
+
+            <div class="card">
+              <div class="row">
+                <div class="col-md-3">
+                  </div>
+
+                  <div class="col-md-6">
+
+
+               
+
+              
+                <!-- Form control repeater section start -->        
+                
+              <section id="form-control-repeater" class="container-fluid py-4">
+            
+                <h1 class="text-center mb-4">Edit User - {{ user.username }}</h1>
+              
+                <form class="row g-3 needs-validation" method="post" novalidate>
+                  {% csrf_token %}
+                  <div class="form-group col-md-6 mb-2">
+                   <input type="text" class="form-control" placeholder="First_Name" id="FirstName" name="first_name"  value="{{ user.first_name }}" required>
+                   </div>
+
+                   <div class="form-group col-md-6 mb-2">  
+                   <input type="text" class="form-control" placeholder="Last_Name" id="lastName" name="last_name" value="{{ user.last_name }}" required>
+               </div>         
+               <div class="form-group col-md-12 mb-2">
+                 <input type="email" class="form-control" placeholder="Email"  id="email" name="email" value="{{ user.email }}" required>
+             </div>
+
+                   <div class="form-group col-md-12 mb-2">
+                     
+                       <select name="usertype" class="form-control" id = "userType" required>
+                           <option value="" disabled="">User Type</option>
+                           {% for role in roles %}
+                           <option value="{{ role }}"{% if user.role == role %} selected {% endif %}>{{ role }}</option>
+                           {% endfor %}
+                       </select>
+                   </div>
+                   <div class="form-group col-md-12 mb-2">
+
+                   
+                     
+                     <select name="Belongs_to" class="form-control" id="user_list" required>
+                         <option value="{{ user.Belongs_to_id }}" selected>{{ user.Belongs_to.username }}</option>
+                      </select>
+                     </select>
+                 </div>
+
+              
+                  
+
+                   <div class="form-group col-md-12 mb-2">
+                    <select name="status" class="form-control" required>
+                      {% for id, sts in status %}
+                      <option value="{{ id }}" {% if user.Status == id %} selected {% endif %}>{{ sts }}</option>
+                      {% endfor %}
+                    </select>
+                   </div>
+                   <div class="form-actions col-12 mb-2">
+                       <div class="text-right">
+                           <button type="submit" class="btn btn-primary">Submit <i class="ft-thumbs-up position-right"></i></button>
+                           <button type="reset" class="btn btn-warning">Reset <i class="ft-refresh-cw position-right"></i></button>
+                       </div>
+                   </div>              
+                </form>
+                
+              </section>
+            </div>
+          </div>
+          <div class="col-md-3">
+            
+          </div>
+                           {% if messages %}
+                            <p></p>
+                            {% for msg in messages %}
+                            <p>{{ msg }}</p>
+                            {% endfor %}
+                            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {%endblock %}
+    {% block js %}  
+    <script>
+      const UserTypefor = document.getElementById('userType');
+      const user_opion = document.getElementById('user_list');
+  
+      UserTypefor.addEventListener('change', () => {
+        const selectedUser = UserTypefor.value;
+        fetch(`/get_data_for/${selectedUser}`)
+          .then(response => response.json())
+          .then(data => {
+            let text =''
+           
+            // console.log(data['list_of'].length);
+            const objectLength = Object.keys(data['list_of']).length;
+           if(objectLength > 0){
+            for(datas in data['list_of'])
+            {
+              console.log(data['list_of'][datas]);
+              text = text + "<option value = '"+datas+"' {% if user.Belongs_to == '"+ datas +"' %} selected {% endif %}>"+ data['list_of'][datas] +"</option>";
+            }
+           }
+          else{
+              text = text + "<option value = 'no data found' disabled>no data found </option>";    
+          }
+            if (data['error']){
+              user_opion.innerHTML = data['error']; 
+            }
+            user_opion.innerHTML = text;
+          });
+      });
+    </script>
+    
+    {% endblock %}
+

@@ -50,13 +50,13 @@
 
                                        {% csrf_token %}
                                        <div class="form-group col-md-12 mb-2">
-                                        <input type="hidden" class="form-control"  value={{request.session.username}} name="username">
-                                        <input type="text" class="form-control" placeholder="enter role" name="role_name">
+                                        <input type="hidden" class="form-control"  value={{request.user.email}} name="username">
+                                        <input type="text" class="form-control" placeholder="Enter Role" name="role_name">
                                         </div>
                                         <div class="form-group col-md-12 mb-2">
                                             <select name="status" class="form-control">
-                                                {% for sts in status %}
-                                                <option value="{{sts}}">{{sts}}</option>
+                                                {% for id,sts in status %}
+                                                <option value="{{id}}">{{sts}}</option>
                                                 {% endfor %}
                                             </select>
                                         </div>
@@ -75,6 +75,12 @@
                         </div>
                     </div>
                 </section>
+                {% if messages %}
+                <p></p>
+                {% for msg in messages %}
+                <p>{{ msg }}</p>
+                {% endfor %}
+                {% endif %}
               </div>
         </div>
       </div>

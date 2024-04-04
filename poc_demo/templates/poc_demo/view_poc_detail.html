@@ -1,0 +1,558 @@
+{% extends "poc_demo/base.html" %}
+
+{% block poc_content %}  
+{% load static %}
+<style>
+  
+body {
+    font-family: Roboto, sans-serif;  /* Choose a clear font */
+    color: #333;  /* Text color */
+}
+
+.card {
+    background-color: #fff;  /* Card background */
+    border: 1px solid #eee;  /* Subtle border */
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);  /* Subtle shadow */
+    margin-bottom: 20px;
+    padding: 15px;
+}
+
+.card-header {
+    background-color: #f8f9fa;  /* Header background */
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.card-title {
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+
+.btn-primary {
+    background-color: #007bff;  /* Primary button color */
+    border-color: #007bff;
+    color: #fff;
+}
+
+</style>
+
+<div class="app-content content">
+    <div class="content-wrapper">
+      <div class="content-header row">
+      </div>
+    <div class="content-body">
+        <!-- Zero configuration table -->
+    <section id="configuration">
+      {% if messages %}
+                  <div class="messages text-center">
+                  {% for message in messages %}
+                  <h4 {% if message.extra_tags %} class="alert alert-{{ message.extra_tags }}"{% else %} 
+                  class="alert alert-{{ message.tags }}"{% endif %}
+                  >{{ message }}</h4>
+                  {% endfor %}
+                  </div>
+                  {% endif %}
+                  
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">POC view</h4>
+                        <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
+                        
+                    </div>
+                    <!-- strt -->
+                    <div class="poc-view row">
+                      <div class="col-md-6">
+                        <form method="POST" action="{% url 'edit_poc' data.id %}">
+                          {% csrf_token %}
+                          <div class="card shadow-sm rounded-3 p-3 mt-2 bg-light">
+                            <div class="row">
+                              <div class="col-md-6">
+                                <h5 class="card-title mb-3 text-primary">Details</h5>
+                                <div class="mb-3">
+                                  <label for="name" class="form-label fw-bold">Name:</label>
+                                  <input type="text" class="form-control" id="name" name="Customer_name" value="{{ data.Customer_name }}" disabled>
+                                </div>
+                                <div class="mb-3">
+                                  <label for="product_name" class="form-label fw-bold">Product Name:</label>
+                               
+                                  <select name="product_name" class="form-control" id="product_name"  required disabled>
+                                    {% for prd in product %}
+                                    <option value="{{ prd }}" {% if data.Product_name == prd  %} selected {% endif %}>{{ prd }}</option>
+                                    {% endfor %}
+                                  </select>
+
+                                </div>
+                                <div class="mb-3">
+                                  <h5 class="card-title mb-3 text-dark">Added By :{{ data.added_by }}</h5>
+                                </div>
+                                
+                                <!-- product -->
+                              </div>
+                              <div class="col-md-6">
+                                <h5 class="card-title mb-3 text-info">Information</h5>
+                                <div class="mb-3">
+                                  <label for="requested_date" class="form-label fw-bold">Requested Date:</label>
+                              <input type="date" class="form-control" id="requested_date_edit" name="requested_date" value="{{ data.Requested_date|date:'Y-m-d' }}" readonly disabled> 
+                                </div>
+                                <div class="mb-3">
+                                  <label for="timeline" class="form-label fw-bold">Timeline:</label>
+                                  <input type="date" class="form-control" id="Timeline_date_edit" name="Timeline_date" value="{{ data.Timeline|date:'Y-m-d' }}" disabled>  
+                                </div>
+                                <div class="mb-3">
+                                  <label for="status" class="form-label fw-bold">Status:</label>
+
+                                  <select name="status" class="form-control" id="status_edit"  required disabled>
+                                    {% for sts in status %}
+                                    <option value="{{ sts.name }}" {% if data.status == sts  %} selected {% endif %}>{{ sts }}</option>
+                                    {% endfor %}
+                                  </select>
+                                </div>
+                              </div>
+                            </div>
+                                     
+                            <div class="text-end">
+                              {% if request.user.role_id in permition %}
+                              <button type="button" class="btn btn-primary edit-btn">Edit</button>
+                              <button type="submit" class="btn btn-success save-btn" disabled>Save Changes</button>
+                              {% endif %}
+                            </div>
+                          </div>
+                        </form>           
+                      </div>
+                      <div class="col-md-6">
+                        <div class="card shadow-sm rounded-3 p-3 mt-2 bg-light">
+                          <div class="row">
+                            <div class="col-sm-6">
+                              <h5 class="card-title mb-3 text-primary">Remarks</h5>
+                            </div>
+                            <div class="col-sm-6 text-end">
+                              {% if request.user.role_id in permition %}
+                              <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#centeredModal" id="{{data.id}}" onclick="set_id(this.id)">
+                                <i class="fas fa-plus"></i> Add Remarks
+                              </button>
+                              {% endif %}
+                            </div>
+                          </div>
+                          <table class="table table-bordered">
+                            <thead>
+                              <tr>
+                                <th scope="col">Remark</th>
+                                <th scope="col">Remark By</th>
+                                <th scope="col">Date</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {% for remark in data.poc_remark_set.all %}
+                              <tr>
+                                <td>{{ remark.remarks }}</td>
+                                <td>{{ remark.added_by }}</td>
+                                <td>{{ remark.created_at }}</td>
+                              </tr>
+                              {% endfor %}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>                    
+
+                    
+                    <!-- end -->
+
+                    
+            
+        </div>
+        </div>
+        </div>
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Features:</h4>
+                <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
+                <div class="heading-elements">
+                    <ul class="list-inline mb-0">
+                        <li><a data-action="collapse"><i class="ft-minus"></i></a></li>
+                        <li><a data-action="reload"><i class="ft-rotate-cw"></i></a></li>
+                        <li><a data-action="expand"><i class="ft-maximize"></i></a></li>
+                        <!-- <li><a data-action="close"><i class="ft-x"></i></a></li> -->
+                    </ul>
+                </div>
+            </div>
+            <div class="card-content collapse show">
+              <div class="card-body card-dashboard">
+  
+                
+                <table class="table table-bordered">
+                  <caption>Favorite and Least Favorite Things</caption>
+                  <tr>
+                        <th scope="col">Feature</th>
+                        <th scope="col">Timeline</th>
+                        <th scope="col">State</th>
+                        <th scope="col">Feture Status</th>
+                        <th scope="col">Feture Status Added_By</th>
+                        <th scope="col">Feture Status Added_At</th>
+                        <th scope="col">Action</th>
+                  </tr>
+
+                  {% for feature in data.feature_set.all %}
+                  <tr>
+                    <td rowspan="{{ feature.feature_status_set.all|length }}">{{ feature.features_list|escapejs }}</td>
+                    <td rowspan="{{ feature.feature_status_set.all|length }}">{{ feature.timeline }}</td>
+                    <td rowspan="{{ feature.feature_status_set.all|length }}">{{ feature.status }}</td>
+                    <td rowspan="{{ feature.feature_status_set.all|length }}">
+                     
+                      <button class="btn btn-sm btn-primary" data-bs-toggle="modal" value="{{ feature.id }}" onclick="update_sts(this)" data-bs-target="#centeredModalupdate">
+                        Add Status
+                      </button>
+                  </td>
+                   {% for sts in feature.feature_status_set.all %}
+                      <td>{{ sts.status }}</td>
+                      <td>{{ sts.added_by }}</td>
+                      <td>{{ sts.created_at }}</td>
+                      </tr>
+                      
+                    {% endfor %}
+                  </tr>
+                  
+                {% endfor %}
+         
+                 </table>
+
+   <hr>
+              </div>
+            </div>
+    </div>
+    </div>
+        <div class="col-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Status Details   </h4>
+                    <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
+                    <div class="heading-elements">
+                        <ul class="list-inline mb-0">
+                            <li><a data-action="collapse"><i class="ft-minus"></i></a></li>
+                            <li><a data-action="reload"><i class="ft-rotate-cw"></i></a></li>
+                            <li><a data-action="expand"><i class="ft-maximize"></i></a></li>
+                            <!-- <li><a data-action="close"><i class="ft-x"></i></a></li> -->
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-content collapse show">
+                    <div  id="featurestsdetatil" class="card-body card-dashboard">
+                                for view, click view buuton in feature section</span>      
+                    </div>
+                </div>
+        </div>
+      </div>
+    </div>
+    </section>
+
+
+  <div class="modal fade" id="centeredModal" tabindex="-1" aria-labelledby="centeredModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="centeredModalLabel">Add Remarks</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+          <form method="post" action="{% url 'add_remarks' data.id %}">
+            {% csrf_token %}
+              <div class="form-group col-md-12 mb-2">
+                <input type="hidden" class="form-control" value={{request.user.email}} name="username">
+                <input type="hidden" name="row_remark_id" id="row_remark_id">
+              </div>
+              
+              <div class="form-group col-12 mb-2 Remark-repeater" id = 'Remark-repeater'>
+                <input type="hidden" id="Remark_count" name="Remark_count">
+                  <div id = "repeater-group_remark" data-repeater-list="repeater-group">
+                      <div class="input-group mb-1" id = "remark_1">
+                          <input type="text" placeholder="Remark" class="form-control" id="example-Remark-input_1" name="remarks">
+                          <!-- <span class="input-group-append" id="button-Remark_addon_1">
+                              <button class="btn btn-danger" type="button" id = "remove_Remark_1" data-repeater-delete onclick="removeDiv(this)"><i class="ft-x"></i></button>
+                          </span> -->
+                      </div>
+                  </div>
+
+                  <!-- <button type="button" id = 'add_new_remark' data-repeater-create class="btn btn-primary">
+                      <i class="ft-plus"></i> Add new Remark
+                  </button> -->
+              </div>
+        </div>
+        <div class="modal-footer">
+            <div class="form-actions col-12 mb-2">
+                <div class="text-right">
+                    <button type="submit" class="btn btn-primary">Submit <i class="ft-thumbs-up position-right"></i></button>
+                    <button type="reset" class="btn btn-warning">Reset <i class="ft-refresh-cw position-right"></i></button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </form>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <!--/ Zero configuration table -->
+
+    <div class="modal fade" id="centeredModalFeture" tabindex="-1" aria-labelledby="centeredModalLabel2" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="centeredModalLabel2"></h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id = 'FetureCentered'>
+            </div>
+            <div class="modal-footer">
+                <div class="form-actions col-12 mb-2">
+                    <div class="text-right">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+  
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- ----------------------------------------------------------------------- -->
+
+      <div class="modal fade" id="centeredModalupdate" tabindex="-1" aria-labelledby="centeredModalLabel3" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+ 
+
+            <form>
+                {% csrf_token %}
+            <div class="modal-header">
+              <h5 class="modal-title" id="centeredModalLabel3"></h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <input type="hidden" id='feture_id' name="feture_id"> 
+            <input type="hidden" value="{{data.id}}" id = 'poc_id' name="poc_id">
+            <input type="hidden" id='sts_id' name="sts_id"> 
+            <div class="modal-body" id = 'FeturestsCenteredupdate'>
+                <input type="text" placeholder="Status" class="form-control" id="sts" name="sts">
+            </div>
+            <div class="modal-footer">
+                <div class="form-actions col-12 mb-2">
+                    <div class="text-right">
+                        <button type="button" id="update_status_feature" class="btn btn-primary">Submit <i class="ft-thumbs-up position-right"></i></button>
+                    <button type="reset" class="btn btn-warning">Reset <i class="ft-refresh-cw position-right"></i></button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+            </form>
+            <div id = 'sts_update_response'></div>
+          </div>
+        </div>
+      </div>    
+      <!-- ----------------------------------------------------------------------- -->
+</div>
+</div>
+</div>
+
+{% endblock %}
+
+    {% block js %}
+
+   <script>
+
+    $(document).ready(function() {
+        $('#update_status_feature').click(function(){
+        sts_id = $("#sts_id").val(); 
+        status = $("#sts").val(); 
+        poc_id = $("#poc_id").val();
+        sts_id_div = `#fet_${sts_id}`
+        $.ajax
+        ({ 
+        url: "{% url 'update_sts' %}",
+        data: {"sts_id": sts_id, "status": status, "poc_id":poc_id, 'csrfmiddlewaretoken': '{{ csrf_token }}', "username": '{{request.user.email}}' },
+        type: 'POST',
+        success: function(result)
+        {
+            $('#centeredModalLabel3').modal('hide');
+            $(sts_id_div).triggerHandler("click");
+            location.reload();
+
+            setTimeout(function(){
+              
+            $('#sts_update_response').html('');
+        }, 5000);
+        },
+        error: function(jqXHR, textStatus, error) {
+            $('#sts_update_response').html(error);
+            setTimeout(function(){
+            $('#sts_update_response').html('');
+        }, 5000);
+        }
+        });
+        
+        
+    });
+    
+    // $('#my_poc_view').dataTable();
+    });
+
+
+    //     document.getElementById('feture_sts_id').value = button_.value;
+    // function view_sts_feature(button_){
+
+    // }
+
+async function view_sts_feature(button_) {
+  const featureStatusid = button_.value;
+  
+//   const additionalData = { param1: featureStatus, param2: 'value2', param3: 'value3' };
+//   const dataString = Object.entries(additionalData) // Convert object to key-value pairs
+//     .map(([key, value]) => `${key}=${value}`) // Join key-value pairs with '=' and '&'
+//     .join('&');
+
+  try {
+    const response = await fetch('{% url 'get_detail_sts' %}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}', 
+                },
+                 body: `id=${featureStatusid}`,
+          });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const responseJson = await response.json();
+    console.log('______',responseJson)
+//  start
+
+const featureTable = document.createElement('table');
+  featureTable.classList.add('feature-table', 'table', 'table-bordered', 'table-responsive'); // Add styling class (optional)
+
+  const tableHeaderRow = document.createElement('tr');
+  tableHeaderRow.classList.add('table-primary'); 
+
+//   const featureIdHeader = document.createElement('th');
+  const statusHeader = document.createElement('th');
+  const addedByHeader = document.createElement('th');
+  const timeHeader = document.createElement('th');
+  const featureHeader = document.createElement('th');
+
+  // Set content for headers
+//   featureIdHeader.textContent = 'Feature ID';
+  statusHeader.textContent = 'Status';
+  addedByHeader.textContent = 'Added By';
+  timeHeader.textContent = 'Time';
+  featureHeader.textContent = 'Feature';
+
+  // Add headers to the table row
+//   tableHeaderRow.appendChild(featureIdHeader);
+  tableHeaderRow.appendChild(statusHeader);
+  tableHeaderRow.appendChild(addedByHeader);
+  tableHeaderRow.appendChild(timeHeader);
+  tableHeaderRow.appendChild(featureHeader);
+
+  // Append the header row to the table
+  featureTable.appendChild(tableHeaderRow);
+
+  // Loop through each key-value pair in the JSON
+  for (const featureId in responseJson) {
+    console.log("iiii"+featureId);
+    const featureData = responseJson[featureId];
+    const tableRow = document.createElement('tr');
+    // const featureIdCell = document.createElement('td');
+    const statusCell = document.createElement('td');
+    const addedByCell = document.createElement('td');
+    const timeCell = document.createElement('td');
+    const featureCell = document.createElement('td');
+
+    // Set content for each cell
+    // featureIdCell.textContent = featureId;
+    statusCell.textContent = featureData.status;
+    addedByCell.textContent = featureData.added_by;
+    timeCell.textContent = featureData.time;
+    featureCell.textContent = featureData.feature;
+
+    // Append cells to the table row
+    // tableRow.appendChild(featureIdCell);
+    tableRow.appendChild(statusCell);
+    tableRow.appendChild(addedByCell);
+    tableRow.appendChild(timeCell);
+    tableRow.appendChild(featureCell);
+
+    // Append the row to the table
+    featureTable.appendChild(tableRow);
+  }
+
+  const featureStatusDiv = document.getElementById('featurestsdetatil');
+
+  featureStatusDiv.innerHTML = featureTable.outerHTML; 
+//  end
+
+    
+  } catch (error) {
+    console.error('Error:', error);
+    // Handle errors appropriately (e.g., display error message to user)
+  }
+}
+
+    function set_id(button_){
+        document.getElementById('row_remark_id').value  = button_
+    }
+
+    function update_sts(button){
+    document.getElementById('sts_id').value = button.value;
+    }
+
+    function display(button_, centeredModalLabel2_val){
+        // document.getElementById('FetureCentered').value = button_
+        // alert(button_.value);
+        document.getElementById("FetureCentered").innerHTML = button_.value;
+
+        document.getElementById("centeredModalLabel2").innerHTML = centeredModalLabel2_val; 
+        // document.getElementById('row_remark_id').value  = button_
+    }
+    
+    function removeDiv(FeatureDiv) {
+          const delDiv = FeatureDiv.parentNode.parentNode;
+          delDiv.parentNode.removeChild(delDiv);
+    }
+
+    var Remark_count = 1
+    document.getElementById('Remark_count').value = Remark_count;
+    // document.getElementById("add_new_remark").addEventListener("click", function () {
+    // Remark_count++;
+    // var newRemarkDiv = document.createElement("div");
+    // document.getElementById('Remark_count').value = Remark_count;
+    // newRemarkDiv.className = "input-group mb-1";
+    // newRemarkDiv.id = `remark_${Remark_count}`;
+
+    // newRemarkDiv.innerHTML = ` <input type="text" placeholder="Remark" class="form-control" 
+    //                         id="example-Remark-input_${Remark_count}" name="remarks"><span class="input-group-append" 
+    //                         id="button-Remark_addon_${Remark_count}"><button class="btn btn-danger" type="button" 
+    //                         id = "remove_Remark_${Remark_count}" data-repeater-delete onclick="removeDiv(this)"><i class="ft-x"></i></button>
+    //                         </span>`
+    // document.getElementById("repeater-group_remark").appendChild(newRemarkDiv);
+    // });
+
+   </script>
+
+<script>
+$(document).ready(function() {
+  // Enable editing on click of "Edit" button
+  $('.edit-btn').click(function() {
+    $(this).prop('disabled', true); // Disable "Edit" button on click
+    $('.form-control').prop('disabled', false); // Enable all input fields
+    $('.save-btn').prop('disabled', false); // Enable "Save" button
+
+  });
+});
+</script>
+
+
+
+{% endblock %}

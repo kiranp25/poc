@@ -40,8 +40,9 @@
                                     <tr>
                                         <th>Name</th>
                                         <th>Product_name</th>
-                                        <th>Features</th>
-                                        <th>Remarks</th>
+                                        <!-- <th>Features</th>
+                                        <th>Remarks</th> -->
+                                        <th> Detail </th>
                                         <th>Requested_date</th>
                                         <th>Timeline</th>
                                         <th>Status</th>
@@ -56,17 +57,22 @@
                                     <tr>
                                         <td>{{i.Customer_name}}</td>
                                         <td>{{i.Product_name}}</td>
-                                        <td>
+                                        <td><a href="{% url 'view_poc_detail' i.id %}" class="btn btn-primary" value="">View</button></td>
+
+                                        <!-- <td>
                                             <button type="button" class="btn btn-primary" data-bs-toggle="modal" value="{% for feature in i.feature_set.all %}<div class='row'><div class='col-sm-3'> <h4>{{ feature.features_list }}</h4> </div><div class='col-sm-3'> {{ feature.status }}</div><div class= 'col-sm-6'><button class='btn btn-primary form-control' data-bs-toggle='modal' value = '{{ feature.id }}' onclick='update_sts(this)' data-bs-target='#centeredModalupdate'>update status</button></div></div><br>{% endfor %}"  onclick="display(this, 'Features')"  data-bs-target="#centeredModalFeture">view</button>           
                                         </td>
                                         <td>
-                                            <!--{% for remark in i.poc_remark_set.all %}
+
+                                            
+                                       
+                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" value=" {% for remark in i.poc_remark_set.all %} {{ remark.remarks }} <hr>  {% endfor %}"  onclick="display(this, 'Remarks')"  data-bs-target="#centeredModalFeture">view</button>
+
+                                        </td> -->
+                                             <!--{% for remark in i.poc_remark_set.all %}
                                             {{remark.remarks}}
                                             {% endfor %} -->
 
-                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" value=" {% for remark in i.poc_remark_set.all %} {{ remark.remarks }} <hr>  {% endfor %}"  onclick="display(this, 'Remarks')"  data-bs-target="#centeredModalFeture">view</button>
-
-                                        </td>
                                         <td>{{i.Requested_date}}</td>
                                         <td>{{i.Timeline}}</td>
                                         <td>{{i.status}}</td>
@@ -124,7 +130,7 @@
           <form method="post">
             {% csrf_token %}
               <div class="form-group col-md-12 mb-2">
-                <input type="hidden" class="form-control" value={{request.session.username}} name="username">
+                <input type="hidden" class="form-control" value={{request.user.email}} name="username">
                 <input type="hidden" name="row_remark_id" id="row_remark_id">
               </div>
               <div class="form-group col-12 mb-2 Remark-repeater" id = 'Remark-repeater'>

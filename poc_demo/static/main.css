@@ -1,3 +1,32 @@
-h1{
-    color: red;
+.user-card {
+    border-radius: 10px; /* Rounded corners */
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2); /* Subtle shadow */
+    margin-bottom: 20px;
+    background-color: #f8f9fa; /* Light background */
+    transition: transform 0.3s ease-in-out; /* Smooth hover effect */
+}
+
+.user-card:hover {
+    transform: translateY(-5px); /* Card lifts slightly on hover */
+}
+
+.user-card-body {
+    padding: 20px;
+}
+
+.user-card-title {
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+}
+
+.user-card-details {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;  /* Spacing between details */
+}
+
+.user-card-detail {
+    font-size: 0.9rem;
+    color: #777;  /* Grayish text color */
 }
