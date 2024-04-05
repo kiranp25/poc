@@ -365,8 +365,9 @@ h6 {
 }
 
 .logo img {
-  max-height: 26px;
-  margin-right: 6px;
+  max-height: 50px;
+  margin-right: 50px;
+  max-width: 450px;
 }
 
 .logo span {

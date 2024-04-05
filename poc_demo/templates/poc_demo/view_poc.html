@@ -59,19 +59,7 @@
                                         <td>{{i.Product_name}}</td>
                                         <td><a href="{% url 'view_poc_detail' i.id %}" class="btn btn-primary" value="">View</button></td>
 
-                                        <!-- <td>
-                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" value="{% for feature in i.feature_set.all %}<div class='row'><div class='col-sm-3'> <h4>{{ feature.features_list }}</h4> </div><div class='col-sm-3'> {{ feature.status }}</div><div class= 'col-sm-6'><button class='btn btn-primary form-control' data-bs-toggle='modal' value = '{{ feature.id }}' onclick='update_sts(this)' data-bs-target='#centeredModalupdate'>update status</button></div></div><br>{% endfor %}"  onclick="display(this, 'Features')"  data-bs-target="#centeredModalFeture">view</button>           
-                                        </td>
-                                        <td>
-
-                                            
                                        
-                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" value=" {% for remark in i.poc_remark_set.all %} {{ remark.remarks }} <hr>  {% endfor %}"  onclick="display(this, 'Remarks')"  data-bs-target="#centeredModalFeture">view</button>
-
-                                        </td> -->
-                                             <!--{% for remark in i.poc_remark_set.all %}
-                                            {{remark.remarks}}
-                                            {% endfor %} -->
 
                                         <td>{{i.Requested_date}}</td>
                                         <td>{{i.Timeline}}</td>

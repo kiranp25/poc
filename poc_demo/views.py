@@ -410,11 +410,13 @@ def edit_product(request, id):
 def view_poc(request):
     print(request.user.role)
     if request.user.role_id == 1:
-        all_active_product = Poc_model.objects.prefetch_related('poc_remark_set', 'feature_set').all() 
+        all_active_product = Poc_model.objects.prefetch_related('poc_f_related', 'poc_r_related').all() 
     elif request.user.role_id == 2:
-        all_active_product = Poc_model.objects.filter(added_by__Belongs_to=request.user.id).prefetch_related('poc_remark_set', 'feature_set').all() 
+        all_active_product = Poc_model.objects.filter(added_by__Belongs_to=request.user.id).prefetch_related('poc_f_related', 'poc_r_related').all() 
     elif request.user.role_id == 3:
-        all_active_product = Poc_model.objects.filter(added_by=request.user.id).prefetch_related('poc_remark_set', 'feature_set').all() 
+        all_active_product = Poc_model.objects.filter(added_by=request.user.id).prefetch_related('poc_f_related', 'poc_r_related').all() 
+    elif request.user.role_id == 4:
+        all_active_product = Poc_model.objects.filter(assign_to=request.user.id).prefetch_related('poc_f_related', 'poc_r_related').all()
     search_query = request.GET.get('search', '')
 
     if search_query:
@@ -440,9 +442,9 @@ def add_remarks(request, id):
         if request.method == 'POST':
             Remark_count = request.POST['Remark_count']
             remarks= request.POST.getlist('remarks')
-            # status= request.POST['status'] 
             added_by = CustomUser.objects.get(id=request.user.id)
             rid = request.POST['row_remark_id']
+            # status= request.POST['status'] 
             get_poc = Poc_model.objects.get(pk=rid)
             # get_poc.Remarks += remarks_list
             # get_poc.Remarks = ",".join(get_poc.Remarks.split(',') + remarks)
@@ -471,6 +473,7 @@ def edit_poc(request, id):
             get_poc.Product_name = product_name
             get_poc.Timeline = request.POST['Timeline_date']
             get_poc.status = status
+            get_poc.assign_to = User.objects.get(pk=request.POST['assign_edit'])
             get_poc.save()
             messages.success(request, 'poc updated')
     except Exception as e:
@@ -500,16 +503,56 @@ def update_sts(request):
 
 @login_required(login_url='loginpage')
 def view_poc_detail(request, id):
-    # poc = Poc_model.objects.prefetch_related('poc_remark_set', 'feature_set').get(id=id)
-    poc = Poc_model.objects.prefetch_related(
-        Prefetch(
-            'feature_set',
-            queryset=Feature.objects.prefetch_related('feature_status_set')  # Eagerly load FeatureStatus
-        ),
-        'poc_remark_set'
-    ).get(id=id)
+    poc = Poc_model.objects.prefetch_related('poc_f_related', 'poc_r_related').get(id=id)
+    html_feture_only = ''' '''
+    html_feture_sts_only = ''' '''
+    html = ''' '''
+    for feature in poc.poc_f_related.all():       
+        elated_objects_count = feature.feature_related.count() + 1
+        row_class = ''  # Initialize row class
+        if elated_objects_count > 5:
+            row_class = 'scrollable-row'  # Add class for scrolling if needed
+        html_feture_only += f'''
+                    <tr>
+                     <td>{feature.features_list }</td>
+                    <td>{ feature.timeline }</td>
+                    <td>{ feature.status }</td>
+                    <td>
+                    <button class="btn btn-sm btn-primary" id="fet_{ feature.id }" value="{ feature.id }" onclick="view_sts_feature(this)"> View Status
+                          </button>
+                      <button class="btn btn-sm btn-primary" data-bs-toggle="modal" value="{feature.id}" onclick="update_sts(this)" data-bs-target="#centeredModalupdate">
+                      Add Status
+                    </button></td>
+                    </tr>'''
+        html += f'''
+        <tr>
+            <td rowspan="{elated_objects_count}">{ feature.features_list }</td>
+                    <td rowspan="{elated_objects_count}">{ feature.timeline }</td>
+                    <td rowspan="{elated_objects_count}">{ feature.status }</td>
+                    <td rowspan="{elated_objects_count}">
+                      <button class="btn btn-sm btn-primary" data-bs-toggle="modal" value="{feature.id}" onclick="update_sts(this)" data-bs-target="#centeredModalupdate">
+                      Add Status
+                    </button></td>
+                    </tr>'''
+        for data in feature.feature_related.all().order_by('-created_at'):
+            html += f'''
+                    <tr>
+                    <td>{ data.status }</td>
+                      <td>{ data.added_by }</td>
+                      <td>{ data.created_at }</td>
+                      </tr>'''
+            html_feture_sts_only += f'''
+                    <tr>
+                     <td>{ feature.features_list }</td>
+                    <td>{ data.status }</td>
+                      <td>{ data.added_by }</td>
+                      <td>{ data.created_at }</td>
+                      </tr>''' 
     all_active_product = Product.objects.all()
     status_list = Status.objects.all()
+    assign_to = User.objects.filter(role=4)
+
+    print(assign_to)
     permition = [1,2,3]
     if request.method == 'POST':
         try:
@@ -531,7 +574,7 @@ def view_poc_detail(request, id):
             return redirect('view_poc_detail', id=id)
         except Exception as e:
             print(e)
-    return render(request, 'poc_demo/view_poc_detail.html', {'data': poc, 'status': status_list, 'product': all_active_product, 'permition': [1,2,3]})
+    return render(request, 'poc_demo/view_poc_detail.html', {'data': poc, 'status': status_list, 'html': html, 'product': all_active_product, 'permition': [1,2,3], "assign_to": assign_to, "html_feture_sts_only":html_feture_sts_only, "html_feture_only":html_feture_only })
 
 
 @login_required(login_url='loginpage')

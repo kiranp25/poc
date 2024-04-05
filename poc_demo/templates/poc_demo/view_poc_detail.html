@@ -1,9 +1,10 @@
 {% extends "poc_demo/base.html" %}
 
 {% block poc_content %}  
+
 {% load static %}
 <style>
-  
+
 body {
     font-family: Roboto, sans-serif;  /* Choose a clear font */
     color: #333;  /* Text color */
@@ -36,14 +37,14 @@ body {
 }
 
 </style>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.datatables.net/2.0.3/css/dataTables.bootstrap5.css" rel="stylesheet">
 
 <div class="app-content content">
     <div class="content-wrapper">
       <div class="content-header row">
       </div>
     <div class="content-body">
-        <!-- Zero configuration table -->
-    <section id="configuration">
       {% if messages %}
                   <div class="messages text-center">
                   {% for message in messages %}
@@ -56,21 +57,27 @@ body {
                   
         <div class="row">
             <div class="col-12">
-                <div class="card">
+                <div class="card" >
                     <div class="card-header">
-                        <h4 class="card-title">POC view</h4>
-                        <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
-                        
+                        <h6 class="card-title">POC view</h6>
+                        <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>   
+                        <ol class="breadcrumb">
+                          <li class="breadcrumb-item"><a href="#" onclick="scrollToElement('poc_option_1')">feature option 1</a></li>
+                          <li class="breadcrumb-item "><a href="#" onclick="scrollToElement('poc_option_2')">feature option 2</a></li>
+                        </ol> 
                     </div>
+
+                    
+                    
                     <!-- strt -->
-                    <div class="poc-view row">
+                    <div class="poc-view row" style="height: 700px;">
                       <div class="col-md-6">
                         <form method="POST" action="{% url 'edit_poc' data.id %}">
                           {% csrf_token %}
                           <div class="card shadow-sm rounded-3 p-3 mt-2 bg-light">
                             <div class="row">
                               <div class="col-md-6">
-                                <h5 class="card-title mb-3 text-primary">Details</h5>
+                                <h5 class="card-title mb-3 text-primary">POCDetails</h5>
                                 <div class="mb-3">
                                   <label for="name" class="form-label fw-bold">Name:</label>
                                   <input type="text" class="form-control" id="name" name="Customer_name" value="{{ data.Customer_name }}" disabled>
@@ -86,8 +93,10 @@ body {
 
                                 </div>
                                 <div class="mb-3">
-                                  <h5 class="card-title mb-3 text-dark">Added By :{{ data.added_by }}</h5>
+                                  <label for="added_by_poc" class="form-label fw-bold">Added By:</label>
+                                  <input type="text" class="form-control" id="added_by_poc" value="{{ data.added_by }}" readonly disabled>
                                 </div>
+
                                 
                                 <!-- product -->
                               </div>
@@ -110,6 +119,25 @@ body {
                                     {% endfor %}
                                   </select>
                                 </div>
+
+                                <div class="mb-3">
+                                  <label for="status" class="form-label fw-bold">Assign To:</label> 
+
+                                  {% if request.user.role_id == 3 %} 
+                                  <input class="form-control" type="hidden" name="assign_edit" value="{{data.assign_to.id}} " readonly>
+                                  <input class="form-control" type="text" name="assign_edit_view" value="{{data.assign_to}} " readonly>
+                                   {% else %}
+                                  <select class="form-control" id="assign_edit" name="assign_edit"  required disabled>
+                                    
+                                    {% for semp in assign_to %}
+                                    <option value="{{ semp.id }}" {% if data.assign_to ==  semp %} selected {% endif %}>{{ semp }}</option>
+
+                                    {% endfor %}
+                                  </select>
+                                  {% endif %}
+                                </div>
+
+
                               </div>
                             </div>
                                      
@@ -126,7 +154,7 @@ body {
                         <div class="card shadow-sm rounded-3 p-3 mt-2 bg-light">
                           <div class="row">
                             <div class="col-sm-6">
-                              <h5 class="card-title mb-3 text-primary">Remarks</h5>
+                              <h5 class="card-title mb-3 text-primary">POC Remarks</h5>
                             </div>
                             <div class="col-sm-6 text-end">
                               {% if request.user.role_id in permition %}
@@ -136,24 +164,27 @@ body {
                               {% endif %}
                             </div>
                           </div>
-                          <table class="table table-bordered">
+
+                          <table id="poc_remark_table" class="table table-striped" style="width:100%">
                             <thead>
-                              <tr>
-                                <th scope="col">Remark</th>
-                                <th scope="col">Remark By</th>
-                                <th scope="col">Date</th>
-                              </tr>
+                                <tr>
+                                  <th>Remark</th>
+                                  <th>Remark By</th>
+                                  <th>Date</th>
+                                </tr>
                             </thead>
                             <tbody>
-                              {% for remark in data.poc_remark_set.all %}
+                              {% for remark in data.poc_r_related.all %}
                               <tr>
                                 <td>{{ remark.remarks }}</td>
                                 <td>{{ remark.added_by }}</td>
                                 <td>{{ remark.created_at }}</td>
                               </tr>
                               {% endfor %}
+                               
                             </tbody>
-                          </table>
+                          
+                        </table>
                         </div>
                       </div>
                     </div>                    
@@ -166,79 +197,100 @@ body {
         </div>
         </div>
         </div>
-    <div class="row">
+    <div class="row" id="poc_option_1">
       <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h4 class="card-title">Features:</h4>
+                <h4 class="card-title"> POC Features:</h4>
                 <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
-                <div class="heading-elements">
-                    <ul class="list-inline mb-0">
-                        <li><a data-action="collapse"><i class="ft-minus"></i></a></li>
-                        <li><a data-action="reload"><i class="ft-rotate-cw"></i></a></li>
-                        <li><a data-action="expand"><i class="ft-maximize"></i></a></li>
-                        <!-- <li><a data-action="close"><i class="ft-x"></i></a></li> -->
-                    </ul>
-                </div>
             </div>
-            <div class="card-content collapse show">
               <div class="card-body card-dashboard">
-  
-                
-                <table class="table table-bordered">
-                  <caption>Favorite and Least Favorite Things</caption>
-                  <tr>
-                        <th scope="col">Feature</th>
-                        <th scope="col">Timeline</th>
-                        <th scope="col">State</th>
-                        <th scope="col">Feture Status</th>
-                        <th scope="col">Feture Status Added_By</th>
-                        <th scope="col">Feture Status Added_At</th>
-                        <th scope="col">Action</th>
+                <div class="table-container">
+                  <!-- <table class="table table-bordered table-responsive">                 -->
+                  <table id="poc_data_table" class="table table-striped" style="width:100%">
+                  <thead>
+                    <tr>
+                      <th scope="col">Feature</th>
+                      <th scope="col">Timeline</th>
+                      <th scope="col">State</th>
+                      <th scope="col">Action</th>
+                      <th scope="col">Feture Status</th>
+                      <th scope="col">Added_By</th>
+                      <th scope="col">Date</th>
                   </tr>
-
-                  {% for feature in data.feature_set.all %}
-                  <tr>
-                    <td rowspan="{{ feature.feature_status_set.all|length }}">{{ feature.features_list|escapejs }}</td>
-                    <td rowspan="{{ feature.feature_status_set.all|length }}">{{ feature.timeline }}</td>
-                    <td rowspan="{{ feature.feature_status_set.all|length }}">{{ feature.status }}</td>
-                    <td rowspan="{{ feature.feature_status_set.all|length }}">
-                     
-                      <button class="btn btn-sm btn-primary" data-bs-toggle="modal" value="{{ feature.id }}" onclick="update_sts(this)" data-bs-target="#centeredModalupdate">
-                        Add Status
-                      </button>
-                  </td>
-                   {% for sts in feature.feature_status_set.all %}
-                      <td>{{ sts.status }}</td>
-                      <td>{{ sts.added_by }}</td>
-                      <td>{{ sts.created_at }}</td>
-                      </tr>
-                      
-                    {% endfor %}
-                  </tr>
-                  
-                {% endfor %}
-         
+                  </thead>
+                <tbody>
+                  {{ html | safe }} 
+                  </tbody>  
                  </table>
-
-   <hr>
+                </div>
+              </div>
+    </div>
+    </div>
+    </div>
+    
+    <div class="row" id="poc_option_2">
+      <div class="col-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title"> POC Features:</h4>
+                <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
+            </div>
+              <div class="card-body card-dashboard">
+                <div class="table-container">
+                  <!-- <table class="table table-bordered table-responsive">                 -->
+                  <table id="poc_data_table_feature" class="table table-striped" style="width:100%">
+                  <thead>
+                    <tr>
+                      <th scope="col">Feature</th>
+                      <th scope="col">Timeline</th>
+                      <th scope="col">State</th>
+                      <th scope="col">Action</th>
+                    </tr>
+                    </thead>
+                  <tbody>
+                {{ html_feture_only | safe }} 
+                </tbody>  
+                </table>
               </div>
             </div>
     </div>
     </div>
+    <div class="col-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title">POC Features Status:</h4>
+              <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
+          </div>
+            <div class="card-body card-dashboard">
+              <div class="table-container">
+                <!-- <table class="table table-bordered table-responsive">                 -->
+                <table id="poc_data_table_feature_status" class="table table-striped" style="width:100%">
+                <thead>
+                  <tr>
+                    <th scope="col">Feature</th>
+                    <th scope="col">Feature Status</th>
+                    <th scope="col">Added By</th>
+                    <th scope="col">Date</th>
+                  </tr>
+                  </thead>
+                <tbody>
+              {{ html_feture_sts_only | safe }} 
+              </tbody>  
+              </table>
+            </div>
+          </div>
+  </div>
+  </div>
+    </div>
+
+  <div class="row">
         <div class="col-6">
             <div class="card">
                 <div class="card-header">
-                    <h4 class="card-title">Status Details   </h4>
+                    <h4 class="card-title">Status Details  </h4>
                     <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
-                    <div class="heading-elements">
-                        <ul class="list-inline mb-0">
-                            <li><a data-action="collapse"><i class="ft-minus"></i></a></li>
-                            <li><a data-action="reload"><i class="ft-rotate-cw"></i></a></li>
-                            <li><a data-action="expand"><i class="ft-maximize"></i></a></li>
-                            <!-- <li><a data-action="close"><i class="ft-x"></i></a></li> -->
-                        </ul>
-                    </div>
+
                 </div>
                 <div class="card-content collapse show">
                     <div  id="featurestsdetatil" class="card-body card-dashboard">
@@ -248,7 +300,7 @@ body {
         </div>
       </div>
     </div>
-    </section>
+
 
 
   <div class="modal fade" id="centeredModal" tabindex="-1" aria-labelledby="centeredModalLabel" aria-hidden="true">
@@ -358,13 +410,22 @@ body {
 </div>
 </div>
 
+
 {% endblock %}
 
     {% block js %}
+    
+    <script src="https://code.jquery.com/jquery-3.7.1.js"  crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"  crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.datatables.net/2.0.3/js/dataTables.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.datatables.net/2.0.3/js/dataTables.bootstrap5.js" referrerpolicy="no-referrer"></script>
+        
 
    <script>
-
     $(document).ready(function() {
+      $('#poc_remark_table').DataTable();
+      $('#poc_data_table_feature').DataTable();
+      $('#poc_data_table_feature_status').DataTable();  
         $('#update_status_feature').click(function(){
         sts_id = $("#sts_id").val(); 
         status = $("#sts").val(); 
@@ -396,8 +457,6 @@ body {
         
         
     });
-    
-    // $('#my_poc_view').dataTable();
     });
 
 
@@ -405,6 +464,23 @@ body {
     // function view_sts_feature(button_){
 
     // }
+
+
+//     function scrollToElement(selector, callback){
+//     var animation = {scrollTop: $(selector).offset().top};
+//     $('html,body').animate(animation, 'slow', 'swing', function() {
+//         if (typeof callback == 'function') {
+//             callback();
+//         }
+//         callback = null;
+//     });
+// }
+
+
+function scrollToElement(id) {
+  const element = document.getElementById(id);
+  element.scrollIntoView();
+}
 
 async function view_sts_feature(button_) {
   const featureStatusid = button_.value;
@@ -491,6 +567,7 @@ const featureTable = document.createElement('table');
   const featureStatusDiv = document.getElementById('featurestsdetatil');
 
   featureStatusDiv.innerHTML = featureTable.outerHTML; 
+  scrollToElement('featurestsdetatil');
 //  end
 
     
@@ -541,7 +618,11 @@ const featureTable = document.createElement('table');
 
    </script>
 
+
+
 <script>
+
+
 $(document).ready(function() {
   // Enable editing on click of "Edit" button
   $('.edit-btn').click(function() {
