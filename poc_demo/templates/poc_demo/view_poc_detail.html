@@ -426,6 +426,7 @@ body {
       $('#poc_remark_table').DataTable();
       $('#poc_data_table_feature').DataTable();
       $('#poc_data_table_feature_status').DataTable();  
+      
         $('#update_status_feature').click(function(){
         sts_id = $("#sts_id").val(); 
         status = $("#sts").val(); 
@@ -482,6 +483,7 @@ function scrollToElement(id) {
   element.scrollIntoView();
 }
 
+
 async function view_sts_feature(button_) {
   const featureStatusid = button_.value;
   
@@ -507,10 +509,12 @@ async function view_sts_feature(button_) {
 //  start
 
 const featureTable = document.createElement('table');
+featureTable.id = 'my-feature-table'; 
   featureTable.classList.add('feature-table', 'table', 'table-bordered', 'table-responsive'); // Add styling class (optional)
-
+  const featureheadheader = document.createElement('thead');
   const tableHeaderRow = document.createElement('tr');
   tableHeaderRow.classList.add('table-primary'); 
+  
 
 //   const featureIdHeader = document.createElement('th');
   const statusHeader = document.createElement('th');
@@ -532,9 +536,11 @@ const featureTable = document.createElement('table');
   tableHeaderRow.appendChild(timeHeader);
   tableHeaderRow.appendChild(featureHeader);
 
-  // Append the header row to the table
-  featureTable.appendChild(tableHeaderRow);
+  featureheadheader.appendChild(tableHeaderRow);
 
+  // Append the header row to the table
+  featureTable.appendChild(featureheadheader);
+  const featureBody = document.createElement('tbody');
   // Loop through each key-value pair in the JSON
   for (const featureId in responseJson) {
     console.log("iiii"+featureId);
@@ -555,19 +561,23 @@ const featureTable = document.createElement('table');
 
     // Append cells to the table row
     // tableRow.appendChild(featureIdCell);
-    tableRow.appendChild(statusCell);
     tableRow.appendChild(addedByCell);
+    tableRow.appendChild(statusCell);
     tableRow.appendChild(timeCell);
     tableRow.appendChild(featureCell);
 
     // Append the row to the table
-    featureTable.appendChild(tableRow);
+    featureBody.appendChild(tableRow)
+    featureTable.appendChild(featureBody);
   }
 
   const featureStatusDiv = document.getElementById('featurestsdetatil');
 
   featureStatusDiv.innerHTML = featureTable.outerHTML; 
   scrollToElement('featurestsdetatil');
+  $(document).ready(function() {
+  $('#my-feature-table').DataTable();
+});
 //  end
 
     
