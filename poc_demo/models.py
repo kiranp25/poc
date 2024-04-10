@@ -45,18 +45,14 @@ class Poc_model(models.Model):
     updated_at = models.DateTimeField(auto_now=True, blank=True)
     assign_to = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, blank=True, null=True, related_name='assignuser')
 
-class Demo_model(models.Model):
-    Ref_id = models.CharField(max_length=36, unique=True, default=generate_reference_id)
-    Customer_name = models.CharField(max_length=30)
-    Product_name = models.ForeignKey('Product', on_delete=models.SET_NULL, blank=True, null=True)
-    # Features = models.TextField()
-    Requested_date = models.DateField(default=get_default_date)
-    # Remarks = models.TextField()
-    Timeline = models.DateField(default=get_default_date)
-    status = models.ForeignKey('Status', on_delete=models.SET_NULL, blank=True, null=True)
+class Poc_remark(models.Model):
+    poc_id = models.ForeignKey('Poc_model', on_delete=models.CASCADE, blank=True, null=True, related_name='poc_r_related')
+    remarks = models.TextField()
+    status =  models.TextField(default=None)
     added_by = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True)
+
 
 class Product(models.Model):
     Product_name = models.TextField()
@@ -85,32 +81,43 @@ class Feature_status(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True)
 
+class Demo_model(models.Model):
+    Ref_id = models.CharField(max_length=36, unique=True, default=generate_reference_id)
+    Customer_name = models.CharField(max_length=30)
+    Product_name = models.ForeignKey('Product', on_delete=models.SET_NULL, blank=True, null=True)
+    Requested_date = models.DateField(default=get_default_date)
+    Timeline = models.DateField(default=get_default_date)
+    status = models.ForeignKey('Status', on_delete=models.SET_NULL,     blank=True, null=True)
+    added_by = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True)
+    assign_to = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, blank=True, null=True, related_name='assignuser')
 
 class Demo_feature(models.Model):
-    Demo_id = models.ForeignKey('Poc_model', on_delete=models.CASCADE, blank=True, null=True)
-    Features_list = models.TextField()
+    poc_id = models.ForeignKey('Demo_model', on_delete=models.CASCADE, blank=True, null=True, related_name='demo_f_related')
+    features_list = models.TextField()
     status = models.TextField(default=None)
+    timeline = models.DateField(default=get_default_date)
     added_by = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True)
 
 
-class Poc_remark(models.Model):
-    poc_id = models.ForeignKey('Poc_model', on_delete=models.CASCADE, blank=True, null=True, related_name='poc_r_related')
-    remarks = models.TextField()
-    status =  models.TextField(default=None)
-    added_by = added_by = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, blank=True, null=True)
+class Demo_Feature_status(models.Model):
+    feature = models.ForeignKey('Demo_feature', on_delete=models.CASCADE, blank=True, null=True, related_name='demo_feature_related')
+    status = models.TextField()
+    added_by = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True)
-
 
 class Demo_remark(models.Model):
-    demo_id = models.ForeignKey('Poc_model', on_delete=models.CASCADE, blank=True, null=True)
-    Remarks = models.TextField()
+    demo_id = models.ForeignKey('Demo_model', on_delete=models.CASCADE, blank=True, null=True)
+    remarks = models.TextField()
     status =  models.TextField(default=None)
     added_by = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True)
+
 
 
 class Roles(models.Model):

@@ -459,6 +459,29 @@ def add_remarks(request, id):
     except Exception as e:
         print(e)
         return redirect('view_poc_detail', id=id)
+    
+def add_feature(request, id):
+    try:
+        if request.method == 'POST':
+            print(request.POST)
+            added_by = CustomUser.objects.get(id=request.user.id)
+            features_list = request.POST.getlist('Feature_ids')
+            poc_ref = Poc_model.objects.get(pk=id)
+            new_feature_list = []
+            for j in features_list:
+                print(request.POST[f'features_{j}'])
+                print(request.POST[f'timeline_{j}'])
+                new_feature_list.append({'poc_id': poc_ref, 'features_list':request.POST[f'features_{j}'],'timeline':request.POST[f'timeline_{j}'], 'status':'New', 'added_by': added_by}) 
+            features_lsts_added = []
+            for data in new_feature_list:
+                feature = Feature.objects.create(**data)  # Create the Feature object
+                status_data = Feature_status.objects.create(feature=feature, status="active", added_by=added_by)  # Create the Status object linked to the Feature
+                features_lsts_added.append(status_data)
+            messages.success(request, "new Feture added successfully")
+            return redirect('view_poc_detail', id=id)
+    except Exception as e:
+        messages.error(request, "new Feture not added {e}")
+        return redirect('view_poc_detail', id=id)
 
 
 @login_required(login_url='loginpage')
@@ -482,10 +505,12 @@ def edit_poc(request, id):
 
 
 @login_required(login_url='loginpage')
-def update_sts(request):
+def update_sts(request, id):
+
     if request.method == 'POST':
         try:
-            print("###########")
+
+            print(f"###########{id}")
             print(request.POST)
             sts_id = request.POST['sts_id']
             status = request.POST['status']
@@ -494,11 +519,31 @@ def update_sts(request):
             print(added_by,'$$$$')
             featureobj = Feature.objects.get(pk=sts_id)
             Feature_status.objects.create(feature=featureobj,status=status,added_by=added_by)
-            messages.success(request, "status updated")
             # return redirect('view_poc_detail', id=id)
-            return HttpResponse('<div class="messages text-center alert alert-success"> <h2> status submitted.</h2> </div>') #just for testing purpose you can remove it.
+            return HttpResponse(f'<div class="messages text-center alert alert-danger"> <h2> status  added.</h2> </div>') 
+
         except Exception as e:
+            # return redirect('view_poc_detail', id=id)
             return HttpResponse(f'<div class="messages text-center alert alert-danger"> <h2> status not added {e}.</h2> </div>') 
+
+@login_required(login_url='loginpage')
+def update_feature_detail(request):
+    if request.method == 'POST':
+        try:
+            print("###########")
+            print(request.POST)
+            id = request.POST['id']
+            feature = get_object_or_404(Feature, pk=id)
+            feature.features_list = request.POST['Feature_name']
+            feature.status = request.POST['status']
+            feature.timeline = request.POST['Feature_timeline']
+            feature.added_by  = CustomUser.objects.get(id=request.user.id)
+            feature.save()
+            messages.success(request, "Feture Updated")
+            return HttpResponse('<div class="messages text-center alert alert-success"> <h2>  updaed.</h2> </div>') #just for testing purpose you can remove it.
+        except Exception as e:
+            messages.success(request, f"Feture not updated {e}")
+            return HttpResponse(f'<div class="messages text-center alert alert-danger"> <h2>  not updated {e}.</h2> </div>') 
 
 
 @login_required(login_url='loginpage')
@@ -510,30 +555,30 @@ def view_poc_detail(request, id):
     for feature in poc.poc_f_related.all():       
         elated_objects_count = feature.feature_related.count() + 1
         row_class = ''  # Initialize row class
-        if elated_objects_count > 5:
-            row_class = 'scrollable-row'  # Add class for scrolling if needed
-        html_feture_only += f'''
-                    <tr>
-                     <td>{feature.features_list }</td>
-                    <td>{ feature.timeline }</td>
-                    <td>{ feature.status }</td>
-                    <td>
-                    <button class="btn btn-sm btn-primary" id="fet_{ feature.id }" value="{ feature.id }" onclick="view_sts_feature(this)"> View Status
-                          </button>
-                      <button class="btn btn-sm btn-primary" data-bs-toggle="modal" value="{feature.id}" onclick="update_sts(this)" data-bs-target="#centeredModalupdate">
-                      Add Status
-                    </button></td>
-                    </tr>'''
-        html += f'''
-        <tr>
-            <td rowspan="{elated_objects_count}">{ feature.features_list }</td>
-                    <td rowspan="{elated_objects_count}">{ feature.timeline }</td>
-                    <td rowspan="{elated_objects_count}">{ feature.status }</td>
-                    <td rowspan="{elated_objects_count}">
-                      <button class="btn btn-sm btn-primary" data-bs-toggle="modal" value="{feature.id}" onclick="update_sts(this)" data-bs-target="#centeredModalupdate">
-                      Add Status
-                    </button></td>
-                    </tr>'''
+        # if elated_objects_count > 5:
+        #     row_class = 'scrollable-row'  # Add class for scrolling if needed
+        # html_feture_only += f'''
+                    # <tr>
+                    #  <td>{feature.features_list }</td>
+                    # <td>{ feature.timeline }</td>
+                    # <td>{ feature.status }</td>
+                    # <td>
+                    # <button class="btn btn-sm btn-primary" id="fet_{ feature.id }" value="{ feature.id }" onclick="view_sts_feature(this)"> View Status
+                    #       </button>
+                    #   <button class="btn btn-sm btn-primary" data-bs-toggle="modal" value="{feature.id}" onclick="update_sts(this)" data-bs-target="#centeredModalupdate">
+                    #   Add Status
+                    # </button></td>
+                    # </tr>'''
+        # html += f'''
+        # <tr>
+        #     <td rowspan="{elated_objects_count}">{ feature.features_list }</td>
+        #             <td rowspan="{elated_objects_count}">{ feature.timeline }</td>
+        #             <td rowspan="{elated_objects_count}">{ feature.status }</td>
+        #             <td rowspan="{elated_objects_count}">
+        #               <button class="btn btn-sm btn-primary" data-bs-toggle="modal" value="{feature.id}" onclick="update_sts(this)" data-bs-target="#centeredModalupdate">
+        #               Add Status
+        #             </button></td>
+        #             </tr>'''
         for data in feature.feature_related.all().order_by('-created_at'):
             html += f'''
                     <tr>
@@ -581,6 +626,8 @@ def view_poc_detail(request, id):
 def get_detail_sts(request):
     sts_data = dict()
     if request.method == 'POST':
+        print("**********")
+        print(request.POST)
         id = request.POST.get('id')
         feature = Feature.objects.get(pk=id)
         get_data = Feature_status.objects.filter(feature=feature).order_by('-created_at')
@@ -638,3 +685,68 @@ def delete_status(request, id):
         messages.error(request,f'not deleted {e}', extra_tags='danger')
     return redirect('view_status')
     
+
+
+
+
+@login_required(login_url='loginpage')
+def add_demo(request):
+    all_active_product = Product.objects.all()
+    sts = Status.objects.all()
+    context = {}
+    context['status'] = sts
+    product_list = [product for product in all_active_product]
+    
+    if request.method == 'POST':
+        try:
+            print(request.POST)
+            customer_name = request.POST['CustomerName']
+            # product_name = request.POST['product_name']
+            product_name = Product.objects.get(Product_name=request.POST['product_name'])
+            feature_count = request.POST['feature_count']
+            features_list = request.POST.getlist('Feature_ids')
+            features = request.POST.getlist('features')
+            Remark_count = request.POST['Remark_count']
+            remarks= request.POST.getlist('remarks')
+            # status= request.POST['status'] 
+            status = Status.objects.get(name=request.POST['status'])
+            added_by = CustomUser.objects.get(id=request.user.id)
+            Timeline = request.POST['timeline']
+            # features_list = ",".join(features)
+            remarks_list = ",".join(remarks)
+
+            new_poc = Poc_model(Customer_name=customer_name,Product_name=product_name,status=status,added_by=added_by,Timeline=Timeline)
+            new_poc.save()
+
+            poc_ref = Poc_model.objects.get(pk=new_poc.id)
+            
+            new_feature_list = []
+            for feture in features:
+                new_feature_list.append({'poc_id': poc_ref, 'features_list':feture, 'status':status, 'added_by': added_by})            
+            messages.success(request, "poc added successfully")
+            new_feature_list = []
+            for j in features_list:
+                print(request.POST[f'features_{j}'])
+                print(request.POST[f'timeline_{j}'])
+                new_feature_list.append({'poc_id': poc_ref, 'features_list':request.POST[f'features_{j}'],'timeline':request.POST[f'timeline_{j}'], 'status':status, 'added_by': added_by}) 
+            # Access created features and their status objects:
+            features_lsts_added = []
+            for data in new_feature_list:
+                feature = Feature.objects.create(**data)  # Create the Feature object
+                status_data = Feature_status.objects.create(feature=feature, status=status, added_by=added_by)  # Create the Status object linked to the Feature
+                features_lsts_added.append(status_data)
+            messages.success(request, "poc added successfully")
+            new_remarks_list = []
+            for remark in remarks:
+                new_remarks_list.append({'poc_id': poc_ref, 'remarks': remark, 'status':status, 'added_by': added_by})
+            # new_fetures = Feature()
+            # Feature.objects.bulk_create([Feature(**data) for data in new_feature_list])
+            # new_remarks = Poc_remark()
+            Poc_remark.objects.bulk_create([Poc_remark(**data) for data in new_remarks_list])
+        except Exception as e:
+            print(e)
+            messages.error(request,f"poc not added {e}")
+        
+    context['product_list'] = product_list
+    return render(request, 'poc_demo/add_poc.html', context)
+
