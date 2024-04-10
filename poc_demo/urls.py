@@ -11,7 +11,7 @@ urlpatterns = [
     path('add_product/',views.add_product, name='add_product'),
     path('get_data_for/<str:usertype>/', views.get_data_for, name='get_data_for'),
     path('view_poc/',views.view_poc, name='view_poc'),
-    path('update_sts/',views.update_sts, name='update_sts'),
+    path('update_sts/<int:id>',views.update_sts, name='update_sts'),
     path('view_poc_detail/<int:id>',views.view_poc_detail, name='view_poc_detail'),
     path('get_detail_sts/',views.get_detail_sts, name='get_detail_sts'),
     path('logout/', views.logout_page, name='logout_page'),
@@ -30,8 +30,12 @@ urlpatterns = [
     # path('flush_message/', views.flush_message, name='flush_message'),
     path('edit_poc/<int:id>', views.edit_poc, name='edit_poc'),
     path('add_remarks/<int:id>', views.add_remarks, name='add_remarks'),
-
+    path('update_feature_detail/', views.update_feature_detail, name='update_feature_detail'),
+    path('add_feature/<int:id>', views.add_feature, name='add_feature'),
     
+
+
+    path('add_demo/', views.add_demo, name='add_demo'),
     
 ]
 
