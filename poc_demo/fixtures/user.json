@@ -1,0 +1,16 @@
+[
+    {
+        "model": "poc_demo.customuser",
+        "pk": 1,
+        "fields": {
+            "username": "Admin",
+            "email": "admin@olatechs.com",
+            "password": "pbkdf2_sha256$390000$ilKE3Ga2oatl7V3sLBKybl$+qp7urMS97tloTAh4bTxvpP3Wx6zloyDTSqPAkeG+90=", 
+            "role": 1,
+            "is_superuser" : 1,
+            "is_staff" : 1,
+            "Belongs_to": null,
+            "Status": "1"
+        }
+    }
+]

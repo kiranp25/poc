@@ -411,9 +411,9 @@ def view_poc(request):
     print(request.user.role)
     if request.user.role_id == 1:
         all_active_product = Poc_model.objects.prefetch_related('poc_f_related', 'poc_r_related').all() 
-    elif request.user.role_id == 2:
-        all_active_product = Poc_model.objects.filter(added_by__Belongs_to=request.user.id).prefetch_related('poc_f_related', 'poc_r_related').all() 
     elif request.user.role_id == 3:
+        all_active_product = Poc_model.objects.filter(added_by__Belongs_to=request.user.id).prefetch_related('poc_f_related', 'poc_r_related').all() 
+    elif request.user.role_id == 2:
         all_active_product = Poc_model.objects.filter(added_by=request.user.id).prefetch_related('poc_f_related', 'poc_r_related').all() 
     elif request.user.role_id == 4:
         all_active_product = Poc_model.objects.filter(assign_to=request.user.id).prefetch_related('poc_f_related', 'poc_r_related').all()
