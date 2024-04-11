@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, HttpResponse,get_object_or_404
-from .models import Product, Roles,Poc_model, Feature, Poc_remark, Status, Feature_status, status_choice,  user_type_choice, CustomUser
+from .models import *
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.db.models import Q
@@ -411,9 +411,9 @@ def view_poc(request):
     print(request.user.role)
     if request.user.role_id == 1:
         all_active_product = Poc_model.objects.prefetch_related('poc_f_related', 'poc_r_related').all() 
-    elif request.user.role_id == 3:
-        all_active_product = Poc_model.objects.filter(added_by__Belongs_to=request.user.id).prefetch_related('poc_f_related', 'poc_r_related').all() 
     elif request.user.role_id == 2:
+        all_active_product = Poc_model.objects.filter(added_by__Belongs_to=request.user.id).prefetch_related('poc_f_related', 'poc_r_related').all() 
+    elif request.user.role_id == 3:
         all_active_product = Poc_model.objects.filter(added_by=request.user.id).prefetch_related('poc_f_related', 'poc_r_related').all() 
     elif request.user.role_id == 4:
         all_active_product = Poc_model.objects.filter(assign_to=request.user.id).prefetch_related('poc_f_related', 'poc_r_related').all()
@@ -496,7 +496,8 @@ def edit_poc(request, id):
             get_poc.Product_name = product_name
             get_poc.Timeline = request.POST['Timeline_date']
             get_poc.status = status
-            get_poc.assign_to = User.objects.get(pk=request.POST['assign_edit'])
+            if request.POST['assign_edit']:
+                get_poc.assign_to = User.objects.get(pk=request.POST['assign_edit'])
             get_poc.save()
             messages.success(request, 'poc updated')
     except Exception as e:
@@ -554,31 +555,6 @@ def view_poc_detail(request, id):
     html = ''' '''
     for feature in poc.poc_f_related.all():       
         elated_objects_count = feature.feature_related.count() + 1
-        row_class = ''  # Initialize row class
-        # if elated_objects_count > 5:
-        #     row_class = 'scrollable-row'  # Add class for scrolling if needed
-        # html_feture_only += f'''
-                    # <tr>
-                    #  <td>{feature.features_list }</td>
-                    # <td>{ feature.timeline }</td>
-                    # <td>{ feature.status }</td>
-                    # <td>
-                    # <button class="btn btn-sm btn-primary" id="fet_{ feature.id }" value="{ feature.id }" onclick="view_sts_feature(this)"> View Status
-                    #       </button>
-                    #   <button class="btn btn-sm btn-primary" data-bs-toggle="modal" value="{feature.id}" onclick="update_sts(this)" data-bs-target="#centeredModalupdate">
-                    #   Add Status
-                    # </button></td>
-                    # </tr>'''
-        # html += f'''
-        # <tr>
-        #     <td rowspan="{elated_objects_count}">{ feature.features_list }</td>
-        #             <td rowspan="{elated_objects_count}">{ feature.timeline }</td>
-        #             <td rowspan="{elated_objects_count}">{ feature.status }</td>
-        #             <td rowspan="{elated_objects_count}">
-        #               <button class="btn btn-sm btn-primary" data-bs-toggle="modal" value="{feature.id}" onclick="update_sts(this)" data-bs-target="#centeredModalupdate">
-        #               Add Status
-        #             </button></td>
-        #             </tr>'''
         for data in feature.feature_related.all().order_by('-created_at'):
             html += f'''
                     <tr>
@@ -607,14 +583,9 @@ def view_poc_detail(request, id):
             added_by = CustomUser.objects.get(id=request.user.id)
             rid = request.POST['row_remark_id']
             get_poc = Poc_model.objects.get(pk=rid)
-            # get_poc.Remarks += remarks_list
-            # get_poc.Remarks = ",".join(get_poc.Remarks.split(',') + remarks)
-            # # print(remarks_list)
-            # get_poc.save()
             new_remarks_list = []
             for remark in remarks:
                 new_remarks_list.append({'poc_id': get_poc, 'remarks': remark, 'status':get_poc.status, 'added_by': added_by})
-            # new_remarks = Poc_remark()
             Poc_remark.objects.bulk_create([Poc_remark(**data) for data in new_remarks_list])
             return redirect('view_poc_detail', id=id)
         except Exception as e:
@@ -715,38 +686,233 @@ def add_demo(request):
             # features_list = ",".join(features)
             remarks_list = ",".join(remarks)
 
-            new_poc = Poc_model(Customer_name=customer_name,Product_name=product_name,status=status,added_by=added_by,Timeline=Timeline)
-            new_poc.save()
+            new_demo = Demo_model(Customer_name=customer_name,Product_name=product_name,status=status,added_by=added_by,Timeline=Timeline)
+            new_demo.save()
 
-            poc_ref = Poc_model.objects.get(pk=new_poc.id)
-            
-            new_feature_list = []
-            for feture in features:
-                new_feature_list.append({'poc_id': poc_ref, 'features_list':feture, 'status':status, 'added_by': added_by})            
-            messages.success(request, "poc added successfully")
+            demo_ref = Demo_model.objects.get(pk=new_demo.id)
             new_feature_list = []
             for j in features_list:
                 print(request.POST[f'features_{j}'])
                 print(request.POST[f'timeline_{j}'])
-                new_feature_list.append({'poc_id': poc_ref, 'features_list':request.POST[f'features_{j}'],'timeline':request.POST[f'timeline_{j}'], 'status':status, 'added_by': added_by}) 
+                new_feature_list.append({'poc_id': demo_ref, 'features_list':request.POST[f'features_{j}'],'timeline':request.POST[f'timeline_{j}'], 'status':status, 'added_by': added_by}) 
             # Access created features and their status objects:
             features_lsts_added = []
             for data in new_feature_list:
-                feature = Feature.objects.create(**data)  # Create the Feature object
-                status_data = Feature_status.objects.create(feature=feature, status=status, added_by=added_by)  # Create the Status object linked to the Feature
+                feature = Demo_feature.objects.create(**data)  # Create the Feature object
+                status_data = Demo_Feature_status.objects.create(feature=feature, status=status, added_by=added_by)  # Create the Status object linked to the Feature
                 features_lsts_added.append(status_data)
-            messages.success(request, "poc added successfully")
+            messages.success(request, "Demo added successfully")
             new_remarks_list = []
             for remark in remarks:
-                new_remarks_list.append({'poc_id': poc_ref, 'remarks': remark, 'status':status, 'added_by': added_by})
-            # new_fetures = Feature()
-            # Feature.objects.bulk_create([Feature(**data) for data in new_feature_list])
-            # new_remarks = Poc_remark()
-            Poc_remark.objects.bulk_create([Poc_remark(**data) for data in new_remarks_list])
+                new_remarks_list.append({'demo_id': demo_ref, 'remarks': remark, 'status':status, 'added_by': added_by})
+            Demo_remark.objects.bulk_create([Demo_remark(**data) for data in new_remarks_list])
         except Exception as e:
             print(e)
-            messages.error(request,f"poc not added {e}")
+            messages.error(request,f"Demo not added {e}")
         
     context['product_list'] = product_list
-    return render(request, 'poc_demo/add_poc.html', context)
+    return render(request, 'poc_demo/add_demo.html', context)
+
+@login_required(login_url='loginpage')
+def view_demo(request):
+    print(request.user.role)
+    if request.user.role_id == 1:
+        all_active_product = Demo_model.objects.prefetch_related('demo_f_related', 'demo_r_related').all() 
+    elif request.user.role_id == 3:
+        all_active_product = Demo_model.objects.filter(added_by__Belongs_to=request.user.id).prefetch_related('demo_f_related', 'demo_r_related').all() 
+    elif request.user.role_id == 2:
+        all_active_product = Demo_model.objects.filter(added_by=request.user.id).prefetch_related('demo_f_related', 'demo_r_related').all() 
+    elif request.user.role_id == 4:
+        all_active_product = Demo_model.objects.filter(assign_to=request.user.id).prefetch_related('demo_f_related', 'demo_r_related').all()
+    search_query = request.GET.get('search', '')
+
+    if search_query:
+        if search_query:
+            all_active_product = all_active_product.filter(
+            Q(Customer_name__icontains=search_query) |
+            Q(Requested_date__icontains=search_query) |
+            Q(Timeline__icontains=search_query) |
+            Q(added_by__icontains=search_query)
+        )
+    paginator = Paginator(all_active_product, 10)
+    page_number = request.GET.get('page')
+    page = paginator.get_page(page_number)    
+    context = {'paginator': paginator, 'page': page}
+    context["data"] = all_active_product   
+    context['search_query'] = search_query              
+    
+    return render(request, 'poc_demo/view_demo.html', context)
+
+
+
+@login_required(login_url='loginpage')
+def view_demo_detail(request, id):
+    demo = Demo_model.objects.prefetch_related('demo_f_related', 'demo_r_related').get(id=id)
+    html_feture_only = ''' '''
+    html_feture_sts_only = ''' '''
+    html = ''' '''
+    for feature in demo.demo_f_related.all():       
+        elated_objects_count = feature.demo_feature_related.count() + 1
+        for data in feature.demo_feature_related.all().order_by('-created_at'):
+            html += f'''
+                    <tr>
+                    <td>{ data.status }</td>
+                      <td>{ data.added_by }</td>
+                      <td>{ data.created_at }</td>
+                      </tr>'''
+            html_feture_sts_only += f'''
+                    <tr>
+                     <td>{ feature.features_list }</td>
+                    <td>{ data.status }</td>
+                      <td>{ data.added_by }</td>
+                      <td>{ data.created_at }</td>
+                      </tr>''' 
+    all_active_product = Product.objects.all()
+    status_list = Status.objects.all()
+    assign_to = User.objects.filter(role=4)
+    print(assign_to)
+    permition = [1,2,3]
+    if request.method == 'POST':
+        try:
+            Remark_count = request.POST['Remark_count']
+            remarks= request.POST.getlist('remarks')
+            # status= request.POST['status'] 
+            added_by = CustomUser.objects.get(id=request.user.id)
+            rid = request.POST['row_remark_id']
+            get_demo = Demo_model.objects.get(pk=rid)
+            new_remarks_list = []
+            for remark in remarks:
+                new_remarks_list.append({'poc_id': get_demo, 'remarks': remark, 'status':get_demo.status, 'added_by': added_by})
+            Demo_remark.objects.bulk_create([Demo_remark(**data) for data in new_remarks_list])
+            return redirect('view_demo_detail', id=id)
+        except Exception as e:
+            print(e)
+    return render(request, 'poc_demo/view_demo_detail.html', {'data': demo, 'status': status_list, 'html': html, 'product': all_active_product, 'permition': [1,2,3], "assign_to": assign_to, "html_feture_sts_only":html_feture_sts_only, "html_feture_only":html_feture_only })
+
+
+@login_required(login_url='loginpage')
+def edit_demo(request, id):
+    try:
+        if request.method == 'POST':
+            print(request.POST)
+            get_demo = Demo_model.objects.get(pk=id)
+            product_name = Product.objects.get(Product_name=request.POST['product_name'])    
+            status = Status.objects.get(name=request.POST['status'])
+            get_demo.Customer_name = request.POST['Customer_name']
+            get_demo.Product_name = product_name
+            get_demo.Timeline = request.POST['Timeline_date']
+            get_demo.status = status
+            get_demo.assign_to = User.objects.get(pk=request.POST['assign_edit'])
+            get_demo.save()
+            messages.success(request, 'Demo Updated')
+    except Exception as e:
+        messages.error(request, f"Demo Not Updated {e}")
+    return redirect('view_demo_detail', id=id)
+
+
+@login_required(login_url='loginpage')
+def add_demo_remarks(request, id):
+    try:
+        if request.method == 'POST':
+            print(request.POST,'$$$$$$$$$$$$$$$$$$$$$$$')
+            Remark_count = request.POST['Remark_count']
+            remarks= request.POST.getlist('remarks')
+            added_by = CustomUser.objects.get(id=request.user.id)
+            rid = request.POST['row_remark_id']
+            get_demo = Demo_model.objects.get(pk=rid)
+            new_remarks_list = []
+            for remark in remarks:
+                new_remarks_list.append({'demo_id': get_demo, 'remarks': remark, 'status':get_demo.status, 'added_by': added_by})
+            # new_remarks = Poc_remark()
+            Demo_remark.objects.bulk_create([Demo_remark(**data) for data in new_remarks_list])
+            messages.success(request,'demo remark added')
+            return redirect('view_demo_detail', id=id)
+    except Exception as e:
+        messages.error(request,f'demo remark added {e}')
+
+        return redirect('view_demo_detail', id=id)
+    
+
+@login_required(login_url='loginpage')
+def add_demo_feature(request, id):
+    try:
+        if request.method == 'POST':
+            print(request.POST)
+            added_by = CustomUser.objects.get(id=request.user.id)
+            features_list = request.POST.getlist('Feature_ids')
+            demo_ref = Demo_model.objects.get(pk=id)
+            new_feature_list = []
+            for j in features_list:
+                print(request.POST[f'features_{j}'])
+                print(request.POST[f'timeline_{j}'])
+                new_feature_list.append({'demo_id': demo_ref, 'features_list':request.POST[f'features_{j}'],'timeline':request.POST[f'timeline_{j}'], 'status':'New', 'added_by': added_by}) 
+            features_lsts_added = []
+            for data in new_feature_list:
+                feature = Demo_feature.objects.create(**data)  # Create the Feature object
+                status_data = Demo_Feature_status.objects.create(feature=feature, status="active", added_by=added_by)  # Create the Status object linked to the Feature
+                features_lsts_added.append(status_data)
+            messages.success(request, "new Feture added successfully")
+            return redirect('view_demo_detail', id=id)
+    except Exception as e:
+        messages.error(request, f"new Feture not added {e}")
+        return redirect('view_demo_detail', id=id)
+    
+
+@login_required(login_url='loginpage')
+def get_detail_sts_demo(request):
+    sts_data = dict()
+    if request.method == 'POST':
+        print("**********")
+        print(request.POST)
+        id = request.POST.get('id')
+        feature = Demo_feature.objects.get(pk=id)
+        get_data = Demo_Feature_status.objects.filter(feature=feature).order_by('-created_at')
+        
+        for data in get_data:
+            print(data.id)
+            sts_data[f'new_{data.id}'] = {'status': data.status, 'added_by': data.added_by.username, 'time': data.created_at, 'feature': feature.features_list}
+        print(sts_data)
+    return JsonResponse(sts_data)
+
+
+
+@login_required(login_url='loginpage')
+def demo_update_sts(request, id):
+    if request.method == 'POST':
+        try:
+            print(f"###########{id}")
+            print(request.POST)
+            sts_id = request.POST['sts_id']
+            status = request.POST['status']
+            demo_id = request.POST['demo_id']
+            added_by = CustomUser.objects.get(id=request.user.id)
+            print(added_by,'$$$$')
+            featureobj = Demo_feature.objects.get(pk=sts_id)
+            Demo_Feature_status.objects.create(feature=featureobj,status=status,added_by=added_by)
+            # return redirect('view_poc_detail', id=id)
+            return HttpResponse(f'<div class="messages text-center alert alert-danger"> <h2> status  added.</h2> </div>') 
+
+        except Exception as e:
+            # return redirect('view_poc_detail', id=id)
+            return HttpResponse(f'<div class="messages text-center alert alert-danger"> <h2> status not added {e}.</h2> </div>') 
+        
+
+@login_required(login_url='loginpage')
+def update_feature_detail_demo(request):
+    if request.method == 'POST':
+        try:
+            print("###########")
+            print(request.POST)
+            id = request.POST['id']
+            feature = get_object_or_404(Demo_feature, pk=id)
+            feature.features_list = request.POST['Feature_name']
+            feature.status = request.POST['status']
+            feature.timeline = request.POST['Feature_timeline']
+            feature.added_by  = CustomUser.objects.get(id=request.user.id)
+            feature.save()
+            messages.success(request, "Feture Updated")
+            return HttpResponse('<div class="messages text-center alert alert-success"> <h2>  updaed.</h2> </div>') #just for testing purpose you can remove it.
+        except Exception as e:
+            messages.success(request, f"Feture not updated {e}")
+            return HttpResponse(f'<div class="messages text-center alert alert-danger"> <h2>  not updated {e}.</h2> </div>') 
 
