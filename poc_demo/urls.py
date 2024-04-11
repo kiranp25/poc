@@ -32,10 +32,24 @@ urlpatterns = [
     path('add_remarks/<int:id>', views.add_remarks, name='add_remarks'),
     path('update_feature_detail/', views.update_feature_detail, name='update_feature_detail'),
     path('add_feature/<int:id>', views.add_feature, name='add_feature'),
+    path('add_demo/', views.add_demo, name='add_demo'),
+    path('view_demo/', views.view_demo, name='view_demo'),
+    path('edit_demo/<int:id>', views.edit_demo, name='edit_demo'),
+    path('view_demo_detail/<int:id>',views.view_demo_detail, name='view_demo_detail'),
+    path('add_demo_remarks/<int:id>',views.add_demo_remarks, name='add_demo_remarks'),
+    path('get_detail_sts_demo/',views.get_detail_sts_demo, name='get_detail_sts_demo'),
+    path('add_demo_feature/<int:id>', views.add_demo_feature, name='add_demo_feature'),
+    path('demo_update_sts/<int:id>', views.demo_update_sts, name='demo_update_sts'),
+    path('update_feature_detail_demo', views.update_feature_detail_demo, name='update_feature_detail_demo'),
+
+    
+
+    
+
     
 
 
-    path('add_demo/', views.add_demo, name='add_demo'),
+    
     
 ]
 

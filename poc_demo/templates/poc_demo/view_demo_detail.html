@@ -36,8 +36,8 @@
   }
   
   </style>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.datatables.net/2.0.3/css/dataTables.bootstrap5.css" rel="stylesheet">
+  <!-- <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.datatables.net/2.0.3/css/dataTables.bootstrap5.css" rel="stylesheet"> -->
   
 <div class="app-content content">
     <div class="content-wrapper">
@@ -65,27 +65,27 @@
         <div class="row">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header">
-                        <h4 class="card-title">POC view</h4>
-                        <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
-                        <ol class="breadcrumb"> 
-                          <li class="breadcrumb-item active"><a onclick="scrollToElement('poc_detail')"></a>Detail</li>
-                          <li class="breadcrumb-item"><a onclick="scrollToElement('Remarks_div')">Remarks</a></li>
-                          <li class="breadcrumb-item"><a onclick="scrollToElement('Feature_div')">Feature</a></li>
-                        </ol>            
+                        <div class="card-header">
+                            <h4 class="card-title">POC view</h4>
+                            <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
+                            <ol class="breadcrumb"> 
+                              <li class="breadcrumb-item active"><a onclick="scrollToElement('demo_detail')"></a>Detail</li>
+                              <li class="breadcrumb-item"><a onclick="scrollToElement('Remarks_div')">Remarks</a></li>
+                              <li class="breadcrumb-item"><a onclick="scrollToElement('Feature_div')">Feature</a></li>
+                            </ol>            
                     </div>
                     <!-- strt -->
-                    <div class="poc-view row" id="poc_detail">
+                    <div class="demo-view row" id="demo_detail">
                       <div class="col-md-6">
-                        <form method="POST" action="{% url 'edit_poc' data.id %}">
+                        <form method="POST" action="{% url 'edit_demo' data.id %}">
                           {% csrf_token %}
                           <div class="card shadow-sm rounded-3 p-3 mt-2 bg-light">
                             <div class="row">
                               <div class="col-md-6">
                                 <h5 class="card-title mb-3 text-primary">Details</h5>
                                 <div class="mb-3">
-                                  <label for="name" class="form-label fw-bold">Name:</label>
-                                  <input type="text" class="form-control" id="name" name="Customer_name" value="{{ data.Customer_name }}" disabled>
+                                  <label for="Customer_name" class="form-label fw-bold">Name:</label>
+                                  <input type="text" class="form-control" id="Customer_name" name="Customer_name" value="{{ data.Customer_name }}" disabled>
                                 </div>
                                 <div class="mb-3">
                                   <label for="product_name" class="form-label fw-bold">Product Name:</label>
@@ -97,24 +97,26 @@
                                   </select>
 
                                 </div>
+                             
                                 <div class="mb-3">
-                                  <h5 class="card-title mb-3 text-dark">Added By :{{ data.added_by }}</h5>
-                                </div>
+                                    <label for="added_by" class="form-label fw-bold">Added By:</label>
+                                    <input type="text" class="form-control" id="added_by" value="{{ data.added_by }}" readonly>
+                                  </div>
                                 
                                 <!-- product -->
                               </div>
                               <div class="col-md-6">
                                 <h5 class="card-title mb-3 text-info">Information</h5>
                                 <div class="mb-3">
-                                  <label for="requested_date" class="form-label fw-bold">Requested Date:</label>
+                                  <label for="requested_date_edit" class="form-label fw-bold">Requested Date:</label>
                               <input type="date" class="form-control" id="requested_date_edit" name="requested_date" value="{{ data.Requested_date|date:'Y-m-d' }}" readonly disabled> 
                                 </div>
                                 <div class="mb-3">
-                                  <label for="timeline" class="form-label fw-bold">Timeline:</label>
+                                  <label for="Timeline_date_edit" class="form-label fw-bold">Timeline:</label>
                                   <input type="date" class="form-control" id="Timeline_date_edit" name="Timeline_date" value="{{ data.Timeline|date:'Y-m-d' }}" disabled>  
                                 </div>
                                 <div class="mb-3">
-                                  <label for="status" class="form-label fw-bold">Status:</label>
+                                  <label for="status_edit" class="form-label fw-bold">Status:</label>
 
                                   <select name="status" class="form-control" id="status_edit"  required disabled>
                                     {% for sts in status %}
@@ -124,7 +126,8 @@
                                 </div>
 
                                 <div class="mb-3"> 
-                                  {% if request.user.role.name == "Manager" %}
+                                    
+                                    {% if request.user.role.name == "Manager" %}
                                     <label for="assign_edit" class="form-label fw-bold">Belongs To:</label>
                               
                                     <select name="assign_edit" class="form-control" id="assign_edit" required disabled>
@@ -139,9 +142,9 @@
                                       <input type="text" class="form-control" id="assign_edit_text" name="assign_edit_text" value="{{ data.assign_to }}" readonly>
                                     {% endif %}
                                     </select>
-                
-                                </div>
-                                
+                                   
+                                  </div>
+
                               </div>
                             </div>
                                      
@@ -164,7 +167,7 @@
                               </button>
                             </div>
                           </div>
-                          <table class="table table-bordered datatable" id="poc_remark_table">
+                          <table class="table table-bordered datatable" id="demo_remark_table">
                             <thead>
                               <tr>
                                 <th scope="col">Remark</th>
@@ -173,7 +176,7 @@
                               </tr>
                             </thead>
                             <tbody>
-                              {% for remark in data.poc_r_related.all %}
+                              {% for remark in data.demo_r_related.all %}
                               <tr>
                                 <td>{{ remark.remarks }}</td>
                                 <td>{{ remark.added_by }}</td>
@@ -195,13 +198,12 @@
         </div>
         </div>
         <div id = 'sts_update_response'></div>
-    <div class="row">
-
+    <div class="row" id="Feature_div">
       <div class="col-md-6">
         <div class="card shadow-sm rounded-3 p-3 mt-2 bg-light">
-          <div class="row" id="Feature_div">
+          <div class="row">
             <div class="col-sm-6">
-              <h5 class="card-title mb-3 text-primary">Features</h5>
+              <h5 class="card-title mb-3 text-primary">Features:</h5>
             </div>
             <div class="col-sm-6 text-end">
               <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addFeatureModal" id="{{data.id}}">
@@ -209,7 +211,7 @@
               </button>
             </div>
           </div>
-          <table class="table table-striped table-hover table-bordered datatable" id="poc_data_table_feature">
+          <table class="table table-striped table-hover table-bordered datatable" id="demo_data_table_feature">
             <thead>
               <tr>
                 <th scope="col">Feature</th>
@@ -219,7 +221,7 @@
               </tr>
             </thead>
             <tbody>
-              {% for feature in data.poc_f_related.all %}
+              {% for feature in data.demo_f_related.all %}
               <tr>
                 <td>{{ feature.features_list }}</td>
                 <td>{{ feature.timeline }}</td>
@@ -250,13 +252,23 @@
         <div class="col-6">
             <div class="card">
                 <div class="card-header">
-                    <h4 class="card-title">Status Details   </h4>
-                    <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
-          
+                    <h4 class="card-title">Status Details </h4>
+                    <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>     
                 </div>
                 <div class="card-content collapse show">
                     <div  id="featurestsdetatil" class="card-body card-dashboard">
-                                for view, click view buuton in feature section</span>      
+                                for view, click view buuton in feature section</span>    
+                                <table class="datatable" id="my-feature-table">
+                                    <thead>
+                                        <th>Status</th>
+                                        <th>Added By</th>
+                                        <th>Time</th>
+                                        <th>Feature</th>
+                                    </thead>
+                                    <tbody id="tbody_table">
+
+                                    </tbody>
+                                </table>  
                     </div>
                 </div>
         </div>
@@ -268,7 +280,7 @@
     <div class="modal fade" id="centeredModal" tabindex="-1" aria-labelledby="centeredModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-          <form method="post" action="{% url 'add_remarks' data.id %}">
+          <form method="post" action="{% url 'add_demo_remarks' data.id %}">
             {% csrf_token %}
             <div class="modal-header bg-light border-bottom">
               <h5 class="modal-title" id="centeredModalLabel">Add Remarks</h5>
@@ -290,15 +302,9 @@
                   <div class="mb-3" id="remark_1">
                     <input type="text" placeholder="Remark" class="form-control" id="example-Remark-input_1" name="remarks">
                     <span class="input-group-append">
-                      <!-- <button class="btn btn-danger" type="button" id="remove_Remark_1" data-repeater-delete onclick="removeDiv(this)">
-                        <i class="ft-x"></i>
-                      </button> -->
                     </span>
                   </div>
                 </div>
-                <!-- <button type="button" id="add_new_remark" data-repeater-create class="btn btn-primary">
-                  <i class="ft-plus"></i> Add new Remark
-                </button> -->
               </div>
             </div>
             <div class="modal-footer py-3 px-5">
@@ -352,7 +358,7 @@
             <div class="form-group col-md-12 mb-2">
               <input type="hidden" class="form-control" id='feture_id' name="feture_id"> 
             <input type="hidden" class="form-control"  id='sts_id' name="sts_id"> 
-            <input type="hidden" class="form-control" value="{{data.id}}" id = 'poc_id' name="poc_id">
+            <input type="hidden" class="form-control" value="{{data.id}}" id = 'demo_id' name="demo_id">
             <div class="modal-body" id = 'FeturestsCenteredupdate'>
                 <input type="text" class="form-control" placeholder="Status" class="form-control" id="sts" name="sts">
             </div>
@@ -383,7 +389,7 @@
               </div>
               <div class="modal-body py-4 px-5">
                 <input type="hidden" id='feature_ids' name="feature_ids">
-                <input type="hidden" value="{{data.id}}" id = 'poc_ids' name="poc_ids">
+                <input type="hidden" value="{{data.id}}" id = 'demo_ids' name="demo_ids">
     
                 <div class="form-group mb-3">
                   <label for="Feature_name" class="form-label">Feature Name</label>
@@ -414,7 +420,7 @@
     <div class="modal fade" id="addFeatureModal" tabindex="-1" aria-labelledby="addFeatureModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <form method="post" action="{% url 'add_feature' data.id %}">  {% csrf_token %}
+      <form method="post" action="{% url 'add_demo_feature' data.id %}">  {% csrf_token %}
         <div class="modal-header bg-light border-bottom">
           <h5 class="modal-title" id="addFeatureModalLabel">Add Feature</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -463,7 +469,6 @@
 </div>
 </div>
 
-
         <!-- //////////////////////////////////////////////////////////////// -->
 
 
@@ -479,12 +484,15 @@
     <!-- <script src="https://code.jquery.com/jquery-3.7.1.js"  crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"  crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdn.datatables.net/2.0.3/js/dataTables.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdn.datatables.net/2.0.3/js/dataTables.bootstrap5.js" referrerpolicy="no-referrer"></script> -->
-    
+    <script src="https://cdn.datatables.net/2.0.3/js/dataTables.bootstrap5.js" referrerpolicy="no-referrer"></script>
+     -->
 
    <script>
 
     $(document).ready(function() {
+
+    //   $('#demo_remark_table').DataTable({  });
+    //   $('#demo_data_table_feature').DataTable(); 
 
 
       
@@ -495,7 +503,7 @@
         Feature_sts = $('#Feature_sts').val();
         $.ajax
         ({ 
-        url: "{% url 'update_feature_detail'  %}",
+        url: "{% url 'update_feature_detail_demo'  %}",
         data: {"id": id, "status":  Feature_sts, "Feature_timeline":Feature_timeline,"Feature_name":Feature_name, 'csrfmiddlewaretoken': '{{ csrf_token }}', "username": '{{request.user.email}}' },
         type: 'POST',
         success: function(result)
@@ -514,15 +522,15 @@
       $('#update_status_feature').click(function() {
     sts_id = $("#sts_id").val();
     status = $("#sts").val();
-    poc_id = $("#poc_id").val();
+    demo_id = $("#demo_id").val();
     sts_id_div = `#fet_${sts_id}`;
 
     $.ajax({
-        url: "{% url 'update_sts' data.id %}",
+        url: "{% url 'demo_update_sts' data.id %}",
         data: {
             "sts_id": sts_id,
             "status": status,
-            "poc_id": poc_id,
+            "demo_id": demo_id,
             'csrfmiddlewaretoken': '{{ csrf_token }}',
             "username": '{{ request.user.email }}'
         },
@@ -574,7 +582,7 @@
 //     .join('&');
 
   try {
-    const response = await fetch('{% url 'get_detail_sts' %}', {
+    const response = await fetch('{% url 'get_detail_sts_demo' %}', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded',
                     'X-CSRFToken': '{{ csrf_token }}', 
@@ -587,28 +595,12 @@
     
     const responseJson = await response.json();
     console.log('______',responseJson);
+    const table = '';
+    for (const featureId in responseJson) {
+        table += `<tr><td>${featureData.status}</td><td>${featureData.added_by}</td><td>${featureData.time}</td><td>${featureData.feature}</td></tr>`;
+    }
 //  start
 
-const featureTable = document.createElement('table');
-featureTable.id = 'my-feature-table'; 
-  featureTable.classList.add('feature-table', 'table', 'table-bordered', 'table-responsive', 'datatable'); // Add styling class (optional)
-  const featureheadheader = document.createElement('thead');
-  const tableHeaderRow = document.createElement('tr');
-  tableHeaderRow.classList.add('table-primary'); 
-  
-
-//   const featureIdHeader = document.createElement('th');
-  const statusHeader = document.createElement('th');
-  const addedByHeader = document.createElement('th');
-  const timeHeader = document.createElement('th');
-  const featureHeader = document.createElement('th');
-
-  // Set content for headers
-//   featureIdHeader.textContent = 'Feature ID';
-  statusHeader.textContent = 'Status';
-  addedByHeader.textContent = 'Added By';
-  timeHeader.textContent = 'Time';
-  featureHeader.textContent = 'Feature';
 
   // Add headers to the table row
 //   tableHeaderRow.appendChild(featureIdHeader);
@@ -695,21 +687,6 @@ featureTable.id = 'my-feature-table';
 
     var Remark_count = 1
     document.getElementById('Remark_count').value = Remark_count;
-    // document.getElementById("add_new_remark").addEventListener("click", function () {
-    // Remark_count++;
-    // var newRemarkDiv = document.createElement("div");
-    // document.getElementById('Remark_count').value = Remark_count;
-    // newRemarkDiv.className = "input-group mb-1";
-    // newRemarkDiv.id = `remark_${Remark_count}`;
-
-    // newRemarkDiv.innerHTML = ` <input type="text" placeholder="Remark" class="form-control" 
-    //                         id="example-Remark-input_${Remark_count}" name="remarks"><span class="input-group-append" 
-    //                         id="button-Remark_addon_${Remark_count}"><button class="btn btn-danger" type="button" 
-    //                         id = "remove_Remark_${Remark_count}" data-repeater-delete onclick="removeDiv(this)"><i class="ft-x"></i></button>
-    //                         </span>`
-    // document.getElementById("repeater-group_remark").appendChild(newRemarkDiv);
-    // });
-
    </script>
 
 <script>
@@ -755,23 +732,7 @@ $(document).ready(function() {
   
     document.getElementById("repeater-group_feature").appendChild(newFeatureDiv);
     });
-  var Remark_count = 1
-  document.getElementById('Remark_count').value = Remark_count;
-  document.getElementById("add_new_remark").addEventListener("click", function () {
-    Remark_count++;
-  var newRemarkDiv = document.createElement("div");
-  document.getElementById('Remark_count').value = Remark_count;
-  newRemarkDiv.className = "input-group mb-1";
-  newRemarkDiv.id = `remark_${Remark_count}`;
-  
-  newRemarkDiv.innerHTML = ` <input type="text" placeholder="Remark" class="form-control" 
-                              id="example-Remark-input_${Remark_count}" name="remarks"><span class="input-group-append" 
-                              id="button-Remark_addon_${Remark_count}"><button class="btn btn-danger" type="button" 
-                              id = "remove_Remark_${Remark_count}" data-repeater-delete onclick="removeDiv(this)"><i class="ft-x"></i></button>
-                            </span>`
-  document.getElementById("repeater-group_remark").appendChild(newRemarkDiv);
-  });
-  
+
 
 
   </script>

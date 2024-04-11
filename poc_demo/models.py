@@ -91,10 +91,10 @@ class Demo_model(models.Model):
     added_by = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True)
-    assign_to = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, blank=True, null=True, related_name='assignuser')
+    assign_to = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, blank=True, null=True, related_name='assignuser_demo')
 
 class Demo_feature(models.Model):
-    poc_id = models.ForeignKey('Demo_model', on_delete=models.CASCADE, blank=True, null=True, related_name='demo_f_related')
+    demo_id = models.ForeignKey('Demo_model', on_delete=models.CASCADE, blank=True, null=True, related_name='demo_f_related')
     features_list = models.TextField()
     status = models.TextField(default=None)
     timeline = models.DateField(default=get_default_date)
@@ -111,7 +111,7 @@ class Demo_Feature_status(models.Model):
     updated_at = models.DateTimeField(auto_now=True, blank=True)
 
 class Demo_remark(models.Model):
-    demo_id = models.ForeignKey('Demo_model', on_delete=models.CASCADE, blank=True, null=True)
+    demo_id = models.ForeignKey('Demo_model', on_delete=models.CASCADE, blank=True, null=True, related_name='demo_r_related')
     remarks = models.TextField()
     status =  models.TextField(default=None)
     added_by = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, blank=True, null=True)

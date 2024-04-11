@@ -1,7 +1,4 @@
-
-
 {% extends "poc_demo/base.html" %}
-
 {% block poc_content %}  
 {% load static %}
 
@@ -19,14 +16,7 @@
                     <div class="card-header">
                         <h4 class="card-title">POC view</h4>
                         <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
-                        <div class="heading-elements">
-                            <ul class="list-inline mb-0">
-                                <li><a data-action="collapse"><i class="ft-minus"></i></a></li>
-                                <li><a data-action="reload"><i class="ft-rotate-cw"></i></a></li>
-                                <li><a data-action="expand"><i class="ft-maximize"></i></a></li>
-                                <!-- <li><a data-action="close"><i class="ft-x"></i></a></li> -->
-                            </ul>
-                        </div>
+
                         
                         <div class="col-md-2 ms-auto mt-2" style="margin-left: 100px;">
                             <form method="get" id="filter-form" class="form-inline">
@@ -40,16 +30,12 @@
                                     <tr>
                                         <th>Name</th>
                                         <th>Product_name</th>
-                                        <!-- <th>Features</th>
-                                        <th>Remarks</th> -->
                                         <th> Detail </th>
                                         <th>Requested_date</th>
                                         <th>Timeline</th>
                                         <th>Status</th>
                                         <th>added_by</th>
-                                        {% if  request.session.roles  == 'Manager' %}
-                                        <th>add_remarks</th>
-                                        {% endif %}
+                                        
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -57,37 +43,16 @@
                                     <tr>
                                         <td>{{i.Customer_name}}</td>
                                         <td>{{i.Product_name}}</td>
-                                        <td><a href="{% url 'view_poc_detail' i.id %}" class="btn btn-primary" value="">View</button></td>
-
-                                       
-
+                                        <td><a href="{% url 'view_demo_detail' i.id %}" class="btn btn-primary" value="">View</button></td>
                                         <td>{{i.Requested_date}}</td>
                                         <td>{{i.Timeline}}</td>
                                         <td>{{i.status}}</td>
                                         <td>{{i.added_by}}</td>
-                                        
-                                        {% if  request.session.roles  == 'Manager' %}
-                                        <td>
-                                        <!-- <td><button type ='button' class = 'btn btn-sm-primary'>add</button> -->
-                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" id ='{{i.id}}' data-bs-target="#centeredModal" onclick="set_id(this.id)">
-                                                ADD
-                                              </button>
-                                        </td>
-                                        {% endif %}
                                     </tr>
                                     {% endfor %}
                                 
                                     </tbody>
-                                <!-- <tfoot>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Position</th>
-                                        <th>Office</th>
-                                        <th>Age</th>
-                                        <th>Start date</th>
-                                        <th>Salary</th>
-                                    </tr>
-                                </tfoot> -->
+                    
                             </table>
                             <div class="paginator" align='center'>
                                 <span style="color:black">Page {{page.number}} of {{page.paginator.num_pages}}</span>
@@ -131,7 +96,6 @@
                           </span> -->
                       </div>
                   </div>
-
                   <!-- <button type="button" id = 'add_new_remark' data-repeater-create class="btn btn-primary">
                       <i class="ft-plus"></i> Add new Remark
                   </button> -->
@@ -210,7 +174,6 @@
 </div>
 
     {% endblock %}
-
     {% block js %}
     <!-- <script src="https://code.jquery.com/jquery-3.6.3.min.js"></script> -->
 
@@ -240,21 +203,6 @@
 
     var Remark_count = 1
     document.getElementById('Remark_count').value = Remark_count;
-    // document.getElementById("add_new_remark").addEventListener("click", function () {
-    // Remark_count++;
-    // var newRemarkDiv = document.createElement("div");
-    // document.getElementById('Remark_count').value = Remark_count;
-    // newRemarkDiv.className = "input-group mb-1";
-    // newRemarkDiv.id = `remark_${Remark_count}`;
-
-    // newRemarkDiv.innerHTML = ` <input type="text" placeholder="Remark" class="form-control" 
-    //                         id="example-Remark-input_${Remark_count}" name="remarks"><span class="input-group-append" 
-    //                         id="button-Remark_addon_${Remark_count}"><button class="btn btn-danger" type="button" 
-    //                         id = "remove_Remark_${Remark_count}" data-repeater-delete onclick="removeDiv(this)"><i class="ft-x"></i></button>
-    //                         </span>`
-    // document.getElementById("repeater-group_remark").appendChild(newRemarkDiv);
-    // });
-
    </script>
 
 
