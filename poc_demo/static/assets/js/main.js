@@ -6,6 +6,7 @@
 * License: https://bootstrapmade.com/license/
 */
 
+
 (function() {
   "use strict";
 
@@ -300,6 +301,7 @@
   /**
    * Initiate Datatables
    */
+  
   const datatables = select('.datatable', true)
   datatables.forEach(datatable => {
     new simpleDatatables.DataTable(datatable, {
@@ -316,7 +318,6 @@
       ]
     });
   })
-
   /**
    * Autoresize echart charts
    */

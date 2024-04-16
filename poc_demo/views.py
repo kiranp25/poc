@@ -510,7 +510,6 @@ def update_sts(request, id):
 
     if request.method == 'POST':
         try:
-
             print(f"###########{id}")
             print(request.POST)
             sts_id = request.POST['sts_id']
@@ -858,6 +857,8 @@ def add_demo_feature(request, id):
         return redirect('view_demo_detail', id=id)
     
 
+
+
 @login_required(login_url='loginpage')
 def get_detail_sts_demo(request):
     sts_data = dict()
@@ -880,7 +881,7 @@ def get_detail_sts_demo(request):
 def demo_update_sts(request, id):
     if request.method == 'POST':
         try:
-            print(f"###########{id}")
+            print(f"###########--{id}")
             print(request.POST)
             sts_id = request.POST['sts_id']
             status = request.POST['status']
@@ -888,11 +889,15 @@ def demo_update_sts(request, id):
             added_by = CustomUser.objects.get(id=request.user.id)
             print(added_by,'$$$$')
             featureobj = Demo_feature.objects.get(pk=sts_id)
+            print(sts_id)
+            print(featureobj)
             Demo_Feature_status.objects.create(feature=featureobj,status=status,added_by=added_by)
+            messages.success(request, "addec")
             # return redirect('view_poc_detail', id=id)
             return HttpResponse(f'<div class="messages text-center alert alert-danger"> <h2> status  added.</h2> </div>') 
 
         except Exception as e:
+            messages.error(request, f"addec {e}")
             # return redirect('view_poc_detail', id=id)
             return HttpResponse(f'<div class="messages text-center alert alert-danger"> <h2> status not added {e}.</h2> </div>') 
         
@@ -914,5 +919,5 @@ def update_feature_detail_demo(request):
             return HttpResponse('<div class="messages text-center alert alert-success"> <h2>  updaed.</h2> </div>') #just for testing purpose you can remove it.
         except Exception as e:
             messages.success(request, f"Feture not updated {e}")
-            return HttpResponse(f'<div class="messages text-center alert alert-danger"> <h2>  not updated {e}.</h2> </div>') 
+            return HttpResponse(f'<div cla  ss="messages text-center alert alert-danger"> <h2>  not updated {e}.</h2> </div>') 
 

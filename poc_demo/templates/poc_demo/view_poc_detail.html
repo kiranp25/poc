@@ -226,7 +226,7 @@
                 <td>{{ feature.status }}</td>
                 <td>
                   <div class="d-flex justify-content-between">
-                    <button class="btn btn-sm btn-primary" id="fet_{{ feature.id }}" value="{{ feature.id }}" onclick="view_sts_feature(this)">
+                    <button class="btn btn-sm btn-primary new-btns" id="fet_{{ feature.id }}" value="{{ feature.id }}">
                       View Status
                     </button>
                     <button class="btn btn-sm btn-primary"  data-bs-toggle="modal" id="{{ feature.id }}_update_feture" value="{{ feature.id }}" onclick="update_feature(this,'{{ feature.features_list }}','{{ feature.timeline|date:'Y-m-d' }}','{{ feature.status }}')" data-bs-target="#centeredModalupdatefeature">
@@ -255,9 +255,36 @@
           
                 </div>
                 <div class="card-content collapse show">
-                    <div  id="featurestsdetatil" class="card-body card-dashboard">
-                                for view, click view buuton in feature section</span>      
-                    </div>
+                  <div id="featurestsdetatil" class="card-body card-dashboard">
+                  <span id="hide_sp"> Click on view status for specific feature</span>
+
+                    {% for feature in data.poc_f_related.all %}
+                      
+                      <div class="feature-container" id="featurestsdetatil_{{feature.id}}" style="display: none;"> 
+                        <h4> Feature - {{ feature.features_list }}</h4> 
+                        <table class="datatable" id="my-feature-table_{{ feature.id }}">
+                          <thead>
+                            <tr>
+                              <th>Status</th>
+                              <th>Added By</th>
+                              <th>Added At</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                
+                            {% for dt in feature.feature_related.all %}
+                            <tr>
+                              <td>{{ dt.status }}</td>
+                              <td>{{ dt.added_by }}</td>
+                              <td>{{ dt.created_at }}</td>
+                            </tr>
+                            {% endfor %}
+                
+                          </tbody>
+                        </table>
+                      </div>
+                    {% endfor %}
+                  </div>
                 </div>
         </div>
       </div>
@@ -475,14 +502,34 @@
     {% endblock %}
 
     {% block js %}
-    <!-- <script src="https://code.jquery.com/jquery-3.6.3.min.js"></script> -->
-    <!-- <script src="https://code.jquery.com/jquery-3.7.1.js"  crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"  crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdn.datatables.net/2.0.3/js/dataTables.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdn.datatables.net/2.0.3/js/dataTables.bootstrap5.js" referrerpolicy="no-referrer"></script> -->
-    
+    <script>
+      const buttons = document.querySelectorAll('.new-btns'); // Assuming your buttons have this class
 
-   <script>
+function hideAllTables() {
+  // Select all feature containers
+  const featureContainers = document.querySelectorAll('.feature-container');
+  for (const container of featureContainers) {
+    container.style.display = 'none'; // Hide all containers initially
+  }
+}
+
+buttons.forEach(button => {
+  button.addEventListener('click', async function (event) {
+    const clickedButton = event.target;
+    const featureId = clickedButton.value; // Assuming button value represents feature ID
+
+    // Hide all tables first
+    hideAllTables();
+
+    // Show the relevant table container based on button value (feature ID)
+    const tableToShow = document.getElementById(`featurestsdetatil_${featureId}`);
+    const msgspm = document.getElementById(`hide_sp`);
+    if (tableToShow) {
+      tableToShow.style.display = ''; // Unhide the specific container
+      msgspm.style.display = 'none';
+    }
+  });
+});
 
     $(document).ready(function() {
 
@@ -564,105 +611,7 @@
   element.scrollIntoView();
 }
 
-
-    async function view_sts_feature(button_) {
-  const featureStatusid = button_.value;
-  
-//   const additionalData = { param1: featureStatus, param2: 'value2', param3: 'value3' };
-//   const dataString = Object.entries(additionalData) // Convert object to key-value pairs
-//     .map(([key, value]) => `${key}=${value}`) // Join key-value pairs with '=' and '&'
-//     .join('&');
-
-  try {
-    const response = await fetch('{% url 'get_detail_sts' %}', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': '{{ csrf_token }}', 
-                },
-                 body: `id=${featureStatusid}`,
-          });
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const responseJson = await response.json();
-    console.log('______',responseJson);
-//  start
-
-const featureTable = document.createElement('table');
-featureTable.id = 'my-feature-table'; 
-  featureTable.classList.add('feature-table', 'table', 'table-bordered', 'table-responsive', 'datatable'); // Add styling class (optional)
-  const featureheadheader = document.createElement('thead');
-  const tableHeaderRow = document.createElement('tr');
-  tableHeaderRow.classList.add('table-primary'); 
-  
-
-//   const featureIdHeader = document.createElement('th');
-  const statusHeader = document.createElement('th');
-  const addedByHeader = document.createElement('th');
-  const timeHeader = document.createElement('th');
-  const featureHeader = document.createElement('th');
-
-  // Set content for headers
-//   featureIdHeader.textContent = 'Feature ID';
-  statusHeader.textContent = 'Status';
-  addedByHeader.textContent = 'Added By';
-  timeHeader.textContent = 'Time';
-  featureHeader.textContent = 'Feature';
-
-  // Add headers to the table row
-//   tableHeaderRow.appendChild(featureIdHeader);
-  tableHeaderRow.appendChild(statusHeader);
-  tableHeaderRow.appendChild(addedByHeader);
-  tableHeaderRow.appendChild(timeHeader);
-  tableHeaderRow.appendChild(featureHeader);
-
-  featureheadheader.appendChild(tableHeaderRow);
-
-  // Append the header row to the table
-  featureTable.appendChild(featureheadheader);
-  const featureBody = document.createElement('tbody'); 
-  // Loop through each key-value pair in the JSON
-  for (const featureId in responseJson) {
-    console.log("iiii"+featureId);
-    const featureData = responseJson[featureId];
-    const tableRow = document.createElement('tr');
-    // const featureIdCell = document.createElement('td');
-    const statusCell = document.createElement('td');
-    const addedByCell = document.createElement('td');
-    const timeCell = document.createElement('td');
-    const featureCell = document.createElement('td');
-
-    // Set content for each cell
-    // featureIdCell.textContent = featureId;
-    statusCell.textContent = featureData.status;
-    addedByCell.textContent = featureData.added_by;
-    timeCell.textContent = featureData.time;
-    featureCell.textContent = featureData.feature;
-
-    // Append cells to the table row
-    // tableRow.appendChild(featureIdCell);
-    tableRow.appendChild(statusCell);
-    tableRow.appendChild(addedByCell);
-    tableRow.appendChild(timeCell);
-    tableRow.appendChild(featureCell);
-
-    // Append the row to the table
-    featureBody.appendChild(tableRow)
-    featureTable.appendChild(featureBody);
-  }
-
-  const featureStatusDiv = document.getElementById('featurestsdetatil');
-
-  featureStatusDiv.innerHTML = featureTable.outerHTML; 
-  scrollToElement('featurestsdetatil');
-//  end
-  } catch (error) {
-    console.error('Error:', error);
-    // Handle errors appropriately (e.g., display error message to user)
-  }
-}
-    function set_id(button_){
+   function set_id(button_){
         document.getElementById('row_remark_id').value  = button_
     }
 
@@ -695,21 +644,7 @@ featureTable.id = 'my-feature-table';
 
     var Remark_count = 1
     document.getElementById('Remark_count').value = Remark_count;
-    // document.getElementById("add_new_remark").addEventListener("click", function () {
-    // Remark_count++;
-    // var newRemarkDiv = document.createElement("div");
-    // document.getElementById('Remark_count').value = Remark_count;
-    // newRemarkDiv.className = "input-group mb-1";
-    // newRemarkDiv.id = `remark_${Remark_count}`;
-
-    // newRemarkDiv.innerHTML = ` <input type="text" placeholder="Remark" class="form-control" 
-    //                         id="example-Remark-input_${Remark_count}" name="remarks"><span class="input-group-append" 
-    //                         id="button-Remark_addon_${Remark_count}"><button class="btn btn-danger" type="button" 
-    //                         id = "remove_Remark_${Remark_count}" data-repeater-delete onclick="removeDiv(this)"><i class="ft-x"></i></button>
-    //                         </span>`
-    // document.getElementById("repeater-group_remark").appendChild(newRemarkDiv);
-    // });
-
+    
    </script>
 
 <script>
@@ -757,22 +692,7 @@ $(document).ready(function() {
     });
   var Remark_count = 1
   document.getElementById('Remark_count').value = Remark_count;
-  document.getElementById("add_new_remark").addEventListener("click", function () {
-    Remark_count++;
-  var newRemarkDiv = document.createElement("div");
-  document.getElementById('Remark_count').value = Remark_count;
-  newRemarkDiv.className = "input-group mb-1";
-  newRemarkDiv.id = `remark_${Remark_count}`;
   
-  newRemarkDiv.innerHTML = ` <input type="text" placeholder="Remark" class="form-control" 
-                              id="example-Remark-input_${Remark_count}" name="remarks"><span class="input-group-append" 
-                              id="button-Remark_addon_${Remark_count}"><button class="btn btn-danger" type="button" 
-                              id = "remove_Remark_${Remark_count}" data-repeater-delete onclick="removeDiv(this)"><i class="ft-x"></i></button>
-                            </span>`
-  document.getElementById("repeater-group_remark").appendChild(newRemarkDiv);
-  });
-  
-
 
   </script>
 
