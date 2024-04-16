@@ -892,12 +892,11 @@ def demo_update_sts(request, id):
             print(sts_id)
             print(featureobj)
             Demo_Feature_status.objects.create(feature=featureobj,status=status,added_by=added_by)
-            messages.success(request, "addec")
+            messages.success(request, f"added status {status}")
             # return redirect('view_poc_detail', id=id)
             return HttpResponse(f'<div class="messages text-center alert alert-danger"> <h2> status  added.</h2> </div>') 
-
         except Exception as e:
-            messages.error(request, f"addec {e}")
+            messages.error(request, f"not added {request.POST['status']}")
             # return redirect('view_poc_detail', id=id)
             return HttpResponse(f'<div class="messages text-center alert alert-danger"> <h2> status not added {e}.</h2> </div>') 
         
