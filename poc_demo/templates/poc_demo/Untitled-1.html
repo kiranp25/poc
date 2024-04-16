@@ -66,18 +66,18 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="card-title">DEMO view</h4>
+                        <h4 class="card-title">POC view</h4>
                         <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
                         <ol class="breadcrumb"> 
-                          <li class="breadcrumb-item active"><a onclick="scrollToElement('Demo_detail')"></a>Detail</li>
+                          <li class="breadcrumb-item active"><a onclick="scrollToElement('poc_detail')"></a>Detail</li>
                           <li class="breadcrumb-item"><a onclick="scrollToElement('Remarks_div')">Remarks</a></li>
                           <li class="breadcrumb-item"><a onclick="scrollToElement('Feature_div')">Feature</a></li>
                         </ol>            
                     </div>
                     <!-- strt -->
-                    <div class="DEMO-view row" id="Demo_detail">
+                    <div class="poc-view row" id="poc_detail">
                       <div class="col-md-6">
-                        <form method="POST" action="{% url 'edit_demo' data.id %}">
+                        <form method="POST" action="{% url 'edit_poc' data.id %}">
                           {% csrf_token %}
                           <div class="card shadow-sm rounded-3 p-3 mt-2 bg-light">
                             <div class="row">
@@ -164,7 +164,7 @@
                               </button>
                             </div>
                           </div>
-                          <table class="table table-bordered datatable" id="demo_remark_table">
+                          <table class="table table-bordered datatable" id="poc_remark_table">
                             <thead>
                               <tr>
                                 <th scope="col">Remark</th>
@@ -173,7 +173,7 @@
                               </tr>
                             </thead>
                             <tbody>
-                              {% for remark in data.demo_r_related.all %}
+                              {% for remark in data.poc_r_related.all %}
                               <tr>
                                 <td>{{ remark.remarks }}</td>
                                 <td>{{ remark.added_by }}</td>
@@ -219,14 +219,14 @@
               </tr>
             </thead>
             <tbody>
-              {% for feature in data.demo_f_related.all %}
+              {% for feature in data.poc_f_related.all %}
               <tr>
                 <td>{{ feature.features_list }}</td>
                 <td>{{ feature.timeline }}</td>
                 <td>{{ feature.status }}</td>
                 <td>
                   <div class="d-flex justify-content-between">
-                    <button class="btn btn-sm btn-primary new-btns" id="fet_{{ feature.id }}" value="{{ feature.id }}">
+                    <button class="btn btn-sm btn-primary" id="fet_{{ feature.id }}" value="{{ feature.id }}" onclick="view_sts_feature(this)">
                       View Status
                     </button>
                     <button class="btn btn-sm btn-primary"  data-bs-toggle="modal" id="{{ feature.id }}_update_feture" value="{{ feature.id }}" onclick="update_feature(this,'{{ feature.features_list }}','{{ feature.timeline|date:'Y-m-d' }}','{{ feature.status }}')" data-bs-target="#centeredModalupdatefeature">
@@ -255,36 +255,12 @@
           
                 </div>
                 <div class="card-content collapse show">
-                  <div id="featurestsdetatil" class="card-body card-dashboard">
-                  <span id="hide_sp"> Click on view status for specific feature</span>
-
-                    {% for feature in data.demo_f_related.all %}
-                      
-                      <div class="feature-container" id="featurestsdetatil_{{feature.id}}" style="display: none;"> 
-                        <h4> Feature - {{ feature.features_list }}</h4> 
-                        <table class="datatable" id="my-feature-table_{{ feature.id }}">
-                          <thead>
-                            <tr>
-                              <th>Status</th>
-                              <th>Added By</th>
-                              <th>Added At</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                
-                            {% for dt in feature.demo_feature_related.all %}
-                            <tr>
-                              <td>{{ dt.status }}</td>
-                              <td>{{ dt.added_by }}</td>
-                              <td>{{ dt.created_at }}</td>
-                            </tr>
-                            {% endfor %}
-                
-                          </tbody>
-                        </table>
-                      </div>
-                    {% endfor %}
-                  </div>
+                    <div  id="featurestsdetatil" class="card-body card-dashboard">
+                               <span> for view, click view buuton in feature section</span> 
+                               <br><br> 
+                                <table id="my-feature-table">
+                                  </table>    
+                    </div>
                 </div>
         </div>
       </div>
@@ -295,7 +271,7 @@
     <div class="modal fade" id="centeredModal" tabindex="-1" aria-labelledby="centeredModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-          <form method="post" action="{% url 'add_demo_remarks' data.id %}">
+          <form method="post" action="{% url 'add_remarks' data.id %}">
             {% csrf_token %}
             <div class="modal-header bg-light border-bottom">
               <h5 class="modal-title" id="centeredModalLabel">Add Remarks</h5>
@@ -377,8 +353,9 @@
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="form-group col-md-12 mb-2">
-            <input type="text" class="form-control"  id='sts_id' name="sts_id"> 
-            <input type="text" class="form-control" value="{{data.id}}" id = 'demo_id' name="demo_id">
+              <input type="hidden" class="form-control" id='feture_id' name="feture_id"> 
+            <input type="hidden" class="form-control"  id='sts_id' name="sts_id"> 
+            <input type="hidden" class="form-control" value="{{data.id}}" id = 'poc_id' name="poc_id">
             <div class="modal-body" id = 'FeturestsCenteredupdate'>
                 <input type="text" class="form-control" placeholder="Status" class="form-control" id="sts" name="sts">
             </div>
@@ -409,7 +386,7 @@
               </div>
               <div class="modal-body py-4 px-5">
                 <input type="hidden" id='feature_ids' name="feature_ids">
-                <input type="hidden" value="{{data.id}}" id = 'demo_ids' name="demo_ids">
+                <input type="hidden" value="{{data.id}}" id = 'poc_ids' name="poc_ids">
     
                 <div class="form-group mb-3">
                   <label for="Feature_name" class="form-label">Feature Name</label>
@@ -440,7 +417,7 @@
     <div class="modal fade" id="addFeatureModal" tabindex="-1" aria-labelledby="addFeatureModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <form method="post" action="{% url 'add_demo_feature' data.id %}">  {% csrf_token %}
+      <form method="post" action="{% url 'add_feature' data.id %}">  {% csrf_token %}
         <div class="modal-header bg-light border-bottom">
           <h5 class="modal-title" id="addFeatureModalLabel">Add Feature</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -512,36 +489,6 @@
 
     $(document).ready(function() {
 
-      const buttons = document.querySelectorAll('.new-btns'); // Assuming your buttons have this class
-
-function hideAllTables() {
-  // Select all feature containers
-  const featureContainers = document.querySelectorAll('.feature-container');
-  for (const container of featureContainers) {
-    container.style.display = 'none'; // Hide all containers initially
-  }
-}
-
-buttons.forEach(button => {
-  button.addEventListener('click', async function (event) {
-    const clickedButton = event.target;
-    const featureId = clickedButton.value; // Assuming button value represents feature ID
-
-    // Hide all tables first
-    hideAllTables();
-
-    // Show the relevant table container based on button value (feature ID)
-    const tableToShow = document.getElementById(`featurestsdetatil_${featureId}`);
-    const msgspm = document.getElementById(`hide_sp`);
-    if (tableToShow) {
-      tableToShow.style.display = ''; // Unhide the specific container
-      msgspm.style.display = 'none';
-    }
-  });
-  scrollToElement('featurestsdetatil');
-});
-
-
 
       
       $('#update_data_feature').click(function(){
@@ -551,7 +498,7 @@ buttons.forEach(button => {
         Feature_sts = $('#Feature_sts').val();
         $.ajax
         ({ 
-        url: "{% url 'update_feature_detail_demo'  %}",
+        url: "{% url 'update_feature_detail'  %}",
         data: {"id": id, "status":  Feature_sts, "Feature_timeline":Feature_timeline,"Feature_name":Feature_name, 'csrfmiddlewaretoken': '{{ csrf_token }}', "username": '{{request.user.email}}' },
         type: 'POST',
         success: function(result)
@@ -567,18 +514,18 @@ buttons.forEach(button => {
            
       });
        
-    $('#update_status_feature').click(function() {
-
+      $('#update_status_feature').click(function() {
     sts_id = $("#sts_id").val();
     status = $("#sts").val();
-    demo_id = $("#demo_id").val();
+    poc_id = $("#poc_id").val();
     sts_id_div = `#fet_${sts_id}`;
+
     $.ajax({
-        url: "{% url 'demo_update_sts' data.id %}",
+        url: "{% url 'update_sts' data.id %}",
         data: {
             "sts_id": sts_id,
             "status": status,
-            "demo_id": demo_id,
+            "poc_id": poc_id,
             'csrfmiddlewaretoken': '{{ csrf_token }}',
             "username": '{{ request.user.email }}'
         },
@@ -594,7 +541,8 @@ buttons.forEach(button => {
                 // window.location.reload();  // Reload the page
             }, 2000); // Adjust delay as needed (in milliseconds)
 
-          
+            // Option 2: Redirect to a specific URL (uncomment if preferred)
+            // window.location.href = "your_desired_url";
         },
         error: function(jqXHR, textStatus, error) {
             $('#sts_update_response').html(error);
@@ -619,14 +567,81 @@ buttons.forEach(button => {
   element.scrollIntoView();
 }
 
+async function view_sts_feature(button_) {
+  const featureStatusid = button_.value;
 
+//   const additionalData = { param1: featureStatus, param2: 'value2', param3: 'value3' };
+//   const dataString = Object.entries(additionalData) // Convert object to key-value pairs
+//     .map(([key, value]) => `${key}=${value}`) // Join key-value pairs with '=' and '&'
+//     .join('&');
+
+  try {
+    const response = await fetch('{% url 'get_detail_sts' %}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}', 
+                },
+                 body: `id=${featureStatusid}`,
+          });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const processedData = []; 
+    const responseJson = await response.json();
+  // Loop through each key-value pair in the JSON
+  for (const featureId in responseJson) {
+    const featureData = responseJson[featureId];
+    
+    const status = featureData.status; // Replace with actual property name
+    const addedBy = featureData.added_by;
+    const addedAt = featureData.time; // Replace with actual property names
+    const feature = featureData.feature;/* property for feature */;
+    const formattedAddedAt = new Date(addedAt).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  processedData.push([status, addedBy, formattedAddedAt, feature]);
+  }
+  console.log(processedData);
+ const datatable = new window.simpleDatatables.DataTable("#my-feature-table", {
+  perPageSelect: [10, 100, 1000, 10000, ["All", -1]],
+  perPage: 10,
+  columns: [
+      {
+          // select the Third column ...
+          select: 2,
+          // ... let the instance know we have datetimes in it ...
+          type: "date",
+          // ... pass the correct datetime format ...
+          format: "YYYY/DD/MM",
+          // ... sort it ...
+          sort: "desc"
+      }
+      ],
+      data: {
+      "headings": ["Status", "Added By", "Added At", "Feature"],
+      "data": processedData,
+        
+   },
+    });
+    console.log(datatable);
+  // const featureStatusDiv = document.getElementById('featurestsdetatil');
+
+  // featureStatusDiv.innerHTML = featureTable.outerHTML; 
+  scrollToElement('featurestsdetatil');
+//  end
+  } catch (error) {
+    console.error('Error:', error);
+    // Handle errors appropriately (e.g., display error message to user)
+  }
+}
 
    function set_id(button_){
         document.getElementById('row_remark_id').value  = button_
     }
 
     function update_feature(button, name, timeline, status){
-      alert( button.value);
     document.getElementById('feature_ids').value = button.value;
     document.getElementById('Feature_name').value = name;
     document.getElementById('Feature_timeline').value = timeline;
