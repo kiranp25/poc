@@ -243,51 +243,47 @@
           </table>
         </div>
       </div>
-
-
-
-
-        <div class="col-6">
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="card-title">Status Details   </h4>
-                    <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
-          
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h4 class="card-title">Status Details   </h4>
+            <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
+          </div>
+          <div class="card-content collapse show">
+            <div id="featurestsdetatil" class="card-body card-dashboard">
+              <span id="hide_sp"> Click on view status for specific feature</span>
+      
+              {% for feature in data.poc_f_related.all %}
+                <div class="feature-container" id="featurestsdetatil_{{feature.id}}" style="display: none;">
+                  <h4> Feature - {{ feature.features_list }}</h4>
+      
+                  <table class="table table-striped table-hover table-bordered datatable" id="my-feature-table_{{ feature.id }}">  <thead>
+                      <tr>
+                        <th>Status</th>
+                        <th>Added By</th>
+                        <th>Added At</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for dt in feature.feature_related.all %}
+                      <tr>
+                        <td>{{ dt.status }}</td>
+                        <td>{{ dt.added_by }}</td>
+                        <td>{{ dt.created_at }}</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
                 </div>
-                <div class="card-content collapse show">
-                  <div id="featurestsdetatil" class="card-body card-dashboard">
-                  <span id="hide_sp"> Click on view status for specific feature</span>
-
-                    {% for feature in data.poc_f_related.all %}
-                      
-                      <div class="feature-container" id="featurestsdetatil_{{feature.id}}" style="display: none;"> 
-                        <h4> Feature - {{ feature.features_list }}</h4> 
-                        <table class="datatable" id="my-feature-table_{{ feature.id }}">
-                          <thead>
-                            <tr>
-                              <th>Status</th>
-                              <th>Added By</th>
-                              <th>Added At</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                
-                            {% for dt in feature.feature_related.all %}
-                            <tr>
-                              <td>{{ dt.status }}</td>
-                              <td>{{ dt.added_by }}</td>
-                              <td>{{ dt.created_at }}</td>
-                            </tr>
-                            {% endfor %}
-                
-                          </tbody>
-                        </table>
-                      </div>
-                    {% endfor %}
-                  </div>
-                </div>
+              {% endfor %}
+            </div>
+          </div>
         </div>
       </div>
+
+
+
+
     </div>
     </section>
 
@@ -331,7 +327,7 @@
             <div class="modal-footer py-3 px-5">
               <div class="d-flex justify-content-end">
                 <button type="reset" class="btn btn-secondary me-2">Reset</button>
-                <button type="submit" class="btn btn-primary">Submit</button>
+                <button type="submit" onclick="localStorage.setItem('typer', 'remark_added'); console.log('Value added to Local Storage!')" class="btn btn-primary">Submit</button>
               </div>
             </div>
           </form>
@@ -574,19 +570,14 @@ buttons.forEach(button => {
             "username": '{{ request.user.email }}'
         },
         type: 'POST',
-        success: function(result) {
-            $(sts_id_div).triggerHandler("click");
-            $('#centeredModalupdate').modal('hide');  // Hide modal dialog
-            $('.modal-backdrop').remove();             // Remove backdrop elements
-            $('#sts_update_response').html('Status updated successfully!');  // Show success message
+        success: function(result) {                    // Store data
+          localStorage.setItem('myData', sts_id);
+          localStorage.setItem('typer', "sts_add");
+          window.location.reload();
+          $('#centeredModalupdate').modal('hide');  // Hide modal dialog
+          $('.modal-backdrop').remove();             // Remove backdrop elements
+          // $('#sts_update_response').html('Status updated successfully!');  // Show success message
 
-            // Option 1: Reload window after a short delay
-            setTimeout(function() {
-                // window.location.reload();  // Reload the page
-            }, 2000); // Adjust delay as needed (in milliseconds)
-
-            // Option 2: Redirect to a specific URL (uncomment if preferred)
-            // window.location.href = "your_desired_url";
         },
         error: function(jqXHR, textStatus, error) {
             $('#sts_update_response').html(error);
@@ -596,6 +587,21 @@ buttons.forEach(button => {
         }
     });
 });
+        
+const last_action = localStorage.getItem('typer');
+      console.log('last_action', last_action);
+      if (last_action == 'sts_add'){
+        const retrievedData = localStorage.getItem('myData');
+      console.log(retrievedData);
+      $(`${retrievedData}`).triggerHandler("click");
+      const tableToShow = document.getElementById(`featurestsdetatil_${retrievedData}`);
+      const msgspm = document.getElementById(`hide_sp`);
+      if (tableToShow && retrievedData) {
+        tableToShow.style.display = ''; // Unhide the specific container
+        msgspm.style.display = 'none';
+      scrollToElement(`featurestsdetatil_${retrievedData}`);
+      }
+      }
     
     // $('#my_poc_view').dataTable();
     });
