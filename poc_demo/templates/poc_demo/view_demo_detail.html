@@ -125,8 +125,7 @@
 
                                 <div class="mb-3"> 
                                   {% if request.user.role.name == "Manager" %}
-                                    <label for="assign_edit" class="form-label fw-bold">Belongs To:</label>
-                              
+                                    <label for="assign_edit" class="form-label fw-bold">Assign To:</label>
                                     <select name="assign_edit" class="form-control" id="assign_edit" required disabled>
                                         {% if data.assign_to == None %}
                                         <option value="{{ data.assign_to }}" selected>{{ data.assign_to }} </option>
@@ -135,7 +134,7 @@
                                       <option value="{{ belong.id }}" {% if data.assign_to == belong  %} selected {% endif %}>{{ belong }}</option>
                                       {% endfor %}
                                     {% else %}
-                                      <label for="assign_edit_text" class="form-label fw-bold">Belongs To:</label>
+                                      <label for="assign_edit_text" class="form-label fw-bold">Assign To:</label>
                                       <input type="text" class="form-control" id="assign_edit_text" name="assign_edit_text" value="{{ data.assign_to }}" readonly>
                                     {% endif %}
                                     </select>
@@ -146,8 +145,10 @@
                             </div>
                                      
                             <div class="text-end">
+                              {% if request.user.role.name in permission_for_edit %}
                               <button type="button" class="btn btn-primary edit-btn">Edit</button>
                               <button type="submit" class="btn btn-success save-btn" disabled>Save Changes</button>
+                              {% endif %}
                             </div>
                           </div>
                         </form>           
@@ -159,9 +160,11 @@
                               <h5 class="card-title mb-3 text-primary">Remarks</h5>
                             </div>
                             <div class="col-sm-6 text-end">
+                              {% if request.user.role.name in permission_for_edit or  request.user.role.name == 'Support' %}
                               <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#centeredModal" id="{{data.id}}" onclick="set_id(this.id)">
                                 <i class="fas fa-plus"></i> Add Remarks
                               </button>
+                              {% endif %}
                             </div>
                           </div>
                           <table class="table table-bordered datatable" id="demo_remark_table">
@@ -196,6 +199,7 @@
         </div>
         <div id = 'sts_update_response'></div>
     <div class="row">
+      <div id = 'delete_feature_div'></div>
 
       <div class="col-md-6">
         <div class="card shadow-sm rounded-3 p-3 mt-2 bg-light">
@@ -204,9 +208,11 @@
               <h5 class="card-title mb-3 text-primary">Features</h5>
             </div>
             <div class="col-sm-6 text-end">
+              {% if request.user.role.name in permission_for_edit %}
               <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addFeatureModal" id="{{data.id}}">
                 <i class="fas fa-plus"></i> Add Feature
               </button>
+              {% endif %}
             </div>
           </div>
           <table class="table table-striped table-hover table-bordered datatable" id="poc_data_table_feature">
@@ -225,16 +231,31 @@
                 <td>{{ feature.timeline }}</td>
                 <td>{{ feature.status }}</td>
                 <td>
+
+
+
+
                   <div class="d-flex justify-content-between">
-                    <button class="btn btn-sm btn-primary new-btns" id="fet_{{ feature.id }}" value="{{ feature.id }}">
-                      View Status
+                    <button class="btn btn-sm btn-primary new-btns " data-toggle="tooltip" data-placement="top" title="View" id="fet_{{ feature.id }}" value="{{ feature.id }}">
+                      <i class="ri-eye-line" id="fet_{{ feature.id }}_see" ></i>
                     </button>
-                    <button class="btn btn-sm btn-primary"  data-bs-toggle="modal" id="{{ feature.id }}_update_feture" value="{{ feature.id }}" onclick="update_feature(this,'{{ feature.features_list }}','{{ feature.timeline|date:'Y-m-d' }}','{{ feature.status }}')" data-bs-target="#centeredModalupdatefeature">
-                      Update Feature
+                    {% if request.user.role.name in permission_for_edit %}
+                    <button class="btn btn-sm btn-primary"  data-bs-toggle="modal" data-toggle="tooltip" data-placement="top" title="Edit" id="{{ feature.id }}_update_feture" value="{{ feature.id }}" onclick="update_feature(this,'{{ feature.features_list }}','{{ feature.timeline|date:'Y-m-d' }}','{{ feature.status }}')" data-bs-target="#centeredModalupdatefeature">
+                      
+                    <i class="ri-edit-circle-fill" alt="update"></i>
                     </button>
+                    {% endif %}
+                    {% if request.user.role.name in permission_for_ADD_STATUS %}
                     <button class="btn btn-sm btn-primary" data-bs-toggle="modal" value="{{ feature.id }}" onclick="update_sts(this)" data-bs-target="#centeredModalupdate">
-                      Add Status
+                      <i class="ri-file-add-line"></i>Status
                     </button>
+                    {% endif %}
+                    {% if request.user.role.name in permission_for_delete %}
+                    <a class="btn btn-sm btn-danger delete-feature" data-id="{{ feature.id }}" href="#">
+                      <i class="ri-delete-bin-line"></i> 
+                    </a>
+                    {% endif %}
+
                   </div>
                 </td>
               </tr>
@@ -298,6 +319,7 @@
           <form method="post" action="{% url 'add_demo_remarks' data.id %}">
             {% csrf_token %}
             <div class="modal-header bg-light border-bottom">
+
               <h5 class="modal-title" id="centeredModalLabel">Add Remarks</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -510,6 +532,41 @@
 
    <script>
 
+$(document).ready(function() {
+  $('.delete-feature').click(function(event) {
+    event.preventDefault(); // Prevent default form submission
+    const delete_feature_div = document.getElementById('delete_feature_div');
+    var featureId = $(this).data('id'); // Get feature ID from data attribute
+
+    $.ajax({
+      url: "{% url 'delete_feature' %}", // Use URL template tag
+      type: 'POST', // Use POST for delete requests
+      data: {
+        id: featureId,
+        slug: 'demo',
+        'csrfmiddlewaretoken': '{{ csrf_token }}',
+      },
+      dataType: 'json', // Expect a JSON response
+      success: function(data) {
+        if (data.success) {
+          
+          delete_feature_div.innerHTML = data.message
+          localStorage.setItem('typer', "feture_state");
+          location.reload();
+
+        } else {
+       
+          delete_feature_div.innerHTML = data.message
+        }
+      },
+      error: function(jqXHR, textStatus, errorThrown) {
+        console.error('Delete feature failed:', textStatus, errorThrown);
+        delete_feature_div.innerHTML = data.message
+      }
+    });
+  });
+});
+
     $(document).ready(function() {
 
 
@@ -619,6 +676,7 @@ $.ajax({
 
 function scrollToElement(id) {
   const element = document.getElementById(id);
+  console.log(id);
   element.scrollIntoView();
 }
 
@@ -629,7 +687,6 @@ function scrollToElement(id) {
     }
 
     function update_feature(button, name, timeline, status){
-      alert( button.value);
     document.getElementById('feature_ids').value = button.value;
     document.getElementById('Feature_name').value = name;
     document.getElementById('Feature_timeline').value = timeline;

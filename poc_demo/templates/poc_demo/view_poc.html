@@ -4,6 +4,20 @@
 
 {% block poc_content %}  
 {% load static %}
+          {% if messages %}
+          <div class="messages text-center">
+
+<!--
+            {% for message in messages %}
+            {{message}}
+            {% endfor %} -->
+
+          {% for message in messages %}
+          <h4 {% if message.extra_tags %} class="alert alert-{{ message.extra_tags }}"{% else %}
+          class="alert alert-{{ message.tags }}"{% endif %}>{{ message }}</h4>
+          {% endfor %}
+          </div>
+          {% endif %}
 
 <div class="app-content content">
     <div class="content-wrapper">
@@ -215,10 +229,11 @@
     <!-- <script src="https://code.jquery.com/jquery-3.6.3.min.js"></script> -->
 
    <script>
-
+    localStorage.setItem('typer', "new");
     function set_id(button_){
         document.getElementById('row_remark_id').value  = button_
     }
+
 
     function update_sts(button){
     document.getElementById('sts_id').value = button.value;

@@ -5,7 +5,20 @@
 {% block poc_content %}
   
   {% load static %}
+          {% if messages %}
+          <div class="messages text-center">
 
+<!--
+            {% for message in messages %}
+            {{message}}
+            {% endfor %} -->
+
+          {% for message in messages %}
+          <h4 {% if message.extra_tags %} class="alert alert-{{ message.extra_tags }}"{% else %}
+          class="alert alert-{{ message.tags }}"{% endif %}>{{ message }}</h4>
+          {% endfor %}
+          </div>
+          {% endif %}
     <div class="app-content content">
       <div class="content-wrapper">
         <div class="content-header row">
@@ -62,7 +75,10 @@
                    
                      
                      <select name="Belongs_to" class="form-control" id="user_list" required>
-                         <option value="{{ user.Belongs_to_id }}" selected>{{ user.Belongs_to.username }}</option>
+                         {% for user in all_user %}
+                           <option value="{{ user.id }}"{% if user.id == user.Belongs_to.id %} selected {% endif %}>{{ user }}</option>
+                           {% endfor %}
+
                       </select>
                      </select>
                  </div>
@@ -91,12 +107,7 @@
           <div class="col-md-3">
             
           </div>
-                           {% if messages %}
-                            <p></p>
-                            {% for msg in messages %}
-                            <p>{{ msg }}</p>
-                            {% endfor %}
-                            {% endif %}
+
           </div>
         </div>
       </div>

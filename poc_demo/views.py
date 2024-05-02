@@ -7,13 +7,22 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login,logout, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Prefetch
+from django.contrib.auth.models import User, Permission, Group
+from django.contrib.contenttypes.models import ContentType
+
+
 
 # Create your views here.
 User = get_user_model()
 
 @login_required(login_url='loginpage')
 def dahboard(request):
-    context = {'name': 'kp'}
+    user_types = request.user.role
+    all_active_product = Product.objects.all()
+    all_poc = Poc_model.objects.all()
+    all_users = User.objects.all()
+    all_demo = Demo_model.objects.all()
+    context = {'name': 'kp', 'user_type': user_types, 'Products': all_active_product, "poc": all_poc, "demo": all_demo, "user": all_users}
     return render(request, 'poc_demo/index.html', context)
 
 # def loginpage(request):
@@ -39,6 +48,10 @@ def login_page(request):
                     return redirect('loginpage')
                 else:
                     login(request, user)
+
+                    content_type = ContentType.objects.get_for_model(Poc_model)
+                    post_permission = Permission.objects.filter(content_type=content_type)
+                    print([perm.codename for perm in post_permission])
                     return redirect('dashboard')
     except Exception as e:
         print(e)
@@ -113,8 +126,7 @@ def add_poc(request):
             
             new_feature_list = []
             for feture in features:
-                new_feature_list.append({'poc_id': poc_ref, 'features_list':feture, 'status':status, 'added_by': added_by})            
-            messages.success(request, "poc added successfully")
+                new_feature_list.append({'poc_id': poc_ref, 'features_list':feture, 'status':status, 'added_by': added_by})
             new_feature_list = []
             for j in features_list:
                 print(request.POST[f'features_{j}'])
@@ -147,6 +159,8 @@ def add_user(request):
     flow = {"Admin":['Admin', 'Manager', 'Sales'], "Manager": ['Sales'], "Sales": ''}
     user = User.objects.all()
     roles = Roles.objects.all()
+    
+
     for i in roles:
         print(i)
     sts = status_choice
@@ -174,17 +188,40 @@ def add_user(request):
             else:
                 Belongs_to = User.objects.get(id=request.POST['Belongs_to'])
                 usertype = Roles.objects.get(name=request.POST['usertype'])
+                if usertype.name == 'Support':
+                    permissions_to_skip = ['delete', 'edit']  # Permissions Support shouldn't have
+                else:
+                    permissions_to_skip = []
                 first_name = request.POST['first_name']
                 last_name = request.POST['last_name']
                 email = request.POST['email']
                 username = request.POST['username']
                 password = request.POST['password']
                 status = request.POST.get('status')
-                
                 new_user = User.objects.create(first_name=first_name,last_name=last_name,email=email,username=username,Belongs_to=Belongs_to,role=usertype,Status=status)
                 new_user.set_password(password)
+                list_dict = {'poc': Poc_model, 'demo': Demo_model, 'fstatus': Feature_status, 'dstatus': Demo_Feature_status, 'user': User
+                             ,'premark': Poc_remark, 'dremark': Demo_remark, 'pfeature': Feature, 'dfeature': Demo_feature}
+                # for j in ['poc', 'demo', 'fstatus', 'dstatus', 'user', 'premark', 'dremark', 'pfeature', 'dfeature']:
+                #     contenttype = ContentType.objects.get_for_model(list_dict[j])
+                #     for i in ['add', 'delete', 'view', 'edit']:
+                #         if i in permissions_to_skip:
+                #             continue
+                #         else: 
+                #             print("************",usertype)
+
+                #         review_permision = Permission.objects.create(
+                #             codename = f"{i}_{j}",
+                #             name =f"Can {i} {j}",
+                #             content_type =contenttype
+                #         )
+                #         new_user.user_permissions.add(review_permision)
+
+                # user_group = Group.objects.get_or_create(name=usertype.name)[0]
+                # print(user_group)
+                # new_user.groups.add(user_group)
                 new_user.save()
-                # result['message'] = "successfully user added"
+             
                 messages.success(request,'successfully user added')
         except Exception as e:
             messages.success(request,f'user  not added {e}')
@@ -206,6 +243,7 @@ def view_users(request):
 
 @login_required(login_url='loginpage')
 def edit_user(request, id):
+    all_user = User.objects.all()
     user = get_object_or_404(User, pk=id)  # Fetch user by ID
     flow = {"Admin":['Admin', 'Manager', 'Sales'], "Manager": ['Sales'], "Sales": ''}
     roles = Roles.objects.all()
@@ -227,17 +265,20 @@ def edit_user(request, id):
                 user.first_name = request.POST['first_name']
                 user.last_name = request.POST['last_name']
                 user.email = request.POST['email']
-                user.Belongs_to = User.objects.get(id=request.POST['Belongs_to'])
+                if request.POST['Belongs_to'] != 'None':
+                    user.Belongs_to = User.objects.get(id=request.POST['Belongs_to'])
+
                 user.role = Roles.objects.get(name=request.POST['usertype'])
                 user.Status = request.POST.get('status')
                 user.save()
                 messages.success(request,'successfully user updaed')
         except Exception as e:
             messages.error(request,f'user not updated {e}')
-            return redirect('add_users')
+            return redirect('view_users')
     context = {'user': user,
                'roles': roles,
-               'status': sts
+               'status': sts,
+               'all_user': all_user
                }
     return render(request, 'poc_demo/edit_user.html', context)
 
@@ -290,7 +331,7 @@ def add_role(request):
             Role_name = request.POST['role_name']
             status = request.POST.get('status') #request.POST.get('status')
             print(status)
-            new_role = Roles(name=Role_name,status=status,added_by=CustomUser.objects.get(id=request.user.id))
+            new_role = Roles(name=Role_name,status=status)
             new_role.save()
             messages.success(request, f"Role added Successfully")
             # request.session['success_message'] = 'Successfully added!'
@@ -409,13 +450,16 @@ def edit_product(request, id):
 @login_required(login_url='loginpage')
 def view_poc(request):
     print(request.user.role)
-    if request.user.role_id == 1:
+    print(request.user.role_id)
+    if request.user.role.name == "Admin":
         all_active_product = Poc_model.objects.prefetch_related('poc_f_related', 'poc_r_related').all() 
-    elif request.user.role_id == 2:
+    elif request.user.role.name == "Manager":
+        print("********8***88")
+        print("request.user.id",request.user.id)
         all_active_product = Poc_model.objects.filter(added_by__Belongs_to=request.user.id).prefetch_related('poc_f_related', 'poc_r_related').all() 
-    elif request.user.role_id == 3:
+    elif request.user.role.name == "Sales":
         all_active_product = Poc_model.objects.filter(added_by=request.user.id).prefetch_related('poc_f_related', 'poc_r_related').all() 
-    elif request.user.role_id == 4:
+    elif request.user.role.name == "Support":
         all_active_product = Poc_model.objects.filter(assign_to=request.user.id).prefetch_related('poc_f_related', 'poc_r_related').all()
     search_query = request.GET.get('search', '')
 
@@ -496,8 +540,9 @@ def edit_poc(request, id):
             get_poc.Product_name = product_name
             get_poc.Timeline = request.POST['Timeline_date']
             get_poc.status = status
-            if request.POST['assign_edit']:
-                get_poc.assign_to = User.objects.get(pk=request.POST['assign_edit'])
+            if request.POST.get('assign_edit'):
+                if request.POST['assign_edit'] != 'None':
+                    get_poc.assign_to = User.objects.get(pk=request.POST.get('assign_edit'))
             get_poc.save()
             messages.success(request, 'poc updated')
     except Exception as e:
@@ -549,6 +594,9 @@ def update_feature_detail(request):
 @login_required(login_url='loginpage')
 def view_poc_detail(request, id):
     poc = Poc_model.objects.prefetch_related('poc_f_related', 'poc_r_related').get(id=id)
+    permission_for_edit = ['Admin', 'Sales', 'Manager']
+    permission_for_delete = ['Admin', 'Sales', 'Manager']
+    permission_for_ADD_STATUS = ['Admin', 'Sales', 'Manager','Support']
     html_feture_only = ''' '''
     html_feture_sts_only = ''' '''
     html = ''' '''
@@ -589,7 +637,18 @@ def view_poc_detail(request, id):
             return redirect('view_poc_detail', id=id)
         except Exception as e:
             print(e)
-    return render(request, 'poc_demo/view_poc_detail.html', {'data': poc, 'status': status_list, 'html': html, 'product': all_active_product, 'permition': [1,2,3], "assign_to": assign_to, "html_feture_sts_only":html_feture_sts_only, "html_feture_only":html_feture_only })
+    return render(request, 'poc_demo/view_poc_detail.html', {'data': poc,
+                                                             'status': status_list,
+                                                             'html': html,
+                                                             'product': all_active_product,
+                                                             'permition': [1,2,3],
+                                                             "assign_to": assign_to,
+                                                             "html_feture_sts_only":html_feture_sts_only,
+                                                             "html_feture_only":html_feture_only,
+                                                             "permission_for_edit":permission_for_edit,
+                                                              "permission_for_ADD_STATUS": permission_for_ADD_STATUS,
+                                                             "permission_for_delete": permission_for_delete
+                                                             })
 
 
 @login_required(login_url='loginpage')
@@ -693,7 +752,7 @@ def add_demo(request):
             for j in features_list:
                 print(request.POST[f'features_{j}'])
                 print(request.POST[f'timeline_{j}'])
-                new_feature_list.append({'poc_id': demo_ref, 'features_list':request.POST[f'features_{j}'],'timeline':request.POST[f'timeline_{j}'], 'status':status, 'added_by': added_by}) 
+                new_feature_list.append({'demo_id': demo_ref, 'features_list':request.POST[f'features_{j}'],'timeline':request.POST[f'timeline_{j}'], 'status':status, 'added_by': added_by})
             # Access created features and their status objects:
             features_lsts_added = []
             for data in new_feature_list:
@@ -746,6 +805,9 @@ def view_demo(request):
 
 @login_required(login_url='loginpage')
 def view_demo_detail(request, id):
+    permission_for_edit = ['Admin', 'Sales', 'Manager']
+    permission_for_delete = ['Admin', 'Sales', 'Manager']
+    permission_for_ADD_STATUS = ['Admin', 'Sales', 'Manager', 'Support']
     demo = Demo_model.objects.prefetch_related('demo_f_related', 'demo_r_related').get(id=id)
     html_feture_only = ''' '''
     html_feture_sts_only = ''' '''
@@ -786,14 +848,25 @@ def view_demo_detail(request, id):
             return redirect('view_demo_detail', id=id)
         except Exception as e:
             print(e)
-    return render(request, 'poc_demo/view_demo_detail.html', {'data': demo, 'status': status_list, 'html': html, 'product': all_active_product, 'permition': [1,2,3], "assign_to": assign_to, "html_feture_sts_only":html_feture_sts_only, "html_feture_only":html_feture_only })
+    return render(request, 'poc_demo/view_demo_detail.html', {'data': demo,
+                                                              'status': status_list,
+                                                              'html': html,
+                                                              'product': all_active_product,
+                                                              'permition': [1,2,3],
+                                                              "assign_to": assign_to,
+                                                              "html_feture_sts_only":html_feture_sts_only,
+                                                              "html_feture_only":html_feture_only,
+                                                              "permission_for_edit": permission_for_edit,
+                                                              "permission_for_ADD_STATUS": permission_for_ADD_STATUS,
+                                                              "permission_for_delete": permission_for_delete
+                                                              })
 
 
 @login_required(login_url='loginpage')
 def edit_demo(request, id):
     try:
         if request.method == 'POST':
-            print(request.POST)
+            print(request.POST, id)
             get_demo = Demo_model.objects.get(pk=id)
             product_name = Product.objects.get(Product_name=request.POST['product_name'])    
             status = Status.objects.get(name=request.POST['status'])
@@ -801,7 +874,10 @@ def edit_demo(request, id):
             get_demo.Product_name = product_name
             get_demo.Timeline = request.POST['Timeline_date']
             get_demo.status = status
-            get_demo.assign_to = User.objects.get(pk=request.POST['assign_edit'])
+            if request.POST.get('assign_edit'):
+                print(request.POST['assign_edit'])
+                if request.POST['assign_edit'] != 'None':
+                    get_demo.assign_to = User.objects.get(pk=request.POST.get('assign_edit'))
             get_demo.save()
             messages.success(request, 'Demo Updated')
     except Exception as e:
@@ -847,6 +923,7 @@ def add_demo_feature(request, id):
                 new_feature_list.append({'demo_id': demo_ref, 'features_list':request.POST[f'features_{j}'],'timeline':request.POST[f'timeline_{j}'], 'status':'New', 'added_by': added_by}) 
             features_lsts_added = []
             for data in new_feature_list:
+                print(data)
                 feature = Demo_feature.objects.create(**data)  # Create the Feature object
                 status_data = Demo_Feature_status.objects.create(feature=feature, status="active", added_by=added_by)  # Create the Status object linked to the Feature
                 features_lsts_added.append(status_data)
@@ -917,6 +994,22 @@ def update_feature_detail_demo(request):
             messages.success(request, "Feture Updated")
             return HttpResponse('<div class="messages text-center alert alert-success"> <h2>  updaed.</h2> </div>') #just for testing purpose you can remove it.
         except Exception as e:
-            messages.success(request, f"Feture not updated {e}")
+            messages.error(request, f"Feture not updated {e}")
             return HttpResponse(f'<div cla  ss="messages text-center alert alert-danger"> <h2>  not updated {e}.</h2> </div>') 
 
+
+def delete_feature(request):
+    if request.method == 'POST':
+        try:
+            print(request.POST)
+            if request.POST['slug'] == 'demo':
+                feature = get_object_or_404(Demo_feature, pk=int(request.POST['id']))  # Adjust model access logic
+                feature.delete()
+            else:
+                feature = get_object_or_404(Feature, pk=int(request.POST['id']))  # Adjust model access logic
+                feature.delete()
+            return JsonResponse({'success': True, 'message': 'Feature deleted successfully'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'Error deleting feature: {e}'})
+    else:
+        return JsonResponse({'success': False, 'message': 'Invalid request method'})

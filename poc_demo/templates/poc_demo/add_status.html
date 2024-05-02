@@ -3,18 +3,25 @@
 
 {% block poc_content %}  
   {% load static %}
+          {% if messages %}
+          <div class="messages text-center">
 
+<!--
+            {% for message in messages %}
+            {{message}}
+            {% endfor %} -->
+
+          {% for message in messages %}
+          <h4 {% if message.extra_tags %} class="alert alert-{{ message.extra_tags }}"{% else %}
+          class="alert alert-{{ message.tags }}"{% endif %}>{{ message }}</h4>
+          {% endfor %}
+          </div>
+          {% endif %}
 <div class="app-content content">
       <div class="content-wrapper">
         <div class="content-header row">
         </div>
         <div class="content-body">
-          {% if message %}     
-          <p>{{ message }}</p>
-          {% endif %}
-          {% if result %}     
-          <p>{{ result }}</p>
-          {% endif %}
 
             <div class="card">
                 <!-- Form control repeater section start -->

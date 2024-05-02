@@ -364,9 +364,11 @@
         </a>
         <ul id="tables-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
+            {% if request.user.role.name == 'Sales' or request.user.role.name == "Admin" %}
             <a href="{% url 'add_demo' %}">
               <i class="bi bi-circle"></i><span>Add Demo</span>
             </a>
+            {% endif %}
           </li>
           <li>
             <a href="{% url 'view_demo' %}">
