@@ -47,60 +47,87 @@
                             <div class="card-content collapse show">
                                 <div class="card-body">
     
-                                    <form class="row" method="post">
 
-                                       {% csrf_token %}
-                                       <div class="form-group col-md-6 mb-2">
+<form class="row g-3 cool-form" method="post">
+  {% csrf_token %}
 
-                                        <input type="text" class="form-control" placeholder="First_Name" name="first_name">
-                                        </div>
-                                        <div class="form-group col-md-6 mb-2">
-                                          
-                                        <input type="text" class="form-control" placeholder="Last_Name" name="last_name">
-                                    </div>
-                                    <div class="form-group col-md-12 mb-2">
-                                      <input type="email" class="form-control" placeholder="Email" name="email">
-                                  </div>
-                                        <div class="form-group col-md-12 mb-2">
-                                            <input type="text" class="form-control" placeholder="Username" name="username">
-                                        </div>
-                                        <div class="form-group col-md-12 mb-2">
-                                          <input type="password" class="form-control" placeholder="Password" name="password">
-                                      </div>
-                                        <div class="form-group col-md-12 mb-2">
-                                          
-                                            <select name="usertype" class="form-control" id = "userType">
-                                                <option value="none" selected="" disabled="">User Type</option>
-                                                {% for role in roles %}
-                                                <option value="{{role}}">{{role}}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                        <div class="form-group col-md-12 mb-2">
-                                          
-                                          <select name="Belongs_to" class="form-control" id="user_list">
-                                              <option value="none" selected="" disabled="">Belongs To</option>
-                                              <!-- {% for user in users %}
-                                              <option value="{{user}}">{{user}}</option>
-                                              {% endfor %} -->
-                                          </select>
-                                      </div>
-                                       
-    
-                                        <div class="form-group col-md-12 mb-2">
-                                            <select name="status" class="form-control">
-                                              {% for id,sts in status %}
-                                              <option value="{{id}}">{{sts}}</option>
-                                              {% endfor %}
-                                            </select>
-                                        </div>
-                                        <div class="form-actions col-12 mb-2">
-                                            <div class="text-right">
-                                                <button type="submit" class="btn btn-primary">Submit <i class="ft-thumbs-up position-right"></i></button>
-                                                <button type="reset" class="btn btn-warning">Reset <i class="ft-refresh-cw position-right"></i></button>
-                                            </div>
-                                        </div>
-                                    </form>
+  <div class="col-md-6">
+    <div class="form-floating mb-2">
+      <input type="text" class="form-control" id="firstName" name="first_name" placeholder="First Name">
+      <label for="firstName">First Name</label>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="form-floating mb-2">
+      <input type="text" class="form-control" id="lastName" name="last_name" placeholder="Last Name">
+      <label for="lastName">Last Name</label>
+    </div>
+  </div>
+
+  <div class="col-md-12">
+    <div class="form-floating mb-2">
+      <input type="email" class="form-control" id="email" name="email" placeholder="Email">
+      <label for="email">Email</label>
+    </div>
+  </div>
+
+  <div class="col-md-12">
+    <div class="form-floating mb-2">
+      <input type="email" class="form-control" id="username" name="username" placeholder="Username">
+      <label for="username">Username</label>
+    </div>
+  </div>
+
+  <div class="col-md-12">
+    <div class="form-floating mb-2">
+      <input type="password" class="form-control" id="password" name="password" placeholder="Password">
+      <label for="password">Password</label>
+    </div>
+  </div>
+
+  <div class="col-md-12">
+    <div class="form-floating mb-2">
+      <select name="usertype" class="form-control" id="userType">
+        <option value="none" selected="" disabled></option>
+        {% for role in roles %}
+          {% if role != 'Admin' %}
+            <option value="{{ role }}">{{ role }}</option>
+          {% endif %}
+        {% endfor %}
+      </select>
+      <label for="userType">User Type</label>
+    </div>
+  </div>
+
+  <div class="col-md-12">
+    <div class="form-floating mb-2">
+      <select name="Belongs_to" class="form-control" id="user_list">
+        <option value="none" selected="" disabled></option>
+        </select>
+      <label for="user_list">Belongs To</label>
+    </div>
+  </div>
+
+  <div class="col-md-12">
+    <div class="form-floating mb-2">
+      <select name="status" class="form-control">
+        {% for id, sts in status %}
+          <option value="{{ id }}">{{ sts }}</option>
+        {% endfor %}
+      </select>
+      <label for="status">Status</label>
+    </div>
+  </div>
+
+  <div class="form-actions col-12 mb-2">
+    <div class="text-right">
+      <button type="submit" class="btn btn-primary">Submit <i class="ft-thumbs-up position-right"></i></button>
+      <button type="reset" class="btn btn-warning">Reset <i class="ft-refresh-cw position-right"></i></button>
+    </div>
+  </div>
+</form>
+
     
                                 </div>
                             </div>

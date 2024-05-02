@@ -24,12 +24,6 @@
         <div class="content-header row">
         </div>
         <div class="content-body">
-          {% if message %}     
-          <p>{{ message }}</p>
-          {% endif %}
-          {% if result %}     
-          <p>{{ result }}</p>
-          {% endif %}
 
             <div class="card">
               <div class="row">
@@ -38,9 +32,6 @@
 
                   <div class="col-md-6">
 
-
-               
-
               
                 <!-- Form control repeater section start -->        
                 
@@ -48,58 +39,82 @@
             
                 <h1 class="text-center mb-4">Edit User - {{ user.username }}</h1>
               
-                <form class="row g-3 needs-validation" method="post" novalidate>
-                  {% csrf_token %}
-                  <div class="form-group col-md-6 mb-2">
-                   <input type="text" class="form-control" placeholder="First_Name" id="FirstName" name="first_name"  value="{{ user.first_name }}" required>
-                   </div>
+                    <form class="row g-3 needs-validation" method="post" novalidate>
+                      {% csrf_token %}
 
-                   <div class="form-group col-md-6 mb-2">  
-                   <input type="text" class="form-control" placeholder="Last_Name" id="lastName" name="last_name" value="{{ user.last_name }}" required>
-               </div>         
-               <div class="form-group col-md-12 mb-2">
-                 <input type="email" class="form-control" placeholder="Email"  id="email" name="email" value="{{ user.email }}" required>
-             </div>
+                      <div class="col-md-6 mb-2">
+                        <div class="form-floating">
+                          <input type="text" class="form-control" id="FirstName" name="first_name" value="{{ user.first_name }}" placeholder="First Name" required>
+                          <label for="FirstName">First Name</label>
+                        </div>
+                      </div>
 
-                   <div class="form-group col-md-12 mb-2">
-                     
-                       <select name="usertype" class="form-control" id = "userType" required>
-                           <option value="" disabled="">User Type</option>
-                           {% for role in roles %}
-                           <option value="{{ role }}"{% if user.role == role %} selected {% endif %}>{{ role }}</option>
-                           {% endfor %}
-                       </select>
-                   </div>
-                   <div class="form-group col-md-12 mb-2">
+                      <div class="col-md-6 mb-2">
+                        <div class="form-floating">
+                          <input type="text" class="form-control" id="lastName" name="last_name" value="{{ user.last_name }}" placeholder="Last Name" required>
+                          <label for="lastName">Last Name</label>
+                        </div>
+                      </div>
 
-                   
-                     
-                     <select name="Belongs_to" class="form-control" id="user_list" required>
-                         {% for user in all_user %}
-                           <option value="{{ user.id }}"{% if user.id == user.Belongs_to.id %} selected {% endif %}>{{ user }}</option>
-                           {% endfor %}
+                      <div class="col-md-12 mb-2">
+                        <div class="form-floating">
+                          <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" placeholder="Email" required>
+                          <label for="email">Email</label>
+                        </div>
+                      </div>
 
-                      </select>
-                     </select>
-                 </div>
+                      <div class="col-md-12 mb-2">
+                        <div class="form-floating">
+                          <select name="usertype" class="form-control" id="userType" required>
+                            <option value="" disabled="">User Type</option>
+                            {% if user.role.name != 'Admin' %}
+                              {% for role in roles %}
+                                {% if role.name != 'Admin' %}
+                                  <option value="{{ role }}" {% if user.role == role %} selected {% endif %}>{{ role }}</option>
+                                {% endif %}
+                              {% endfor %}
+                            {% else %}
+                              <option value="Admin" selected>Admin</option>
+                            {% endif %}
+                          </select>
+                          <label for="userType">User Type</label>
+                        </div>
+                      </div>
 
-              
-                  
+                      <div class="col-md-12 mb-2">
+                        <div class="form-floating">
+                          <select name="Belongs_to" class="form-control" id="user_list" required>
+                            {% if user.role.name != 'Admin' %}
+                              {% for user_ in all_user %}
+                                <option value="{{ user_.id }}" {% if user_.id == user.Belongs_to.id %} selected {% endif %}>{{ user_ }}</option>
+                              {% endfor %}
+                            {% else %}
+                              <option value="{{ user.id }}" selected>{{ user.username }}</option>
+                            {% endif %}
+                          </select>
+                          <label for="user_list">Belongs To</label>
+                        </div>
+                      </div>
 
-                   <div class="form-group col-md-12 mb-2">
-                    <select name="status" class="form-control" required>
-                      {% for id, sts in status %}
-                      <option value="{{ id }}" {% if user.Status == id %} selected {% endif %}>{{ sts }}</option>
-                      {% endfor %}
-                    </select>
-                   </div>
-                   <div class="form-actions col-12 mb-2">
-                       <div class="text-right">
-                           <button type="submit" class="btn btn-primary">Submit <i class="ft-thumbs-up position-right"></i></button>
-                           <button type="reset" class="btn btn-warning">Reset <i class="ft-refresh-cw position-right"></i></button>
-                       </div>
-                   </div>              
-                </form>
+                      <div class="col-md-12 mb-2">
+                        <div class = "form-floating">
+                          <select name="status" id="status" class="form-control" required>
+                            {% for id, sts in status %}
+                              <option value="{{ id }}" {% if user.Status == id %} selected {% endif %}>{{ sts }}</option>
+                            {% endfor %}
+                          </select>
+                          <label for="status">Status</label>
+                        </div>
+                      </div>
+
+                      <div class="form-actions col-12 mb-2">
+                        <div class="text-right">
+                          <button type="submit" class="btn btn-primary">Submit <i class="ft-thumbs-up position-right"></i></button>
+                          <button type="reset" class="btn btn-warning">Reset <i class="ft-refresh-cw position-right"></i></button>
+                        </div>
+                      </div>
+                    </form>
+
                 
               </section>
             </div>
