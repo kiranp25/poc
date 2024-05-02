@@ -23,7 +23,40 @@
   <link href="{% static 'assets/vendor/simple-datatables/style.css' %}" rel="stylesheet">
 
   <link href="{% static 'assets/css/style.css' %}" rel="stylesheet">
+<style>
+  /* CSS Code */
+.smiley-face {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background-color: yellow;
+  position: relative;
+}
 
+.eyes {
+  position: absolute;
+  top: 25%;
+  left: 20%;
+  width: 15%;
+  height: 15%;
+  border-radius: 50%;
+  background-color: black;
+}
+
+.eyes + .eyes {
+  left: 65%;
+}
+
+.mouth {
+  position: absolute;
+  top: 50%;
+  left: 20%;
+  width: 60%;
+  height: 20%;
+  border-radius: 10%;
+  border-top: 3px solid black;
+}
+</style>
 
   <!-- =======================================================
   * Updated: Mar 17 2024 with Bootstrap v5.3.3
@@ -66,6 +99,10 @@
                   <div class="pt-4 pb-2">
                     <h5 class="card-title text-center pb-0 fs-4">Login to Your Account</h5>
                     <p class="text-center small">Enter your username & password to login</p>
+                    <!-- <div class="smiley-face">
+                      <div class="eyes"></div>   <div class="eyes"></div>
+                      <div class="mouth"></div>
+                    </div> -->
                   </div>
 
                   <form class="row g-3 needs-validation" method="post" novalidate>

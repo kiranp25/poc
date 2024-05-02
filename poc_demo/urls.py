@@ -31,6 +31,7 @@ urlpatterns = [
     path('edit_poc/<int:id>', views.edit_poc, name='edit_poc'),
     path('add_remarks/<int:id>', views.add_remarks, name='add_remarks'),
     path('update_feature_detail/', views.update_feature_detail, name='update_feature_detail'),
+    path('delete_feature/', views.delete_feature, name='delete_feature'),
     path('add_feature/<int:id>', views.add_feature, name='add_feature'),
     path('add_demo/', views.add_demo, name='add_demo'),
     path('view_demo/', views.view_demo, name='view_demo'),
