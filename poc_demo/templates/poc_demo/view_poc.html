@@ -41,8 +41,14 @@
                                 <!-- <li><a data-action="close"><i class="ft-x"></i></a></li> -->
                             </ul>
                         </div>
+
+
+
                         
                         <div class="col-md-2 ms-auto mt-2" style="margin-left: 100px;">
+                             <div class="text-end">
+                    <a href="{% url 'add_poc' %}" class="btn btn-primary btn-sm m-2">Add POC</a>
+                </div>
                             <form method="get" id="filter-form" class="form-inline">
                             <input type="text" name="search" placeholder="Search.." id="search" class="form-control ms-auto" value="{{ search_query }}">
                           </form></div>

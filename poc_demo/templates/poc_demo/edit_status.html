@@ -37,23 +37,30 @@
                     <section id="form-control-repeater" class="container-fluid py-4">
                      
                       <form class="row g-3 needs-validation" method="post" novalidate>
-                        {% csrf_token %}
-                        
-                        <div class="form-group col-md-6 mb-2">
-                          <h4 class="text-center mb-4">Edit Status - {{ status.name }}</h4>
-                    
-                          <input type="hidden" class="form-control"  value={{request.user.email}} name="username">
-                          <input type="hidden" class="form-control"  value={{status.id}} name="status_id">
-                          <input type="text" class="form-control" placeholder="status name" name="status_name" value="{{status.name}}">
+                      {% csrf_token %}
+                      <input type="hidden" class="form-control" value={{ request.user.email }} name="username">
+                      <input type="hidden" class="form-control" value={{ status.id }} name="status_id">
+
+                      <div class="col-md-12 mb-4">
+                        <h4 class="text-center">Edit Status - {{ status.name }}</h4>
+                      </div>
+
+                      <div class="col-md-12 mb-2">
+                        <div class="form-floating">
+                          <input type="text" class="form-control" id="statusName" name="status_name" value="{{ status.name }}" placeholder="Status Name" required>
+                          <label for="statusName">Status Name</label>
                           <div class="invalid-feedback">Please provide a valid status.</div>
-                        </div>  
-                        <div class="form-actions col-12 mb-2">
-                          <div class="text-right">
-                              <button type="submit" class="btn btn-primary">Submit <i class="ft-thumbs-up position-right"></i></button>
-                              <button type="reset" class="btn btn-warning">Reset <i class="ft-refresh-cw position-right"></i></button>
-                          </div>
-                      </div>   
-                      </form>
+                        </div>
+                      </div>
+
+                      <div class="form-actions col-12 mb-2">
+                        <div class="text-right">
+                          <button type="submit" class="btn btn-primary">Submit <i class="ft-thumbs-up position-right"></i></button>
+                          <button type="reset" class="btn btn-warning">Reset <i class="ft-refresh-cw position-right"></i></button>
+                        </div>
+                      </div>
+                    </form>
+
                     </section>
                     </div>
 
@@ -61,12 +68,7 @@
                     </div>
 
                 </div>  
-                                         {% if messages %}
-                            <p></p>
-                            {% for msg in messages %}
-                            <p>{{ msg }}</p>
-                            {% endfor %}
-                            {% endif %}
+
           </div>
         </div>
       </div>
