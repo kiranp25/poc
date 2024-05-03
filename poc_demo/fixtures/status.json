@@ -1,0 +1,49 @@
+[
+    {
+        "model": "poc_demo.status",
+        "pk": 1,
+        "fields": {
+            "name": "Pending",
+            "created_at": "2024-04-08T00:00:00Z",
+            "updated_at": "2024-04-08T00:00:00Z"
+        }
+    },
+    {
+        "model": "poc_demo.status",
+        "pk": 2,
+        "fields": {
+            "name": "Approved",
+            "created_at": "2024-04-08T00:00:00Z",
+            "updated_at": "2024-04-08T00:00:00Z"
+        }
+    },
+    {
+        "model": "poc_demo.status",
+        "pk": 3,
+        "fields": {
+            "name": "Active",
+            "created_at": "2024-04-08T00:00:00Z",
+            "updated_at": "2024-04-08T00:00:00Z"
+
+        }
+    },
+    {
+        "model": "poc_demo.status",
+        "pk": 4,
+        "fields": {
+            "name": "InActive",
+            "created_at": "2024-04-08T00:00:00Z",
+            "updated_at": "2024-04-08T00:00:00Z"
+
+        }
+    },
+    {
+        "model": "poc_demo.status",
+        "pk": 5,
+        "fields": {
+            "name": "Rejected",
+            "created_at":"2024-04-08T00:00:00Z",
+            "updated_at": "2024-04-08T00:00:00Z"
+        }
+    }
+]

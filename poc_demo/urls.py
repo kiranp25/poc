@@ -16,6 +16,7 @@ urlpatterns = [
     path('get_detail_sts/',views.get_detail_sts, name='get_detail_sts'),
     path('logout/', views.logout_page, name='logout_page'),
     path('view_users/', views.view_users, name='view_users'),
+    path('change-password/<int:user_id>/', views.change_password, name='change_password'),
     path('edit_user/<int:id>', views.edit_user, name='edit_user'),
     path('edit_status/<int:id>', views.edit_status, name='edit_status'),
     path('view_status/', views.view_status, name='view_status'),
@@ -36,12 +37,16 @@ urlpatterns = [
     path('add_demo/', views.add_demo, name='add_demo'),
     path('view_demo/', views.view_demo, name='view_demo'),
     path('edit_demo/<int:id>', views.edit_demo, name='edit_demo'),
+    path('approved_status/<int:pk>', views.approved_status, name='approved_status'),
     path('view_demo_detail/<int:id>',views.view_demo_detail, name='view_demo_detail'),
     path('add_demo_remarks/<int:id>',views.add_demo_remarks, name='add_demo_remarks'),
     path('get_detail_sts_demo/',views.get_detail_sts_demo, name='get_detail_sts_demo'),
     path('add_demo_feature/<int:id>', views.add_demo_feature, name='add_demo_feature'),
     path('demo_update_sts/<int:id>', views.demo_update_sts, name='demo_update_sts'),
     path('update_feature_detail_demo', views.update_feature_detail_demo, name='update_feature_detail_demo'),
+    path('save_reject_desc/', views.save_reject_desc, name='save_reject_desc'),
+
+
 
     
 

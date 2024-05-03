@@ -9,6 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Prefetch
 from django.contrib.auth.models import User, Permission, Group
 from django.contrib.contenttypes.models import ContentType
+from .form import CustomPasswordResetForm
 
 # Create your views here.
 User = get_user_model()
@@ -90,12 +91,28 @@ def view_poc(request):
     all_poc = Poc_model.objects.all()
     pass
 
+def change_password(request, user_id):
+    if not request.user.is_superuser:
+        return redirect('/')  # Redirect non-admin users
+
+    user = User.objects.get(pk=user_id)
+    if request.method == 'POST':
+        form = CustomPasswordResetForm(user, request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Password reset successfully.')
+            return redirect('view_users')
+    else:
+        form = CustomPasswordResetForm(user)
+    return render(request, 'poc_demo/change_password.html', {'form': form})
 
 @login_required(login_url='loginpage')
 def add_poc(request):
     all_active_product = Product.objects.all()
     sts = Status.objects.all()
+    type_poc = poc_choice
     context = {}
+    context['type_poc'] = type_poc
     context['status'] = sts
     product_list = [product for product in all_active_product]
 
@@ -117,15 +134,17 @@ def add_poc(request):
                 features = request.POST.getlist('features')
                 Remark_count = request.POST['Remark_count']
                 remarks = request.POST.getlist('remarks')
+                type_poc = request.POST.get('poc_type')
                 # status= request.POST['status']
                 status = Status.objects.get(name=request.POST['status'])
                 added_by = CustomUser.objects.get(id=request.user.id)
+
                 Timeline = request.POST['timeline']
                 # features_list = ",".join(features)
                 remarks_list = ",".join(remarks)
 
                 new_poc = Poc_model(Customer_name=customer_name, Product_name=product_name, status=status,
-                                    added_by=added_by, Timeline=Timeline)
+                                    added_by=added_by, Timeline=Timeline, poc_type=type_poc)
                 new_poc.save()
 
                 poc_ref = Poc_model.objects.get(pk=new_poc.id)
@@ -160,6 +179,7 @@ def add_poc(request):
 
     context['product_list'] = product_list
     return render(request, 'poc_demo/add_poc.html', context)
+
 
 
 @login_required(login_url='loginpage')
@@ -467,16 +487,16 @@ def edit_product(request, id):
 @login_required(login_url='loginpage')
 def view_poc(request):
     if request.user.role.name == "Admin":
-        all_active_product = Poc_model.objects.prefetch_related('poc_f_related', 'poc_r_related').all()
+        all_active_product = Poc_model.objects.prefetch_related('poc_f_related', 'poc_r_related').all().order_by('-updated_at')
     elif request.user.role.name == "Manager":
         all_active_product = Poc_model.objects.filter(added_by__Belongs_to=request.user.id).prefetch_related(
-            'poc_f_related', 'poc_r_related').all()
+            'poc_f_related', 'poc_r_related').all().order_by('-updated_at')
     elif request.user.role.name == "Sales":
         all_active_product = Poc_model.objects.filter(added_by=request.user.id).prefetch_related('poc_f_related',
-                                                                                                 'poc_r_related').all()
+                                                                                                 'poc_r_related').all().order_by('-updated_at')
     elif request.user.role.name == "Support":
         all_active_product = Poc_model.objects.filter(assign_to=request.user.id).prefetch_related('poc_f_related',
-                                                                                                  'poc_r_related').all()
+                                                                                                  'poc_r_related').all().order_by('-updated_at')
     search_query = request.GET.get('search', '')
 
     if search_query:
@@ -551,12 +571,19 @@ def edit_poc(request, id):
     try:
         if request.method == 'POST':
             get_poc = Poc_model.objects.get(pk=id)
+            
+            if request.user.role.name == 'Sales' and get_poc.description:
+                status = Status.objects.get(name='Pending')
+                get_poc.description = ''
+            else:
+                status = Status.objects.get(name=request.POST['status'])
             if request.POST.get('product_name'):
                 product_name = Product.objects.get(Product_name=request.POST['product_name'])
                 get_poc.Product_name = product_name
-            status = Status.objects.get(name=request.POST['status'])
+
             get_poc.Customer_name = request.POST['Customer_name']
             get_poc.Timeline = request.POST['Timeline_date']
+            get_poc.poc_type = request.POST['poc_type']
             get_poc.status = status
             if request.POST.get('assign_edit'):
                 if request.POST['assign_edit'] != 'None':
@@ -594,6 +621,12 @@ def update_feature_detail(request):
         try:
             id = request.POST['id']
             feature = get_object_or_404(Feature, pk=id)
+            get_poc = get_object_or_404(Poc_model, pk=feature.poc_id.id)
+            if request.user.role.name == 'Sales' and get_poc.description:
+                get_poc.status = Status.objects.get(name='Pending')
+                get_poc.description = ''
+            get_poc.save()
+
             feature.features_list = request.POST['Feature_name']
             feature.status = request.POST['status']
             feature.timeline = request.POST['Feature_timeline']
@@ -617,6 +650,7 @@ def view_poc_detail(request, id):
     html_feture_only = ''' '''
     html_feture_sts_only = ''' '''
     html = ''' '''
+    type_poc = poc_choice
     for feature in poc.poc_f_related.all():
         elated_objects_count = feature.feature_related.count() + 1
         for data in feature.feature_related.all().order_by('-created_at'):
@@ -663,7 +697,8 @@ def view_poc_detail(request, id):
                                                              "html_feture_only": html_feture_only,
                                                              "permission_for_edit": permission_for_edit,
                                                              "permission_for_ADD_STATUS": permission_for_ADD_STATUS,
-                                                             "permission_for_delete": permission_for_delete
+                                                             "permission_for_delete": permission_for_delete,
+                                                             "type_poc": type_poc
                                                              })
 
 
@@ -881,11 +916,16 @@ def edit_demo(request, id):
     try:
         if request.method == 'POST':
             get_demo = Demo_model.objects.get(pk=id)
+            if request.user.role.name == 'Sales' and get_demo.description:
+                status = Status.objects.get(name='Pending')
+                get_demo.description = ''
+            else:
+                status = Status.objects.get(name=request.POST['status'])
+
             if request.POST.get('product_name'):
                 product_name = Product.objects.get(Product_name=request.POST['product_name'])
                 get_demo.Product_name = product_name
 
-            status = Status.objects.get(name=request.POST['status'])
             get_demo.Customer_name = request.POST['Customer_name']
             get_demo.Timeline = request.POST['Timeline_date']
             get_demo.status = status
@@ -987,6 +1027,11 @@ def update_feature_detail_demo(request):
         try:
             id = request.POST['id']
             feature = get_object_or_404(Demo_feature, pk=id)
+            get_demo = get_object_or_404(Demo_model, pk=feature.demo_id.id)
+            if request.user.role.name == 'Sales' and get_demo.description:
+                get_demo.status = Status.objects.get(name='Pending')
+                get_demo.description = ''
+            get_demo.save()
             feature.features_list = request.POST['Feature_name']
             feature.status = request.POST['status']
             feature.timeline = request.POST['Feature_timeline']
@@ -994,7 +1039,7 @@ def update_feature_detail_demo(request):
             feature.save()
             messages.success(request, f"Feature : {feature.features_list} updated.")
             return HttpResponse(
-                '<div class="messages text-center alert alert-success"> <h2>  updaed.</h2> </div>')  #just for testing purpose you can remove it.
+                '<div class="messages text-center alert alert-success"> <h2>  updated.</h2> </div>')  #just for testing purpose you can remove it.
         except Exception as e:
             messages.error(request, f"Feature : {feature.features_list} not updated {e}.", extra_tags="danger")
             return HttpResponse(
@@ -1007,9 +1052,19 @@ def delete_feature(request):
             if request.POST['slug'] == 'demo':
                 feature = get_object_or_404(Demo_feature, pk=int(request.POST['id']))  # Adjust model access logic
                 feature.delete()
+                get_demo = get_object_or_404(Demo_model, pk=feature.demo_id.id)
+                if request.user.role.name == 'Sales' and get_demo.description:
+                    get_demo.status = Status.objects.get(name='Pending')
+                    get_demo.description = ''
+                get_demo.save()
             else:
                 feature = get_object_or_404(Feature, pk=int(request.POST['id']))  # Adjust model access logic
                 feature.delete()
+                get_poc = get_object_or_404(Poc_model, pk=feature.demo_id.id)
+                if request.user.role.name == 'Sales' and get_poc.description:
+                    get_poc.status = Status.objects.get(name='Pending')
+                    get_poc.description = ''
+                get_poc.save()
             messages.success(request, f"Feature Deleted.")
             return JsonResponse({'success': True, 'message': 'Feature deleted successfully'})
         except Exception as e:
@@ -1017,3 +1072,66 @@ def delete_feature(request):
             return JsonResponse({'success': False, 'message': f'Error deleting feature: {e}'})
     else:
         return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+def approved_status(request, pk,  param1=None):
+    try:
+        print(request.GET['param2'])
+        if request.GET['param1'] in ['Accepted', 'Rejected'] and request.GET['param2'] in ['DEMO', 'POC']:
+            if request.GET['param1'] == 'Accepted':
+                status_nm = 'Approved'
+            else:
+                status_nm = 'Rejected'
+
+            if request.GET['param2'] == 'POC':
+                obj = Poc_model.objects.get(pk=pk)
+                obj.status = Status.objects.get(name=status_nm)
+                obj.description = ""
+                obj.save()
+                messages.success(request, f"POC Request {request.GET['param1']}.")
+                return redirect('view_poc')
+            if request.GET['param2'] == 'DEMO':
+                obj = Demo_model.objects.get(pk=pk)
+                obj.status = Status.objects.get(name=status_nm)
+                obj.description = ""
+                obj.save()
+                messages.success(request, f"DEMO Request {request.GET['param1']}.")
+                return  redirect('view_demo')
+        else:
+            messages.error(request, f"Wrong Request.", extra_tags="danger")
+            if request.GET['param2'] == 'POC':
+                return redirect('view_poc')
+            if request.GET['param2'] == 'DEMO':
+                return  redirect('view_demo')
+    except Exception as e:
+        messages.error(request, f"Something Wrong {e}.", extra_tags="danger")
+        if request.GET['param2'] == 'POC':
+            return redirect('view_poc')
+        if request.GET['param2'] == 'DEMO':
+            return redirect('view_demo')
+
+def save_reject_desc(request):
+    try:
+        print(request.POST)
+        if request.POST:
+            if request.POST['row__type'] == 'POC':
+                obj = Poc_model.objects.get(pk=request.POST['row__id'])
+                obj.status = Status.objects.get(name="Rejected")
+                obj.description = request.POST.get('reason')
+                obj.save()
+            elif request.POST['row__type'] == 'DEMO':
+                obj = Demo_model.objects.get(pk=request.POST['row__id'])
+                obj.status = Status.objects.get(name="Rejected")
+                obj.description = request.POST.get('reason')
+                obj.save()
+            else:
+                messages.error(request, 'Somethin Wrong', extra_tags='danger')
+        if request.POST['row__type'] == 'POC':
+            return redirect('view_poc')
+        elif request.POST['row__type'] == 'DEMO':
+            return redirect('view_demo')
+    except Exception as e:
+        messages.error(request, f"Something Wrong {e}.", extra_tags="danger")
+        if request.POST['row__type'] == 'POC':
+            return redirect('view_poc')
+        elif request.POST['row__type'] == 'DEMO':
+            return redirect('view_demo')

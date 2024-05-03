@@ -126,7 +126,9 @@
                     <select class="form-select" name="status" id="status" aria-label="status">
                       <option value="" selected disabled></option>
                       {% for sts in status %}
-                      <option value="{{sts}}">{{sts}}</option>
+                      {% if sts.name == 'Pending' %}
+                      <option value="{{sts}}" selected>{{sts}}</option>
+                        {% endif %}
                       {% endfor %}
                     </select>
                     <label for="product_name">Status</label>

@@ -101,6 +101,19 @@
                     </div>
                   </div>
 
+                  <div class="col-md-12">
+                    <div class="form-floating mb-3">
+                      <select class="form-select" name="poc_type" id="poc_type" aria-label="status">
+                      <option value="" selected disabled></option>
+                      {% for id, type in type_poc %}
+                        <option value="{{ id }}">{{ type }}</option>
+                        {% endfor %}
+                    </select>
+                      <label for="poc_type">Poc Type</label>
+                    </div>
+                  </div>
+
+
                 <div class="col-md-12">
                   <div class="col-md-12 Remark-repeater" id = 'Remark-repeater'>
                     <input type="hidden" id="Remark_count" name="Remark_count">
@@ -111,6 +124,7 @@
                       </div>
                     </div>
                   </div>
+
                 </div>
                 <div class="col-md-6">
                   <div class="form-floating">
@@ -124,7 +138,9 @@
                     <select class="form-select" name="status" id="status" aria-label="status">
                       <option value="" selected disabled></option>
                       {% for sts in status %}
-                      <option value="{{sts}}">{{sts}}</option>
+                        {% if sts.name == 'Pending' %}
+                      <option value="{{sts}}" selected>{{sts}}</option>
+                        {% endif %}
                       {% endfor %}
                     </select>
                     <label for="product_name">Status</label>

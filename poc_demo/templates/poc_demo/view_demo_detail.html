@@ -74,6 +74,15 @@
                           <li class="breadcrumb-item"><a onclick="scrollToElement('Feature_div')">Feature</a></li>
                         </ol>            
                     </div>
+                  {% if request.user.role.name == 'Sales' %}
+                      {% if data.description %}
+
+                      <div class="alert alert-warning">
+                      <strong>Rejected!</strong> Reason : -  {{ data.description }}
+                    </div>
+
+                      {% endif %}
+                      {% endif %}
                     <!-- strt -->
                     <div class="DEMO-view row" id="Demo_detail">
                       <div class="col-md-6">
@@ -122,9 +131,15 @@
                                 <div class="mb-3">
                                   <label for="status_edit" class="form-label fw-bold">Status:</label>
                                   <select name="status" class="form-control" id="status_edit"  required disabled>
-                                    {% for sts in status %}
-                                    <option value="{{ sts.name }}" {% if data.status == sts  %} selected {% endif %}>{{ sts }}</option>
-                                    {% endfor %}
+                                      {% if data.status.name == 'Rejected'  and request.user.role.name == 'Sales' %}
+                                        <option value="{{data.status.name}}" selected> {{data.status.name}} </option>
+                                    {% elif request.user.role.name == 'Sales' %}
+                                        <option value="{{data.status.name}}" selected> {{data.status.name}} </option>
+                                      {% else %}
+                                          {% for sts in status %}
+                                          <option value="{{ sts.name }}" {% if data.status == sts  %} selected {% endif %}>{{ sts }}</option>
+                                          {% endfor %}
+                                    {% endif %}
                                   </select>
                                 </div>
 

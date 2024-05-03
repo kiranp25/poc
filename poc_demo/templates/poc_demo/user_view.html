@@ -68,9 +68,10 @@
                             <td>
                               <div class="btn-group btn-group-sm" role="group">  
                                 <a href="{% url 'edit_user' user.id %}" class="btn btn-primary">Edit</a>
-                                {% if user.role_id != 1 %}
+                                {% if user.role.name != "Admin" %}
                                 <a href="#" onclick="return confirmDelete('{% url 'delete_user' user.id %}')" class="btn btn-danger btn-sm ms-1">Delete</a>
                                 {% endif %}
+                                <a class="btn btn-info btn-sm ms-1" href="{% url 'change_password' user.id %}">Change Password</a>
                               </div>
                             </td>
                           </tr>

@@ -72,8 +72,18 @@
                           <li class="breadcrumb-item active"><a onclick="scrollToElement('poc_detail')"></a>Detail</li>
                           <li class="breadcrumb-item"><a onclick="scrollToElement('Remarks_div')">Remarks</a></li>
                           <li class="breadcrumb-item"><a onclick="scrollToElement('Feature_div')">Feature</a></li>
-                        </ol>            
+                        </ol>
+
                     </div>
+                    {% if request.user.role.name == 'Sales' %}
+                      {% if data.description %}
+
+                      <div class="alert alert-warning">
+                      <strong>Rejected!</strong> Reason : -  {{ data.description }}
+                    </div>
+
+                      {% endif %}
+                      {% endif %}
                     <!-- strt -->
                     <div class="poc-view row" id="poc_detail">
                       <div class="col-md-6">
@@ -105,6 +115,16 @@
                                   <label for="added_by" class="form-label fw-bold">Added By:</label>
                                   <input type="text" id = 'added_by' class="form-control" value="{{ data.added_by }}"  readonly>
                                 </div>
+                                 <div class="mb-3">
+                                     <label class="form-label fw-bold" for="poc_type">Poc Type:</label>
+                                    <select class="form-control" name="poc_type" id="poc_type" aria-label="status" disabled>
+                                    <option value="" selected disabled></option>
+                                    {% for id, type in type_poc %}
+                                    <option value="{{ id }}" {% if data.poc_type == type %}selected{% endif %}>{{ type }}</option>
+                                    {% endfor %}
+                                      </select>
+
+                                 </div>
 
                                 
                                 <!-- product -->
@@ -123,9 +143,15 @@
                                   <label for="status" class="form-label fw-bold">Status:</label>
 
                                   <select name="status" class="form-control" id="status_edit"  required disabled>
-                                    {% for sts in status %}
-                                    <option value="{{ sts.name }}" {% if data.status == sts  %} selected {% endif %}>{{ sts }}</option>
-                                    {% endfor %}
+                                      {% if data.status.name == 'Rejected'  and request.user.role.name == 'Sales' %}
+                                        <option value="{{data.status.name}}" selected> {{data.status.name}} </option>
+                                    {% elif request.user.role.name == 'Sales' %}
+                                        <option value="{{data.status.name}}" selected> {{data.status.name}} </option>
+                                      {% else %}
+                                          {% for sts in status %}
+                                          <option value="{{ sts.name }}" {% if data.status == sts  %} selected {% endif %}>{{ sts }}</option>
+                                          {% endfor %}
+                                    {% endif %}
                                   </select>
                                 </div>  
 
