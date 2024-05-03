@@ -77,21 +77,38 @@
                                     <tr>
                                         <td>{{i.Customer_name}}</td>
                                         <td>{{i.Product_name}}</td>
-                                        <td><a href="{% url 'view_poc_detail' i.id %}" class="btn btn-primary" value="">View</button></td>
-
-                                       
-
+                                        <td><a href="{% url 'view_poc_detail' i.id %}" class="btn btn-primary" value="">View</a></td>
                                         <td>{{i.Requested_date}}</td>
                                         <td>{{i.Timeline}}</td>
                                         <td>{{i.status}}</td>
                                         <td>{{i.added_by}}</td>
-                                        
-                                        {% if  request.session.roles  == 'Manager' %}
+                                        {% if  request.user.role.name  == 'Sales' %}
+                                        <td>
+                                            {% if i.status.name == 'Pending' %}
+                                            <a class="btn btn-info">Waiting For Confirmation</a>
+                                            {% elif i.status.name == 'Rejected' %}
+                                                <a class="btn btn-warning">Rejected</a>
+                                            {% elif i.status.name != 'Rejected' %}
+                                                <a class="btn btn-primary">Approved</a>
+
+                                            {% endif %}
+
+                                        </td>
+                                        {% endif %}
+                                        {% if  request.user.role.name  == 'Manager' %}
                                         <td>
                                         <!-- <td><button type ='button' class = 'btn btn-sm-primary'>add</button> -->
-                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" id ='{{i.id}}' data-bs-target="#centeredModal" onclick="set_id(this.id)">
-                                                ADD
-                                              </button>
+<!--                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" id ='{{i.id}}' data-bs-target="#centeredModal" onclick="set_id(this.id)">-->
+<!--                                                ADD-->
+<!--                                              </button>-->
+                                            {% if i.status.name == 'Pending' %}
+                                                <a href="{% url 'approved_status' i.id %}?param1=Accepted&param2=POC" class="btn btn-primary" value="">Approve</a>
+                                                <a class="btn btn-danger" data-bs-toggle="modal" id ='{{i.id}}' data-bs-target="#centeredModal" onclick="set_id(this.id)">Reject</a>
+                                            {% elif i.status.name == 'Rejected' %}
+                                                <a class="btn btn-warning">Rejected</a>
+                                            {% elif i.status.name != 'Rejected' %}
+                                                <a class="btn btn-primary">Approved</a>
+                                            {% endif %}
                                         </td>
                                         {% endif %}
                                     </tr>
@@ -123,38 +140,31 @@
                 </div>
             </div>
         </div>
-    </section>
+            </div>
+        </div>
 
+    </section>
 
   <div class="modal fade" id="centeredModal" tabindex="-1" aria-labelledby="centeredModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="centeredModalLabel">Add Remarks</h5>
+          <h5 class="modal-title" id="centeredModalLabel">Add Reason For Rejection</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
 
-          <form method="post">
+          <form method="post" action="{% url 'save_reject_desc' %}">
             {% csrf_token %}
               <div class="form-group col-md-12 mb-2">
-                <input type="hidden" class="form-control" value={{request.user.email}} name="username">
-                <input type="hidden" name="row_remark_id" id="row_remark_id">
+                <input type="hidden" name="row__id" id="row__id">
+                  <input type="hidden" name="row__type" id="row__type" value="POC">
               </div>
-              <div class="form-group col-12 mb-2 Remark-repeater" id = 'Remark-repeater'>
-                <input type="hidden" id="Remark_count" name="Remark_count">
-                  <div id = "repeater-group_remark" data-repeater-list="repeater-group">
-                      <div class="input-group mb-1" id = "remark_1">
-                          <input type="text" placeholder="Remark" class="form-control" id="example-Remark-input_1" name="remarks">
-                          <!-- <span class="input-group-append" id="button-Remark_addon_1">
-                              <button class="btn btn-danger" type="button" id = "remove_Remark_1" data-repeater-delete onclick="removeDiv(this)"><i class="ft-x"></i></button>
-                          </span> -->
-                      </div>
-                  </div>
+              <div class="form-group col-12 mb-2 ">
 
-                  <!-- <button type="button" id = 'add_new_remark' data-repeater-create class="btn btn-primary">
-                      <i class="ft-plus"></i> Add new Remark
-                  </button> -->
+                      <div class="input-group mb-1" id = "desc">
+                          <textarea placeholder="Add Reason" class="form-control" id="example-reason" name="reason"></textarea>
+                      </div>
               </div>
         </div>
         <div class="modal-footer">
@@ -237,7 +247,7 @@
    <script>
     localStorage.setItem('typer', "new");
     function set_id(button_){
-        document.getElementById('row_remark_id').value  = button_
+        document.getElementById('row__id').value  = button_
     }
 
 

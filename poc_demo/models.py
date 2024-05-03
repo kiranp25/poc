@@ -20,6 +20,10 @@ user_type_choice =(
     ("4", "Support") 
 ) 
 
+poc_choice = (
+    ("POC", "POC"),
+    ("Delivery", "Delivery"),
+)
 status_choice =( 
     ("1", "Active"), 
     ("2", "InActive"),
@@ -39,11 +43,13 @@ class Poc_model(models.Model):
     Product_name = models.ForeignKey('Product', on_delete=models.SET_NULL, blank=True, null=True)
     Requested_date = models.DateField(default=get_default_date)
     Timeline = models.DateField(default=get_default_date)
-    status = models.ForeignKey('Status', on_delete=models.SET_NULL,     blank=True, null=True)
+    status = models.ForeignKey('Status', on_delete=models.SET_NULL, blank=True, null=True)
     added_by = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True)
     assign_to = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, blank=True, null=True, related_name='assignuser')
+    description = models.TextField(default=None, blank=True, null=True)
+    poc_type = models.CharField(max_length=30, choices = poc_choice, default="POC")
 
 class Poc_remark(models.Model):
     poc_id = models.ForeignKey('Poc_model', on_delete=models.CASCADE, blank=True, null=True, related_name='poc_r_related')
@@ -92,6 +98,7 @@ class Demo_model(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True)
     assign_to = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, blank=True, null=True, related_name='assignuser_demo')
+    description = models.TextField(default=None, blank=True, null=True)
 
 class Demo_feature(models.Model):
     demo_id = models.ForeignKey('Demo_model', on_delete=models.CASCADE, blank=True, null=True, related_name='demo_f_related')
@@ -132,9 +139,9 @@ class Roles(models.Model):
 
 class Status(models.Model):
     name = models.CharField(max_length=30)
-    added_by = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True)
 
     def __str__(self):
         return self.name
+
