@@ -79,19 +79,33 @@
                                   <!-- Floating Labels Form -->
               <form class="row g-3 cool-form" method="post">
                 {% csrf_token %}     
-                <div class="col-md-12">
-                  <input type="hidden" class="form-control" value={{request.user.email}} name="username">
-                  <div class="form-floating">
-                    <input type="text" class="form-control" id="floatingCustomerName" name="CustomerName" placeholder="Customer Name">
-                    <label for="floatingCustomerName">Customer Name</label>
+<!--                <div class="col-md-12">-->
+<!--                  <input type="hidden" class="form-control" value={{request.user.email}} name="username">-->
+<!--                  <div class="form-floating">-->
+<!--                    <input type="text" class="form-control" id="floatingCustomerName" name="CustomerName" placeholder="Customer Name">-->
+<!--                    <label for="floatingCustomerName">Customer Name</label>-->
 
-                  </div>
+<!--                  </div>-->
+<!--                  </div>-->
+
+                  <div class="col-md-12">
+                       <input type="hidden" class="form-control" value={{request.user.email}} name="username">
+                    <div class="form-floating mb-3">
+                      <select class="form-select" name="CustomerName" id="floatingCustomerName" aria-label="CustomerName" required>
+                      <option value="" selected disabled></option>
+                      {% for customer in customer %}
+
+                        <option value="{{ customer.id }}">{{ customer }}</option>
+                        {% endfor %}
+                    </select>
+                      <label for="floatingCustomerName">Customer Name</label>
+                    </div>
                   </div>
 
                   <div class="col-md-12">
                     <div class="form-floating mb-3">
-                      <select class="form-select" name="product_name" id="product_name" aria-label="product_name">
-                        <option value="" selected disabled></option>
+                      <select class="form-select" name="product_name" id="product_name" aria-label="product_name" required>
+                        <option value="" disabled></option>
                         {% for product in product_list %}
 
                         <option value="{{product}}">{{product}}</option>
@@ -109,7 +123,7 @@
                         <option value="{{ id }}">{{ type }}</option>
                         {% endfor %}
                     </select>
-                      <label for="poc_type">Poc Type</label>
+                      <label for="poc_type">Activity Type</label>
                     </div>
                   </div>
 

@@ -44,11 +44,13 @@
 
 
 
-                        
+                       {% if request.user.role.name == 'Sales' or request.user.role.name == 'Admin' %}
                         <div class="col-md-2 ms-auto mt-2" style="margin-left: 100px;">
                              <div class="text-end">
+
                     <a href="{% url 'add_poc' %}" class="btn btn-primary btn-sm m-2">Add POC</a>
                 </div>
+                            {% endif %}
                             <form method="get" id="filter-form" class="form-inline">
                             <input type="text" name="search" placeholder="Search.." id="search" class="form-control ms-auto" value="{{ search_query }}">
                           </form></div>
@@ -63,21 +65,29 @@
                                         <!-- <th>Features</th>
                                         <th>Remarks</th> -->
                                         <th> Detail </th>
+                                        <th> Type </th>
                                         <th>Requested_date</th>
                                         <th>Timeline</th>
                                         <th>Status</th>
                                         <th>added_by</th>
-                                        {% if  request.session.roles  == 'Manager' %}
-                                        <th>add_remarks</th>
+                                        {% if  request.user.role.name  == 'Manager' or request.user.role.name  == 'Sales'  %}
+                                        <th>Request</th>
+                                        {% endif %}
+                                        {% if  request.user.role.name  == 'Admin' or request.user.role.name  == 'Sales'  %}
+                                        <th>Action</th>
                                         {% endif %}
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    {% if not page.object_list %}
+                                    <tr> <td colspan="10"><h5 style="text-align:center">No data found</h5></td> </tr>
+                                    {% endif %}
                                     {% for i in page.object_list %}
                                     <tr>
                                         <td>{{i.Customer_name}}</td>
                                         <td>{{i.Product_name}}</td>
                                         <td><a href="{% url 'view_poc_detail' i.id %}" class="btn btn-primary" value="">View</a></td>
+                                        <td>{{i.poc_type}}</td>
                                         <td>{{i.Requested_date}}</td>
                                         <td>{{i.Timeline}}</td>
                                         <td>{{i.status}}</td>
@@ -90,9 +100,7 @@
                                                 <a class="btn btn-warning">Rejected</a>
                                             {% elif i.status.name != 'Rejected' %}
                                                 <a class="btn btn-primary">Approved</a>
-
                                             {% endif %}
-
                                         </td>
                                         {% endif %}
                                         {% if  request.user.role.name  == 'Manager' %}
@@ -110,6 +118,9 @@
                                                 <a class="btn btn-primary">Approved</a>
                                             {% endif %}
                                         </td>
+                                        {% endif %}
+                                        {% if  request.user.role.name  == 'Admin' or request.user.role.name  == 'Sales'  %}
+                                        <td><a href="{% url 'delete_poc' i.id %}" class="btn btn-warning" value="">Delete</a></td>
                                         {% endif %}
                                     </tr>
                                     {% endfor %}

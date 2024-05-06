@@ -275,6 +275,8 @@
         </ul>
       </li><!-- End POC Nav -->
 
+
+
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#tables-nav" data-bs-toggle="collapse" href="#">
           <i class="bi bi-layout-text-window-reverse"></i><span>Demo</span><i class="bi bi-chevron-down ms-auto"></i>
@@ -294,6 +296,33 @@
           </li>
         </ul>
       </li><!-- End Tables Nav -->
+
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#forms-nav_bar" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-journal-text"></i><span>Customer</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="forms-nav_bar" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          {% if request.user.role.name == 'Sales' or request.user.role.name == "Admin" %}
+          <li>
+
+            <a href="{% url 'add_customer' %}">
+              <i class="bi bi-circle"></i><span>Add</span>
+            </a>
+
+          </li>
+          {% endif %}
+          <li>
+            <a href="{% url 'view_customer' %}">
+              <i class="bi bi-circle"></i><span>View Customer</span>
+            </a>
+          </li>
+        </ul>
+      </li>
+
+
+
+
     </ul>
 
     

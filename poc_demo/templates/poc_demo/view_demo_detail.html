@@ -94,7 +94,10 @@
                                 <h5 class="card-title mb-3 text-primary">Details</h5>
                                 <div class="mb-3">
                                   <label for="name" class="form-label fw-bold">Customer Name:</label>
-                                  <input type="text" class="form-control" id="name" name="Customer_name" value="{{ data.Customer_name }}" disabled>
+                                  <select name="Customer_name" class="form-control" id="name"  required disabled>
+                                    {% for customer in customer %}
+                                    <option value="{{ customer.id }}" {% if data.Customer_name == customer  %} selected {% endif %}>{{ customer }}</option>
+                                    {% endfor %}
                                 </div>
                                 <div class="mb-3">
                                  {% if request.user.role.name != "Manager" %}
@@ -160,6 +163,22 @@
                                     </select>
                 
                                 </div>
+                                <div class="mb-3">
+                                  {% if request.user.role.name == "Manager" %}
+                                    <label for="kt_given" class="form-label fw-bold">KT given:</label>
+                                    <select name="kt_given" class="form-control" id="kt_given" required disabled>
+
+                                      <option value="True" {% if data.kt_given == True %} selected {% endif %}> Yes </option>
+                                      <option value="False" {% if data.kt_given == False  %} selected {% endif %}> No </option>
+
+                                    {% else %}
+                                      <label for="Kt_given_" class="form-label fw-bold">KT given:</label>
+                                      <input type="text" class="form-control" id="Kt_given_" name="Kt_given_" value="{{ data.kt_given }}" readonly>
+                                    {% endif %}
+                                    </select>
+
+                                </div>
+
                                 
                               </div>
                             </div>
@@ -181,7 +200,7 @@
                             </div>
                             <div class="col-sm-6 text-end">
                               {% if request.user.role.name in permission_for_edit or  request.user.role.name == 'Support' %}
-                              <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#centeredModal" id="{{data.id}}" onclick="set_id(this.id)">
+                              <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#centeredModal" id="{{data.id}}" onclick="set_id(this.id)" {% if request.user.role.name  == "Support" and  data.status.name == 'Pending' %}hidden {% endif %}>
                                 <i class="fas fa-plus"></i> Add Remarks
                               </button>
                               {% endif %}
@@ -266,7 +285,7 @@
                     </button>
                     {% endif %}
                     {% if request.user.role.name in permission_for_ADD_STATUS %}
-                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" value="{{ feature.id }}" onclick="update_sts(this)" data-bs-target="#centeredModalupdate">
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" value="{{ feature.id }}" onclick="update_sts(this)" data-bs-target="#centeredModalupdate" {% if request.user.role.name  == "Support" and  data.status.name == 'Pending' %}hidden {% endif %}>
                       <i class="ri-file-add-line"></i>Remark
                     </button>
                     {% endif %}
