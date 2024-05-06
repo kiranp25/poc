@@ -27,14 +27,15 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="card-title">POC view</h4>
+                        <h4 class="card-title">Demo view</h4>
                         <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
-
+                        {% if request.user.role.name == 'Sales' or request.user.role.name == 'Admin' %}
                         
                         <div class="col-md-2 ms-auto mt-2" style="margin-left: 100px;">
                              <div class="text-end">
-                    <a href="{% url 'add_demo' %}" class="btn btn-primary btn-sm m-2">Add Demo</a>
-                </div>
+                            <a href="{% url 'add_demo' %}" class="btn btn-primary btn-sm m-2">Add Demo</a>
+                        </div>
+                            {% endif %}
                             <form method="get" id="filter-form" class="form-inline">
                             <input type="text" name="search" placeholder="Search.." id="search" class="form-control ms-auto" value="{{ search_query }}">
                           </form></div>
@@ -51,10 +52,19 @@
                                         <th>Timeline</th>
                                         <th>Status</th>
                                         <th>added_by</th>
+                                        {% if  request.user.role.name  == 'Manager' or request.user.role.name  == 'Sales'  %}
+                                        <th>Request</th>
+                                        {% endif %}
+                                        {% if  request.user.role.name  == 'Admin' or request.user.role.name  == 'Sales'  %}
+                                        <th>Action</th>
+                                        {% endif %}
                                         
                                     </tr>
                                 </thead>
                                 <tbody>
+                                 {% if not page.object_list %}
+                                    <tr> <td colspan="10"><h5 style="text-align:center">No data found</h5></td> </tr>
+                                 {% endif %}
                                     {% for i in page.object_list %}
                                     <tr>
                                         <td>{{i.Customer_name}}</td>
@@ -92,6 +102,9 @@
                                                 <a class="btn btn-primary">Approved</a>
                                             {% endif %}
                                         </td>
+                                        {% endif %}
+                                         {% if  request.user.role.name  == 'Admin' or request.user.role.name  == 'Sales'  %}
+                                        <td><a href="{% url 'delete_demo' i.id %}" class="btn btn-warning" value="">Delete</a></td>
                                         {% endif %}
                                     </tr>
                                     {% endfor %}

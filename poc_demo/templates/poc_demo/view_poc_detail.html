@@ -1,6 +1,6 @@
 {% extends "poc_demo/base.html" %}
 
-{% block poc_content %}  
+{% block poc_content %}
 {% load static %}
 <style>
 
@@ -8,7 +8,7 @@
       font-family: Roboto, sans-serif;  /* Choose a clear font */
       color: #333;  /* Text color */
   }
-  
+
   .card {
       background-color: #fff;  /* Card background */
       border: 1px solid #eee;  /* Subtle border */
@@ -17,28 +17,28 @@
       margin-bottom: 20px;
       padding: 15px;
   }
-  
+
   .card-header {
       background-color: #f8f9fa;  /* Header background */
       padding: 10px 15px;
       border-bottom: 1px solid #eee;
   }
-  
+
   .card-title {
       font-size: 18px;
       margin-bottom: 5px;
   }
-  
+
   .btn-primary {
       background-color: #007bff;  /* Primary button color */
       border-color: #007bff;
       color: #fff;
   }
-  
+
   </style>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.datatables.net/2.0.3/css/dataTables.bootstrap5.css" rel="stylesheet">
-  
+
 <div class="app-content content">
     <div class="content-wrapper">
       <div class="content-header row">
@@ -50,25 +50,25 @@
           {% if messages %}
           <div class="messages text-center">
 
-<!--             
+<!--
             {% for message in messages %}
             {{message}}
             {% endfor %} -->
 
           {% for message in messages %}
-          <h4 {% if message.extra_tags %} class="alert alert-{{ message.extra_tags }}"{% else %} 
+          <h4 {% if message.extra_tags %} class="alert alert-{{ message.extra_tags }}"{% else %}
           class="alert alert-{{ message.tags }}"{% endif %}>{{ message }}</h4>
           {% endfor %}
           </div>
           {% endif %}
-                  
+
         <div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
                         <h4 class="card-title">POC view</h4>
                         <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
-                        <ol class="breadcrumb"> 
+                        <ol class="breadcrumb">
                           <li class="breadcrumb-item active"><a onclick="scrollToElement('poc_detail')"></a>Detail</li>
                           <li class="breadcrumb-item"><a onclick="scrollToElement('Remarks_div')">Remarks</a></li>
                           <li class="breadcrumb-item"><a onclick="scrollToElement('Feature_div')">Feature</a></li>
@@ -94,8 +94,12 @@
                               <div class="col-md-6">
                                 <h5 class="card-title mb-3 text-primary">Details</h5>
                                 <div class="mb-3">
-                                  <label for="name" class="form-label fw-bold">Customer Name:</label>
-                                  <input type="text" class="form-control" id="name" name="Customer_name" value="{{ data.Customer_name }}" disabled>
+                                  <label for="customer_name" class="form-label fw-bold">Customer Name:</label>
+                                  <select name="Customer_name" class="form-control" id="customer_name"  required disabled>
+                                    {% for customer in customer %}
+                                    <option value="{{ customer.id }}" {% if data.Customer_name == customer  %} selected {% endif %}>{{ customer }}</option>
+                                    {% endfor %}
+                                  </select>
                                 </div>
                                 <div class="mb-3">
                                   {% if request.user.role.name != "Manager" %}
@@ -116,7 +120,8 @@
                                   <input type="text" id = 'added_by' class="form-control" value="{{ data.added_by }}"  readonly>
                                 </div>
                                  <div class="mb-3">
-                                     <label class="form-label fw-bold" for="poc_type">Poc Type:</label>
+                                     <label class="form-label fw-bold" for="poc_type">Activity Type:
+                                     </label>
                                     <select class="form-control" name="poc_type" id="poc_type" aria-label="status" disabled>
                                     <option value="" selected disabled></option>
                                     {% for id, type in type_poc %}
@@ -126,21 +131,21 @@
 
                                  </div>
 
-                                
+
                                 <!-- product -->
                               </div>
                               <div class="col-md-6">
                                 <h5 class="card-title mb-3 text-info">Information</h5>
                                 <div class="mb-3">
-                                  <label for="requested_date" class="form-label fw-bold">Requested Date:</label>
-                              <input type="date" class="form-control" id="requested_date_edit" name="requested_date" value="{{ data.Requested_date|date:'Y-m-d' }}" readonly disabled> 
+                                  <label for="requested_date_edit" class="form-label fw-bold">Requested Date:</label>
+                              <input type="date" class="form-control" id="requested_date_edit" name="requested_date" value="{{ data.Requested_date|date:'Y-m-d' }}" readonly disabled>
                                 </div>
                                 <div class="mb-3">
-                                  <label for="timeline" class="form-label fw-bold">Timeline:</label>
-                                  <input type="date" class="form-control" id="Timeline_date_edit" name="Timeline_date" value="{{ data.Timeline|date:'Y-m-d' }}" disabled>  
+                                  <label for="Timeline_date_edit" class="form-label fw-bold">Timeline:</label>
+                                  <input type="date" class="form-control" id="Timeline_date_edit" name="Timeline_date" value="{{ data.Timeline|date:'Y-m-d' }}" disabled>
                                 </div>
                                 <div class="mb-3">
-                                  <label for="status" class="form-label fw-bold">Status:</label>
+                                  <label for="status_edit" class="form-label fw-bold">Status:</label>
 
                                   <select name="status" class="form-control" id="status_edit"  required disabled>
                                       {% if data.status.name == 'Rejected'  and request.user.role.name == 'Sales' %}
@@ -153,7 +158,7 @@
                                           {% endfor %}
                                     {% endif %}
                                   </select>
-                                </div>  
+                                </div>
 
                                 <div class="mb-3">
                                   {% if request.user.role.name == "Manager" %}
@@ -170,12 +175,30 @@
                                       <input type="text" class="form-control" id="assign_edit_text" name="assign_edit_text" value="{{ data.assign_to }}" readonly>
                                     {% endif %}
                                     </select>
-                
+
                                 </div>
-                                
+
+
+                                <div class="mb-3">
+                                  {% if request.user.role.name == "Manager" %}
+                                    <label for="kt_given" class="form-label fw-bold">KT given:</label>
+                                    <select name="kt_given" class="form-control" id="kt_given" required disabled>
+
+                                      <option value="True" {% if data.kt_given == True %} selected {% endif %}> Provided </option>
+                                      <option value="False" {% if data.kt_given == False  %} selected {% endif %}> Not Provided </option>
+
+                                    {% else %}
+                                      <label for="Kt_given_" class="form-label fw-bold">KT given:</label>
+                                      <input type="text" class="form-control" id="Kt_given_" name="Kt_given_" value="{% if  data.kt_given == True %}Provided{% else %}Not Provided {% endif %}" readonly>
+                                    {% endif %}
+                                    </select>
+
+                                </div>
+
+
                               </div>
                             </div>
-                                     
+
                             <div class="text-end">
                               {% if request.user.role.name in permission_for_edit %}
                               <button type="button" class="btn btn-primary edit-btn">Edit</button>
@@ -184,7 +207,7 @@
                               {% endif %}
                             </div>
                           </div>
-                        </form>           
+                        </form>
                       </div>
                       <div class="col-md-6" id="Remarks_div">
                         <div class="card shadow-sm rounded-3 p-3 mt-2 bg-light">
@@ -194,7 +217,7 @@
                             </div>
                             <div class="col-sm-6 text-end">
                               {% if request.user.role.name in permission_for_edit or request.user.role.name == 'Support' %}
-                              <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#centeredModal" id="{{data.id}}" onclick="set_id(this.id)">
+                              <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#centeredModal" id="{{data.id}}" onclick="set_id(this.id)" {% if request.user.role.name  == "Support" and  data.status.name == 'Pending' %}hidden {% endif %}>
                                 <i class="fas fa-plus"></i> Add Remarks
                                 {% endif %}
                               </button>
@@ -220,13 +243,13 @@
                           </table>
                         </div>
                       </div>
-                    </div>                    
+                    </div>
 
-                    
+
                     <!-- end -->
 
-                    
-            
+
+
         </div>
         </div>
         </div>
@@ -242,7 +265,7 @@
             </div>
             <div class="col-sm-6 text-end">
               {% if request.user.role.name in permission_for_edit %}
-              <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addFeatureModal" id="{{data.id}}">
+              <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addFeatureModal" id="{{data.id}}" >
                 <i class="fas fa-plus"></i> Add Feature
               </button>
               {% endif %}
@@ -270,12 +293,12 @@
                     </button>
                     {% if request.user.role.name in permission_for_edit %}
                     <button class="btn btn-sm btn-primary"  data-bs-toggle="modal" data-toggle="tooltip" data-placement="top" title="Edit" id="{{ feature.id }}_update_feture" value="{{ feature.id }}" onclick="update_feature(this,'{{ feature.features_list }}','{{ feature.timeline|date:'Y-m-d' }}','{{ feature.status }}')" data-bs-target="#centeredModalupdatefeature">
-                      
+
                     <i class="ri-edit-circle-fill" alt="update"></i>
                     </button>
                     {% endif %}
                     {% if request.user.role.name in permission_for_ADD_STATUS %}
-                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" value="{{ feature.id }}" onclick="update_sts(this)" data-bs-target="#centeredModalupdate">
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" value="{{ feature.id }}" onclick="update_sts(this)" data-bs-target="#centeredModalupdate" {% if request.user.role.name  == "Support" and  data.status.name == 'Pending' %}hidden {% endif %}>
                       <i class="ri-file-add-line"></i>Remark
                     </button>
                     {% endif %}
@@ -301,11 +324,11 @@
           <div class="card-content collapse show">
             <div id="featurestsdetatil" class="card-body card-dashboard">
               <span id="hide_sp"> Click on view Remarks for specific feature</span>
-      
+
               {% for feature in data.poc_f_related.all %}
                 <div class="feature-container" id="featurestsdetatil_{{feature.id}}" style="display: none;">
                   <h4> Feature - {{ feature.features_list }}</h4>
-      
+
                   <table class="table table-striped table-hover table-bordered datatable" id="my-feature-table_{{ feature.id }}">  <thead>
                       <tr>
                         <th>Status</th>
@@ -383,7 +406,7 @@
         </div>
       </div>
     </div>
-    
+
 
     <!--/ Zero configuration table -->
 
@@ -402,7 +425,7 @@
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
-  
+
             </div>
           </div>
         </div>
@@ -412,18 +435,18 @@
       <div class="modal fade" id="centeredModalupdate" tabindex="-1" aria-labelledby="centeredModalLabel3" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
- 
+
 
             <form>
                 {% csrf_token %}
             <div class="modal-header">
-              
+
               <h5 class="modal-title" id="centeredModalLabel3"></h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="form-group col-md-12 mb-2">
-              <input type="hidden" class="form-control" id='feture_id' name="feture_id"> 
-            <input type="hidden" class="form-control"  id='sts_id' name="sts_id"> 
+              <input type="hidden" class="form-control" id='feture_id' name="feture_id">
+            <input type="hidden" class="form-control"  id='sts_id' name="sts_id">
             <input type="hidden" class="form-control" value="{{data.id}}" id = 'poc_id' name="poc_id">
             <div class="modal-body" id = 'FeturestsCenteredupdate'>
                 <input type="text" class="form-control" placeholder="Status" class="form-control" id="sts" name="sts">
@@ -439,10 +462,10 @@
                 </div>
             </div>
             </form>
-            
+
           </div>
         </div>
-      </div>    
+      </div>
 
       <div class="modal fade" id="centeredModalupdatefeature" tabindex="-1" aria-labelledby="centeredModalLabel4" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -456,7 +479,7 @@
               <div class="modal-body py-4 px-5">
                 <input type="hidden" id='feature_ids' name="feature_ids">
                 <input type="hidden" value="{{data.id}}" id = 'poc_ids' name="poc_ids">
-    
+
                 <div class="form-group mb-3">
                   <label for="Feature_name" class="form-label">Feature Name</label>
                   <input type="text" class="form-control" id="Feature_name" name="Feature_name" placeholder="Enter Feature Name">
@@ -500,10 +523,10 @@
       <div class="col-md-12">
         <div class="fmb-3 features-repeater" id="features-repeater">
           <input type="hidden" id="feature_count" name="feature_count">
-        
+
           <div id="repeater-group_feature" data-repeater-list="repeater-group">
             <div class="input-group mb-1" id="feture_1">
-              
+
               <input type="hidden" name="Feature_ids" id="Feature_ids_1" value="1">
               <div class='form-floating'>
               <input type="text" placeholder="Features" class="form-control me-1 " name="features_1" id="example-Features-input_1">
@@ -511,16 +534,16 @@
             </div>
               <div class='form-floating'>
                 <input type="date" class="form-control ms-1" id="timeline_1" min="{% now 'Y-m-d' %}" max="{{ data.Timeline|date:'Y-m-d' }}" name="timeline_1">
-                <label for="timeline_1" class="col-form-label"> Feture Timeline </label>  
+                <label for="timeline_1" class="col-form-label"> Feture Timeline </label>
               </div>
               <span class="input-group-append ms-2" id="button-addon_1">
                 <button class="btn btn-danger mt-2" type="button" id="remove_feture_1" data-repeater-delete onclick="removeDiv(this)">
-                  <i class="ri-delete-bin-6-line"></i> 
+                  <i class="ri-delete-bin-6-line"></i>
                 </button>
               </span>
             </div>
           </div>
-        
+
           <button type="button" id="add_new_feature" data-repeater-create class="btn btn-primary mt-2">
             <i class=" ri-add-line"></i> Add new Feature
           </button>
@@ -575,7 +598,7 @@
           location.reload();
 
         } else {
-       
+
           delete_feature_div.innerHTML = data.message
         }
       },
@@ -619,30 +642,30 @@ buttons.forEach(button => {
     $(document).ready(function() {
 
 
-      
+
       $('#update_data_feature').click(function(){
         id = $('#feature_ids').val();
         Feature_name = $('#Feature_name').val();
         Feature_timeline = $('#Feature_timeline').val();
         Feature_sts = $('#Feature_sts').val();
         $.ajax
-        ({ 
+        ({
         url: "{% url 'update_feature_detail'  %}",
         data: {"id": id, "status":  Feature_sts, "Feature_timeline":Feature_timeline,"Feature_name":Feature_name, 'csrfmiddlewaretoken': '{{ csrf_token }}', "username": '{{request.user.email}}' },
         type: 'POST',
         success: function(result)
-        {   
+        {
           location.reload();
         },
         error: function(jqXHR, textStatus, error) {
           location.reload();
         }
         });
-        
 
-           
+
+
       });
-       
+
       $('#update_status_feature').click(function() {
     sts_id = $("#sts_id").val();
     status = $("#sts").val();
@@ -676,7 +699,7 @@ buttons.forEach(button => {
         }
     });
 });
-        
+
 const last_action = localStorage.getItem('typer');
       console.log('last_action', last_action);
       if (last_action == 'sts_add'){
@@ -691,7 +714,7 @@ const last_action = localStorage.getItem('typer');
       scrollToElement(`featurestsdetatil_${retrievedData}`);
       }
       }
-    
+
     // $('#my_poc_view').dataTable();
     });
 
@@ -728,10 +751,10 @@ const last_action = localStorage.getItem('typer');
         // alert(button_.value);
         document.getElementById("FetureCentered").innerHTML = button_.value;
 
-        document.getElementById("centeredModalLabel2").innerHTML = centeredModalLabel2_val; 
+        document.getElementById("centeredModalLabel2").innerHTML = centeredModalLabel2_val;
         // document.getElementById('row_remark_id').value  = button_
     }
-    
+
     function removeDiv(FeatureDiv) {
           const delDiv = FeatureDiv.parentNode.parentNode;
           delDiv.parentNode.removeChild(delDiv);
@@ -739,7 +762,7 @@ const last_action = localStorage.getItem('typer');
 
     var Remark_count = 1
     document.getElementById('Remark_count').value = Remark_count;
-    
+
    </script>
 
 <script>
@@ -756,7 +779,7 @@ $(document).ready(function() {
 
 </script>
 
-<script>  
+<script>
   var Features_count = 1
   document.getElementById('feature_count').value = Features_count;
   function removeDiv(FeatureDiv) {
@@ -771,23 +794,23 @@ $(document).ready(function() {
     newFeatureDiv.id = `feture_${Features_count}`;
     newFeatureDiv.innerHTML = `<input type="hidden" name="Feature_ids" id="Feature_ids_${Features_count}" value="${Features_count}">
                           <div class="form-floating">
-                          <input type="text" placeholder="Features" class="form-control me-1" 
+                          <input type="text" placeholder="Features" class="form-control me-1"
                             id="example-Features-input_${Features_count}" name="features_${Features_count}">
                             <label for="example-Features-input_${Features_count}" class="col-form-label">Feature</label></div>
                             <div class="form-floating">
                             <input type="date" class="form-control ms-1" id="timeline_${Features_count}" min="{% now 'Y-m-d' %}" max="{{ data.Timeline|date:'Y-m-d' }}" name="timeline_${Features_count}">
                             <label for="timeline_${Features_count}" class="col-form-label">Feture Timeline </label>
                             </div>
-                            <span class="input-group-append ms-2" 
-                            id="button-addon_${Features_count}"><button class="btn btn-danger mt-2" type="button" 
+                            <span class="input-group-append ms-2"
+                            id="button-addon_${Features_count}"><button class="btn btn-danger mt-2" type="button"
                             id = "remove_feture_${Features_count}" data-repeater-delete onclick="removeDiv(this)"><i class="ri-delete-bin-6-line"></i></button>
                              </span>`;
-  
+
     document.getElementById("repeater-group_feature").appendChild(newFeatureDiv);
     });
   var Remark_count = 1
   document.getElementById('Remark_count').value = Remark_count;
-  
+
 
   </script>
 

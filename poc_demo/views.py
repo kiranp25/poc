@@ -110,10 +110,12 @@ def change_password(request, user_id):
 def add_poc(request):
     all_active_product = Product.objects.all()
     sts = Status.objects.all()
+    customer = Customer.objects.filter(status = 'Active')
     type_poc = poc_choice
     context = {}
     context['type_poc'] = type_poc
     context['status'] = sts
+    context['customer'] = customer
     product_list = [product for product in all_active_product]
 
     if request.method == 'POST':
@@ -126,9 +128,8 @@ def add_poc(request):
             if not True:
                 pass
             else:
-                customer_name = request.POST['CustomerName']
+                customer_name = Customer.objects.get(id=request.POST['CustomerName'])
                 # product_name = request.POST['product_name']
-
                 feature_count = request.POST['feature_count']
                 features_list = request.POST.getlist('Feature_ids')
                 features = request.POST.getlist('features')
@@ -180,6 +181,25 @@ def add_poc(request):
     context['product_list'] = product_list
     return render(request, 'poc_demo/add_poc.html', context)
 
+
+
+@login_required(login_url='loginpage')
+def add_customer(request):
+    context = {}
+    context['status'] = ['active', 'inactive']
+    if request.method == 'POST':
+        result = dict()
+        try:
+            existing_user = Customer.objects.filter(name=request.POST['customer_name']).first()
+            if existing_user:
+                messages.error(request, 'Customer  already exist! Please chose different name.', extra_tags="danger")
+            else:
+                new_customer = Customer.objects.create(name=request.POST['customer_name'])
+                messages.success(request, 'Customer added successfully.')
+        except Exception as e:
+            messages.error(request, f'Customer not added {e}.', extra_tags="danger")
+        return redirect('add_customer')
+    return render(request, 'poc_demo/add_customer.html', context)
 
 
 @login_required(login_url='loginpage')
@@ -264,6 +284,16 @@ def view_users(request):
 
     return render(request, 'poc_demo/user_view.html', context)
 
+@login_required(login_url='loginpage')
+def view_customer(request):
+    customer = Customer.objects.all()
+    if request.method == 'POST':
+        pass
+    context = {
+        "customer": customer,
+    }
+
+    return render(request, 'poc_demo/view_customer.html', context)
 
 @login_required(login_url='loginpage')
 def edit_user(request, id):
@@ -407,6 +437,34 @@ def edit_role(request, id):
 
                }
     return render(request, 'poc_demo/edit_role.html', context)
+
+
+@login_required(login_url='loginpage')
+def edit_customer(request, id):
+    context = {}
+    try:
+        # .exclude(pk=user.id)
+        customer = get_object_or_404(Customer, pk=id)
+        status = ['Active', 'InActive']
+        context = {'customer': customer,
+                   'status': status,
+                   }
+        if request.method == "POST":
+            customer_name = (request.POST['customer_name']).strip()
+            existing = Roles.objects.filter(name=customer_name.lower()).exclude(pk=id).first()
+            if existing:
+                messages.error(request, f"Role {customer_name} not updated, Role name already taken!", extra_tags="danger")
+            else:
+                customer.name = request.POST['customer_name']
+                customer.status = request.POST.get('status')
+                customer.save()
+                messages.success(request, f"Customer "
+                                          f": {request.POST['customer_name']} updated.")
+    except Exception as e:
+        messages.error(request, f"Customer {request.POST['customer_name']} not updated {e}.", extra_tags="danger")
+
+    return render(request, 'poc_demo/edit_customer.html', context)
+
 
 
 @login_required(login_url='loginpage')
@@ -581,9 +639,11 @@ def edit_poc(request, id):
                 product_name = Product.objects.get(Product_name=request.POST['product_name'])
                 get_poc.Product_name = product_name
 
-            get_poc.Customer_name = request.POST['Customer_name']
+            get_poc.Customer_name = Customer.objects.get(id=request.POST['Customer_name'])
             get_poc.Timeline = request.POST['Timeline_date']
             get_poc.poc_type = request.POST['poc_type']
+            if request.POST.get('kt_given'):
+                get_poc.kt_given = request.POST['kt_given']
             get_poc.status = status
             if request.POST.get('assign_edit'):
                 if request.POST['assign_edit'] != 'None':
@@ -602,6 +662,8 @@ def update_sts(request, id):
             sts_id = request.POST['sts_id']
             status = request.POST['status']
             poc_id = request.POST['poc_id']
+            obj = Poc_model.objects.get(poc_id = poc_id)
+            print("___________________",obj.status)
             added_by = CustomUser.objects.get(id=request.user.id)
             featureobj = Feature.objects.get(pk=sts_id)
             Feature_status.objects.create(feature=featureobj, status=status, added_by=added_by)
@@ -645,7 +707,7 @@ def update_feature_detail(request):
 def view_poc_detail(request, id):
     poc = Poc_model.objects.prefetch_related('poc_f_related', 'poc_r_related').get(id=id)
     permission_for_edit = ['Admin', 'Sales', 'Manager']
-    permission_for_delete = ['Admin', 'Sales', 'Manager']
+    permission_for_delete = ['Admin', 'Sales']
     permission_for_ADD_STATUS = ['Admin', 'Sales', 'Manager', 'Support']
     html_feture_only = ''' '''
     html_feture_sts_only = ''' '''
@@ -669,7 +731,8 @@ def view_poc_detail(request, id):
                       </tr>'''
     all_active_product = Product.objects.all()
     status_list = Status.objects.all()
-    assign_to = User.objects.filter(role=4)
+    customer = Customer.objects.filter(status = 'Active')
+    assign_to = User.objects.filter(role__name='Support', Belongs_to = request.user.id)
     permition = [1, 2, 3]
     if request.method == 'POST':
         try:
@@ -698,7 +761,8 @@ def view_poc_detail(request, id):
                                                              "permission_for_edit": permission_for_edit,
                                                              "permission_for_ADD_STATUS": permission_for_ADD_STATUS,
                                                              "permission_for_delete": permission_for_delete,
-                                                             "type_poc": type_poc
+                                                             "type_poc": type_poc,
+                                                             "customer": customer
                                                              })
 
 
@@ -725,12 +789,58 @@ def get_detail_sts(request):
 @login_required(login_url='loginpage')
 def delete_role(request, id):
     try:
-        Roles.objects.get(pk=id).delete()
-        messages.success(request, 'Role deleted.')
+        role = Roles.objects.get(pk=id)
+        if role.name != 'Admin':
+            Roles.objects.get(pk=id).delete()
+            messages.success(request, 'Role deleted.')
+        else:
+            messages.error(request, f'Admin Role cant deleted.', extra_tags='danger')
         pass
     except Exception as e:
         messages.error(request, f'Role not deleted {e}.', extra_tags='danger')
     return redirect('view_roles')
+
+@login_required(login_url='loginpage')
+def delete_customer(request, id):
+    try:
+        customer = Customer.objects.get(pk=id)
+        if request.user.role.name == 'Admin':
+            # Customer.objects.get(pk=id).delete()
+            customer.status = 'InActive'
+            customer.save()
+            messages.success(request, 'Customer deleted.')
+        else:
+            messages.error(request, f'Only Admin Allowed.', extra_tags='danger')
+        pass
+    except Exception as e:
+        messages.error(request, f'Customer not deleted {e}.', extra_tags='danger')
+    return redirect('view_customer')
+
+
+@login_required(login_url='loginpage')
+def delete_poc(request, id):
+    try:
+        if request.user.role.name in  ['Admin','Sales']:
+            Poc_model.objects.get(pk=id).delete()
+            messages.success(request, 'POC deleted.')
+        else:
+            messages.error(request, ' POC not deleted. Not Allowed to this user', extra_tags='danger')
+    except Exception as e:
+        messages.error(request, f'Poc not deleted {e}.', extra_tags='danger')
+    return redirect('view_poc')
+
+
+@login_required(login_url='loginpage')
+def delete_demo(request, id):
+    try:
+        if request.user.role.name in  ['Admin','Sales']:
+            Demo_model.objects.get(pk=id).delete()
+            messages.success(request, 'DEMO deleted.')
+        else:
+            messages.error(request, ' DEMO not deleted. Not Allowed to this user', extra_tags='danger')
+    except Exception as e:
+        messages.error(request, f'DEMO not deleted {e}.', extra_tags='danger')
+    return redirect('view_demo')
 
 
 @login_required(login_url='loginpage')
@@ -746,8 +856,11 @@ def delete_product(request, id):
 @login_required(login_url='loginpage')
 def delete_user(request, id):
     try:
-        User.objects.get(pk=id).delete()
-        messages.success(request, 'User deleted.')
+        if id != 1:
+            User.objects.get(pk=id).delete()
+            messages.success(request, 'User deleted.')
+        else:
+            messages.error(request,'Admin User cant Deleted', extra_tags='danger')
     except Exception as e:
         messages.error(request, f'User not deleted {e}.', extra_tags='danger')
     return redirect('view_users')
@@ -766,14 +879,16 @@ def delete_status(request, id):
 @login_required(login_url='loginpage')
 def add_demo(request):
     all_active_product = Product.objects.all()
+    customer = Customer.objects.filter(status = 'Active')
     sts = Status.objects.all()
     context = {}
+    context['customer'] = customer
     context['status'] = sts
     product_list = [product for product in all_active_product]
 
     if request.method == 'POST':
         try:
-            customer_name = request.POST['CustomerName']
+            customer_name = Customer.objects.get(id=request.POST['CustomerName'])
             # product_name = request.POST['product_name']
             product_name = Product.objects.get(Product_name=request.POST['product_name'])
             feature_count = request.POST['feature_count']
@@ -879,6 +994,7 @@ def view_demo_detail(request, id):
                       </tr>'''
     all_active_product = Product.objects.all()
     status_list = Status.objects.all()
+    customer = Customer.objects.filter(status = 'Active')
     assign_to = User.objects.filter(role=4)
     permition = [1, 2, 3]
     if request.method == 'POST':
@@ -907,7 +1023,8 @@ def view_demo_detail(request, id):
                                                               "html_feture_only": html_feture_only,
                                                               "permission_for_edit": permission_for_edit,
                                                               "permission_for_ADD_STATUS": permission_for_ADD_STATUS,
-                                                              "permission_for_delete": permission_for_delete
+                                                              "permission_for_delete": permission_for_delete,
+                                                              'customer': customer
                                                               })
 
 
@@ -926,9 +1043,12 @@ def edit_demo(request, id):
                 product_name = Product.objects.get(Product_name=request.POST['product_name'])
                 get_demo.Product_name = product_name
 
-            get_demo.Customer_name = request.POST['Customer_name']
+            get_demo.Customer_name = Customer.objects.get(id=request.POST['Customer_name'])
             get_demo.Timeline = request.POST['Timeline_date']
             get_demo.status = status
+            if request.POST.get('kt_given'):
+                get_demo.kt_given = request.POST['kt_given']
+
             if request.POST.get('assign_edit'):
                 if request.POST['assign_edit'] != 'None':
                     get_demo.assign_to = User.objects.get(pk=request.POST.get('assign_edit'))

@@ -1,0 +1,94 @@
+
+
+{% extends "poc_demo/base.html" %}
+
+{% block poc_content %}
+  
+  {% load static %}
+
+    <div class="app-content content">
+      <div class="content-wrapper">
+        <div class="content-header row">
+        </div>
+        <div class="content-body">
+
+
+            <div class="card">
+              <div class="card-body">
+                {% if messages %}
+                <div class="messages text-center">
+                {% for message in messages %}
+                <h4 {% if message.extra_tags %} class="alert alert-{{ message.extra_tags }}"{% else %} 
+                class="alert alert-{{ message.tags }}"{% endif %}
+                >{{ message }}</h4>
+                {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Form control repeater section start -->
+                <div class="text-center text-muted"><h1>Users</h1></div>
+                <section id="form-control-repeater">
+                  <div class="container">
+                    <div class="row">
+
+                <div class="col-sm-12  text-end">
+                    <a href="{% url 'add_customer' %}" class="btn btn-primary btn-sm m-2">Add Customer</a>
+                </div>
+            </div>
+                      <table class="datatable table table-striped table-bordered">
+                        <thead>
+                          <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% if customer %}
+                          {% for customer in customer %}
+                          <tr>
+                            <td>{{ customer.name }}</td>
+                            <td>{{ customer.status }}</td>
+                            <td>
+                              <div class="btn-group btn-group-sm" role="group">  
+                                <a href="{% url 'edit_customer' customer.id %}" class="btn btn-primary">Edit</a>
+                                <a href="#" onclick="return confirmDelete('{% url 'delete_customer' customer.id %}')" class="btn btn-danger btn-sm ms-1">Delete</a>
+                              </div>
+                            </td>
+                          </tr>
+                          {% endfor %}
+                          {% else %}
+                          <tr>
+                            <td colspan="3" class="text-center">No users found.</td>
+                          </tr>
+                          {% endif %}
+                        </tbody>
+                      </table>
+                  </div>
+                </section>
+                    
+                
+
+
+              </div>          
+           </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- ////////////////////////////////////////////////////////////////////////////-->
+    {%endblock %}
+
+    
+    {% block js %}  
+
+    <script>
+      function confirmDelete(url) {
+        if (confirm('Are you sure you want to delete?')) {
+          window.location.href = url; // Redirect to delete URL if confirmed
+        }
+      }
+      </script>
+          
+    {% endblock %}
+
