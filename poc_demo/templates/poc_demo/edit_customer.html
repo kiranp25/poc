@@ -5,20 +5,6 @@
 {% block poc_content %}
   
   {% load static %}
-          {% if messages %}
-          <div class="messages text-center">
-
-<!--
-            {% for message in messages %}
-            {{message}}
-            {% endfor %} -->
-
-          {% for message in messages %}
-          <h4 {% if message.extra_tags %} class="alert alert-{{ message.extra_tags }}"{% else %}
-          class="alert alert-{{ message.tags }}"{% endif %}>{{ message }}</h4>
-          {% endfor %}
-          </div>
-          {% endif %}
 
     <div class="app-content content">
       <div class="content-wrapper">
@@ -33,38 +19,77 @@
                         <section id="form-control-repeater" class="container-fluid py-4">
   <h1 class="text-center mb-4">Edit Status - {{ customer.name }}</h1>
 
-  <form class="row g-3 needs-validation" method="post" novalidate>
-    {% csrf_token %}
+<form class="row g-3 needs-validation" method="post" novalidate>
+  {% csrf_token %}
 
-    <div class="col-12">
-      <input type="hidden" class="form-control" value={{ request.user.email }} name="username">
-      <input type="hidden" class="form-control" value={{ customer.id }} name="customer_id">
-    </div>
+  <div class="col-12">
+    <input type="hidden" class="form-control" value={{ request.user.email }} name="username">
+    <input type="hidden" class="form-control" value={{ customer.id }} name="customer_id">
+  </div>
 
-    <div class="col-lg-12 mb-2">
-      <div class="form-floating">
-        <input type="text" class="form-control" id="customer_name" name="customer_name" value="{{ customer.name }}" placeholder="Customer Name" required >
-        <label for="customer_name">Role Name</label>
-        <div class="invalid-feedback">Please provide a valid customer name.</div>
-      </div>
+  <div class="col-lg-6 mb-2">
+    <div class="form-floating">
+      <input type="text" class="form-control" id="customer_name" name="customer_name" value="{{ customer.name }}" placeholder="Customer Name" required>
+      <label for="customer_name">Customer Name</label>
+      <div class="invalid-feedback">Please provide a valid customer name.</div>
     </div>
+  </div>
 
-    <div class="col-lg-12 mb-2">
-      <div class="form-floating">
-        <select name="status" class="form-control" id="custStatus" required>
-          {% for  sts in status %}
-            <option value="{{ sts }}" {% if customer.status == sts %} selected {% endif %}>{{ sts }}</option>
-          {% endfor %}
-        </select>
-        <label for="custStatus">Status</label>
-        <div class="invalid-feedback">Please select a status.</div>
-      </div>
+  <div class="col-lg-6 mb-2">
+    <div class="form-floating">
+      <select name="status" class="form-control" id="custStatus" required>
+        {% for  sts in status %}
+          <option value="{{ sts }}" {% if customer.status == sts %} selected {% endif %}>{{ sts }}</option>
+        {% endfor %}
+      </select>
+      <label for="custStatus">Status</label>
+      <div class="invalid-feedback">Please select a status.</div>
     </div>
+  </div>
 
-    <div class="col-12 text-center mt-4">
-      <button type="submit" class="btn btn-primary btn-lg">Save Changes <i class="ft-thumbs-up position-right"></i></button>
+  <div class="col-lg-6 mb-2">
+    <div class="form-floating">
+      <input type="text" class="form-control" id="location_address" name="location_address" value="{{ customer.location }}" placeholder="Location Address">
+      <label for="location_address">Location Address</label>
+      <div class="invalid-feedback">Please provide a location address.</div>
     </div>
-  </form>
+  </div>
+    <div class="col-lg-6 mb-2">
+    <div class="form-floating">
+      <input type="text" class="form-control" id="address" name="address" value="{{ customer.address }}" placeholder="Address">
+      <label for="location_address"> Address</label>
+      <div class="invalid-feedback">Please provide a location address.</div>
+    </div>
+  </div>
+
+  <div class="col-lg-6 mb-2">
+    <div class="form-floating">
+      <input type="text" class="form-control" id="contact_person" name="contact_person" value="{{ customer.contact_person }}" placeholder="Contact Person">
+      <label for="contact_person">Contact Person</label>
+      <div class="invalid-feedback">Please provide a contact person name.</div>
+    </div>
+  </div>
+
+  <div class="col-lg-6 mb-2">
+    <div class="form-floating">
+          <input type="tel" class="form-control" id="contact_number" name="contact_number" value="{{ customer.contact_number }}" placeholder="Contact Number">
+      <label for="contact_number">Contact Number</label>
+      <div class="invalid-feedback">Please provide a valid contact number.</div>
+    </div>
+  </div>
+
+  <div class="col-lg-6 mb-2">
+    <div class="form-floating">
+      <input type="email" class="form-control" id="contact_email" name="contact_email" value="{{ customer.contact_email }}" placeholder="Email Address">
+      <label for="contact_email">Email Address</label>
+      <div class="invalid-feedback">Please provide a valid email address.</div>
+    </div>
+  </div>
+
+  <div class="col-12 text-center mt-4">
+    <button type="submit" class="btn btn-primary btn-lg" onclick="return confirm('Do you want to save changes?')">Save Changes <i class="ft-thumbs-up position-right"></i></button>
+  </div>
+</form>
 </section>
 
 

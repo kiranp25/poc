@@ -1,20 +1,7 @@
 {% extends "poc_demo/base.html" %}
 {% block poc_content %}  
 {% load static %}
-          {% if messages %}
-          <div class="messages text-center">
 
-<!--
-            {% for message in messages %}
-            {{message}}
-            {% endfor %} -->
-
-          {% for message in messages %}
-          <h4 {% if message.extra_tags %} class="alert alert-{{ message.extra_tags }}"{% else %}
-          class="alert alert-{{ message.tags }}"{% endif %}>{{ message }}</h4>
-          {% endfor %}
-          </div>
-          {% endif %}
 <div class="app-content content">
     <div class="content-wrapper">
       <div class="content-header row">
@@ -29,13 +16,14 @@
                     <div class="card-header">
                         <h4 class="card-title">Demo view</h4>
                         <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
-                        {% if request.user.role.name == 'Sales' or request.user.role.name == 'Admin' %}
+
                         
                         <div class="col-md-2 ms-auto mt-2" style="margin-left: 100px;">
                              <div class="text-end">
-                            <a href="{% url 'add_demo' %}" class="btn btn-primary btn-sm m-2">Add Demo</a>
+                                 {% if "add_demo" in permission_names %}
+                                <a href="{% url 'add_demo' %}" class="btn btn-primary btn-sm m-2">Add Demo</a>
+                                 {% endif %}
                         </div>
-                            {% endif %}
                             <form method="get" id="filter-form" class="form-inline">
                             <input type="text" name="search" placeholder="Search.." id="search" class="form-control ms-auto" value="{{ search_query }}">
                           </form></div>
@@ -46,16 +34,16 @@
                                 <thead>
                                     <tr>
                                         <th>Name</th>
-                                        <th>Product_name</th>
+                                        <th>Product Name</th>
                                         <th> Detail </th>
-                                        <th>Requested_date</th>
+                                        <th>Requested Date</th>
                                         <th>Timeline</th>
                                         <th>Status</th>
-                                        <th>added_by</th>
-                                        {% if  request.user.role.name  == 'Manager' or request.user.role.name  == 'Sales'  %}
+                                        <th>Added By</th>
+                                        {% if  request.user.role.name  == 'Approval' or request.user.role.name  == 'Sales'  %}
                                         <th>Request</th>
                                         {% endif %}
-                                        {% if  request.user.role.name  == 'Admin' or request.user.role.name  == 'Sales'  %}
+                                        {% if  "delete_demo" in permission_names %}
                                         <th>Action</th>
                                         {% endif %}
                                         
@@ -87,15 +75,20 @@
 
                                         </td>
                                         {% endif %}
-                                        {% if  request.user.role.name  == 'Manager' %}
+                                        {% if  request.user.role.name  == 'Approval' %}
                                         <td>
                                         <!-- <td><button type ='button' class = 'btn btn-sm-primary'>add</button> -->
 <!--                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" id ='{{i.id}}' data-bs-target="#centeredModal" onclick="set_id(this.id)">-->
 <!--                                                ADD-->
 <!--                                              </button>-->
                                             {% if i.status.name == 'Pending' %}
-                                                <a href="{% url 'approved_status' i.id %}?param1=Accepted&param2=DEMO" class="btn btn-primary" value="">Approve</a>
+
+                                             {% if "approved_status" in permission_names %}
+                                            <a onclick="return confirmApprove('{% url 'approved_status' i.id %}?param1=Accepted&param2=DEMO')" class="btn btn-primary" value="">Approve</a>
                                                 <a class="btn btn-danger" data-bs-toggle="modal" id ='{{i.id}}' data-bs-target="#centeredModal" onclick="set_id(this.id)">Reject</a>
+                                                {% else %}
+                                                <a class="btn btn-warning">Pending</a>
+                                            {% endif %}
                                             {% elif i.status.name == 'Rejected' %}
                                                 <a class="btn btn-warning">Rejected</a>
                                             {% elif i.status.name != 'Rejected' %}
@@ -103,12 +96,12 @@
                                             {% endif %}
                                         </td>
                                         {% endif %}
-                                         {% if  request.user.role.name  == 'Admin' or request.user.role.name  == 'Sales'  %}
+                                        {% if "delete_demo" in permission_names %}
                                         <td><a href="{% url 'delete_demo' i.id %}" class="btn btn-warning" value="">Delete</a></td>
+                                        {% else %}
                                         {% endif %}
                                     </tr>
                                     {% endfor %}
-                                
                                     </tbody>
                     
                             </table>
@@ -226,8 +219,18 @@
     {% block js %}
     <!-- <script src="https://code.jquery.com/jquery-3.6.3.min.js"></script> -->
 
+     <script>
+      function confirmApprove(url) {
+        if (confirm('Are you sure for Approve Project?')) {
+          window.location.href = url;
+        }
+      }
+      </script>
+
+
    <script>
        localStorage.setItem('typer', "new");
+
 
     function set_id(button_){
         document.getElementById('row__id').value  = button_

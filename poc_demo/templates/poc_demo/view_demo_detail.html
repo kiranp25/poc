@@ -1,6 +1,6 @@
 {% extends "poc_demo/base.html" %}
 
-{% block poc_content %}  
+{% block poc_content %}
 {% load static %}
 <style>
 
@@ -8,7 +8,7 @@
       font-family: Roboto, sans-serif;  /* Choose a clear font */
       color: #333;  /* Text color */
   }
-  
+
   .card {
       background-color: #fff;  /* Card background */
       border: 1px solid #eee;  /* Subtle border */
@@ -17,28 +17,28 @@
       margin-bottom: 20px;
       padding: 15px;
   }
-  
+
   .card-header {
       background-color: #f8f9fa;  /* Header background */
       padding: 10px 15px;
       border-bottom: 1px solid #eee;
   }
-  
+
   .card-title {
       font-size: 18px;
       margin-bottom: 5px;
   }
-  
+
   .btn-primary {
       background-color: #007bff;  /* Primary button color */
       border-color: #007bff;
       color: #fff;
   }
-  
+
   </style>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.datatables.net/2.0.3/css/dataTables.bootstrap5.css" rel="stylesheet">
-  
+
 <div class="app-content content">
     <div class="content-wrapper">
       <div class="content-header row">
@@ -47,34 +47,19 @@
         <!-- Zero configuration table -->
     <section id="configuration">
 
-          {% if messages %}
-          <div class="messages text-center">
-
-<!--             
-            {% for message in messages %}
-            {{message}}
-            {% endfor %} -->
-
-          {% for message in messages %}
-          <h4 {% if message.extra_tags %} class="alert alert-{{ message.extra_tags }}"{% else %}
-          class="alert alert-{{ message.tags }}"{% endif %}>{{ message }}</h4>
-          {% endfor %}
-          </div>
-          {% endif %}
-                  
         <div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="card-title">DEMO view</h4>
+                        <h4 class="card-title">DEMO:</h4>
                         <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
-                        <ol class="breadcrumb"> 
+                        <ol class="breadcrumb">
                           <li class="breadcrumb-item active"><a onclick="scrollToElement('Demo_detail')"></a>Detail</li>
                           <li class="breadcrumb-item"><a onclick="scrollToElement('Remarks_div')">Remarks</a></li>
                           <li class="breadcrumb-item"><a onclick="scrollToElement('Feature_div')">Feature</a></li>
-                        </ol>            
+                        </ol>
                     </div>
-                  {% if request.user.role.name == 'Sales' %}
+                    {% if request.user.role.name == 'Sales' %}
                       {% if data.description %}
 
                       <div class="alert alert-warning">
@@ -86,21 +71,25 @@
                     <!-- strt -->
                     <div class="DEMO-view row" id="Demo_detail">
                       <div class="col-md-6">
-                        <form method="POST" action="{% url 'edit_demo' data.id %}">
+                        <form method="POST" action="{% url 'edit_demo' data.id %}" enctype="multipart/form-data">
                           {% csrf_token %}
                           <div class="card shadow-sm rounded-3 p-3 mt-2 bg-light">
                             <div class="row">
                               <div class="col-md-6">
                                 <h5 class="card-title mb-3 text-primary">Details</h5>
                                 <div class="mb-3">
-                                  <label for="name" class="form-label fw-bold">Customer Name:</label>
-                                  <select name="Customer_name" class="form-control" id="name"  required disabled>
+                                  <label for="customer_name" class="form-label fw-bold">Customer Name:</label>
+                                  {% comment 'in feature' %}
+                                  <select name="Customer_name" class="form-control" id="customer_name"  required disabled>
                                     {% for customer in customer %}
                                     <option value="{{ customer.id }}" {% if data.Customer_name == customer  %} selected {% endif %}>{{ customer }}</option>
                                     {% endfor %}
+                                  </select>
+                                   {% endcomment %}
+                                  <input type="text" name="Customer_name" class="form-control" id="customer_name" value="{{ data.Customer_name }}" disabled readonly>
                                 </div>
                                 <div class="mb-3">
-                                 {% if request.user.role.name != "Manager" %}
+                                  {% if request.user.role.name == "Approval" %}
                                   <label for="product_name" class="form-label fw-bold">Product Name:</label>
                                   <select name="product_name" class="form-control" id="product_name"  required disabled>
                                     {% for prd in product %}
@@ -113,31 +102,63 @@
                                   </select>
 
                                 </div>
-
                                 <div class="mb-3">
                                   <label for="added_by" class="form-label fw-bold">Added By:</label>
-                                  <input type="text" id = 'added_by' class="form-control" value="{{ data.added_by }}"  readonly>
+                                  <input type="text" id = 'added_by' class="form-control" value="{{ data.added_by }}" disabled readonly>
                                 </div>
-                                
+                                {% comment "actiity type in demo" %}
+                                 <div class="mb-3">
+                                     <label class="form-label fw-bold" for="demo_type">Activity Type:
+                                     </label>
+                                    <select class="form-control" name="demo_type" id="demo_type" aria-label="status" disabled>
+                                    <option value="" selected disabled></option>
+                                    {% for id, type in type_poc %}
+                                    <option value="{{ id }}" {% if data.demo_type == type %}selected{% endif %}>{{ type }}</option>
+                                    {% endfor %}
+                                      </select>
+                                   {% if request.user.role.name == "Sales" %}
+                                   <input type="text" name="demo_type"  value="{{data.demo_type}}" readonly hidden>
+                                   {% endif %}
+                                 </div>
+                                {% endcomment %}
+
+                                {% if request.user.role.name == "Approval" %}
+                                <div class="mb-3">
+                                    <label for="uploaded_file" class="form-label fw-bold">Upload Documentaions (PDF or ZIP only):</label>
+                                    <input type="file" id="uploaded_file" name="uploaded_file" class="form-control" accept=".zip,.pdf"  disabled>
+                                    <small class="text-muted">Allowed file types: PDF, ZIP</small>
+
+                                </div>
+                                {% endif %}
+                                {% if data.documentation %}
+                                        <div>
+                                            <p>Uploaded File: <a href="{{ data.documentation.url }}" target="_blank">{{ data.documentation.name }}</a></p>
+                                            <p>To replace the file, upload a new one:</p>
+                                        </div>
+                                    {% endif %}
+
+
                                 <!-- product -->
                               </div>
                               <div class="col-md-6">
                                 <h5 class="card-title mb-3 text-info">Information</h5>
                                 <div class="mb-3">
                                   <label for="requested_date_edit" class="form-label fw-bold">Requested Date:</label>
-                              <input type="date" class="form-control" id="requested_date_edit" name="requested_date" value="{{ data.Requested_date|date:'Y-m-d' }}" readonly disabled> 
+                              <input type="date" class="form-control" id="requested_date_edit" name="requested_date" value="{{ data.Requested_date|date:'Y-m-d' }}" readonly disabled>
                                 </div>
                                 <div class="mb-3">
                                   <label for="Timeline_date_edit" class="form-label fw-bold">Timeline:</label>
-                                  <input type="date" class="form-control" id="Timeline_date_edit" name="Timeline_date" value="{{ data.Timeline|date:'Y-m-d' }}" disabled>  
+                                  <input type="date" class="form-control" id="Timeline_date_edit" name="Timeline_date" value="{{ data.Timeline|date:'Y-m-d' }}" disabled>
                                 </div>
                                 <div class="mb-3">
                                   <label for="status_edit" class="form-label fw-bold">Status:</label>
-                                  <select name="status" class="form-control" id="status_edit"  required disabled>
+                                  <select name="status" class="form-control" id="status_edit"  required disabled onchange="handleStatusChange(this.value)">
                                       {% if data.status.name == 'Rejected'  and request.user.role.name == 'Sales' %}
                                         <option value="{{data.status.name}}" selected> {{data.status.name}} </option>
                                     {% elif request.user.role.name == 'Sales' %}
                                         <option value="{{data.status.name}}" selected> {{data.status.name}} </option>
+                                     {% elif data.status.name == 'Rejected'  and request.user.role.name == 'Approval' %}
+                                           <option value="{{data.status.name}}" selected> {{data.status.name}} </option>
                                       {% else %}
                                           {% for sts in status %}
                                           <option value="{{ sts.name }}" {% if data.status == sts  %} selected {% endif %}>{{ sts }}</option>
@@ -146,8 +167,8 @@
                                   </select>
                                 </div>
 
-                                <div class="mb-3"> 
-                                  {% if request.user.role.name == "Manager" %}
+                                <div class="mb-3">
+                                  {% if request.user.role.name == "Approval" %}
                                     <label for="assign_edit" class="form-label fw-bold">Assign To:</label>
                                     <select name="assign_edit" class="form-control" id="assign_edit" required disabled>
                                         {% if data.assign_to == None %}
@@ -158,39 +179,38 @@
                                       {% endfor %}
                                     {% else %}
                                       <label for="assign_edit_text" class="form-label fw-bold">Assign To:</label>
-                                      <input type="text" class="form-control" id="assign_edit_text" name="assign_edit_text" value="{{ data.assign_to }}" readonly>
+                                      <input type="text" class="form-control" id="assign_edit_text" name="assign_edit_text" value="{{ data.assign_to }}" disabled readonly>
                                     {% endif %}
                                     </select>
-                
                                 </div>
                                 <div class="mb-3">
-                                  {% if request.user.role.name == "Manager" %}
-                                    <label for="kt_given" class="form-label fw-bold">KT given:</label>
+                                  {% if request.user.role.name == "Approval" %}
+                                    <label for="kt_given" class="form-label fw-bold">KT Given:</label>
                                     <select name="kt_given" class="form-control" id="kt_given" required disabled>
-
-                                      <option value="True" {% if data.kt_given == True %} selected {% endif %}> Yes </option>
-                                      <option value="False" {% if data.kt_given == False  %} selected {% endif %}> No </option>
-
+                                      <option value="True" {% if data.kt_given == True %} selected {% endif %}> Provided </option>
+                                      <option value="False" {% if data.kt_given == False  %} selected {% endif %}> Not Provided </option>
+                                      </select>
                                     {% else %}
-                                      <label for="Kt_given_" class="form-label fw-bold">KT given:</label>
-                                      <input type="text" class="form-control" id="Kt_given_" name="Kt_given_" value="{{ data.kt_given }}" readonly>
+                                      <label for="Kt_given_" class="form-label fw-bold">KT Given:</label>
+                                      <input type="text" class="form-control" id="Kt_given_" name="Kt_given_" value="{% if  data.kt_given == True %}Provided{% else %}Not Provided {% endif %}" disabled readonly>
                                     {% endif %}
-                                    </select>
 
                                 </div>
-
-                                
                               </div>
                             </div>
-                                     
                             <div class="text-end">
-                              {% if request.user.role.name in permission_for_edit %}
+                              {% if data.status.name != 'InActive' %}
+                              {% if 'edit_demo' in permission_names  %}
                               <button type="button" class="btn btn-primary edit-btn">Edit</button>
-                              <button type="submit" class="btn btn-success save-btn" disabled>Save Changes</button>
+                              <button type="submit" class="btn btn-success save-btn" onclick="return confirm('Do you want to save changes?')" disabled>Save Changes</button>
+                              {% elif request.user.role.name == 'Sales' and data.status.name == 'Rejected' %}
+                              <button type="button" class="btn btn-primary edit-btn">Edit</button>
+                              <button type="submit" class="btn btn-success save-btn" onclick="return confirm('Do you want to save changes?')" disabled>Save Changes</button>
+                              {% endif %}
                               {% endif %}
                             </div>
                           </div>
-                        </form>           
+                        </form>
                       </div>
                       <div class="col-md-6" id="Remarks_div">
                         <div class="card shadow-sm rounded-3 p-3 mt-2 bg-light">
@@ -199,17 +219,19 @@
                               <h5 class="card-title mb-3 text-primary">Remarks</h5>
                             </div>
                             <div class="col-sm-6 text-end">
-                              {% if request.user.role.name in permission_for_edit or  request.user.role.name == 'Support' %}
-                              <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#centeredModal" id="{{data.id}}" onclick="set_id(this.id)" {% if request.user.role.name  == "Support" and  data.status.name == 'Pending' %}hidden {% endif %}>
+                              {% if data.status.name != 'InActive' %}
+                              {% if 'add_remark' in permission_names %}
+                              <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#centeredModal" id="{{data.id}}"  {% if request.user.role.name  == "Support" and  data.status.name == 'Pending' %}hidden {% endif %}>
                                 <i class="fas fa-plus"></i> Add Remarks
-                              </button>
+                                {% endif %}
                               {% endif %}
+                              </button>
                             </div>
                           </div>
                           <table class="table table-striped table-hover table-bordered datatable" id="demo_remark_table">
                             <thead>
                               <tr>
-                                <th scope="col">Remark</th>
+                                <th scope="col">Remarks</th>
                                 <th scope="col">Remark By</th>
                                 <th scope="col">Date</th>
                               </tr>
@@ -226,13 +248,8 @@
                           </table>
                         </div>
                       </div>
-                    </div>                    
-
-                    
+                    </div>
                     <!-- end -->
-
-                    
-            
         </div>
         </div>
         </div>
@@ -247,11 +264,15 @@
               <h5 class="card-title mb-3 text-primary">Features</h5>
             </div>
             <div class="col-sm-6 text-end">
-              {% if request.user.role.name in permission_for_edit %}
-              <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addFeatureModal" id="{{data.id}}">
+              {% comment "Optional note" %}
+              {% if data.status.name != 'InActive' %}
+               {% if 'add_feature' in permission_names %}
+              <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addFeatureModal" id="{{data.id}}" >
                 <i class="fas fa-plus"></i> Add Feature
               </button>
               {% endif %}
+              {% endif %}
+              {% endcomment %}
             </div>
           </div>
           <table class="table table-striped table-hover table-bordered datatable" id="poc_data_table_feature">
@@ -270,17 +291,12 @@
                 <td>{{ feature.timeline }}</td>
 <!--                <td>{{ feature.status }}</td>-->
                 <td>
-
-
-
-
                   <div class="d-flex justify-content-between">
                     <button class="btn btn-sm btn-primary new-btns " data-toggle="tooltip" data-placement="top" title="View" id="fet_{{ feature.id }}" value="{{ feature.id }}">
-                       View Remarks
+                      View Remarks
                     </button>
-                    {% if request.user.role.name in permission_for_edit %}
+                    {% if "edit_feature" in permission_names %}
                     <button class="btn btn-sm btn-primary"  data-bs-toggle="modal" data-toggle="tooltip" data-placement="top" title="Edit" id="{{ feature.id }}_update_feture" value="{{ feature.id }}" onclick="update_feature(this,'{{ feature.features_list }}','{{ feature.timeline|date:'Y-m-d' }}','{{ feature.status }}')" data-bs-target="#centeredModalupdatefeature">
-                      
                     <i class="ri-edit-circle-fill" alt="update"></i>
                     </button>
                     {% endif %}
@@ -289,12 +305,11 @@
                       <i class="ri-file-add-line"></i>Remark
                     </button>
                     {% endif %}
-                    {% if request.user.role.name in permission_for_delete %}
+                    {% if "delete_feature" in permission_names %}
                     <a class="btn btn-sm btn-danger delete-feature" data-id="{{ feature.id }}" href="#">
-                      <i class="ri-delete-bin-line"></i> 
-                    </a>
-                    {% endif %}
-
+                      <i class="ri-delete-bin-line"></i>
+                      </a>
+                      {% endif %}
                   </div>
                 </td>
               </tr>
@@ -303,49 +318,39 @@
           </table>
         </div>
       </div>
-
-
-
-
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="card-title">Feature Remarks Details </h4>
-                    <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
-          
-                </div>
-                <div class="card-content collapse show">
-                  <div id="featurestsdetatil" class="card-body card-dashboard">
-                  <span id="hide_sp"> Click on view Remarks for specific feature</span>
-
-                    {% for feature in data.demo_f_related.all %}
-                      
-                      <div class="feature-container" id="featurestsdetatil_{{feature.id}}" style="display: none;"> 
-                        <h4> Feature - {{ feature.features_list }}</h4> 
-                        <table class="table table-striped table-hover table-bordered datatable" id="my-feature-table_{{ feature.id }}">
-                          <thead>
-                            <tr>
-                              <th>Status</th>
-                              <th>Added By</th>
-                              <th>Added At</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                
-                            {% for dt in feature.demo_feature_related.all %}
-                            <tr>
-                              <td>{{ dt.status }}</td>
-                              <td>{{ dt.added_by }}</td>
-                              <td>{{ dt.created_at }}</td>
-                            </tr>
-                            {% endfor %}
-                
-                          </tbody>
-                        </table>
-                      </div>
-                    {% endfor %}
-                  </div>
-                </div>
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h4 class="card-title">Feature Remarks Details </h4>
+            <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
+          </div>
+          <div class="card-content collapse show">
+            <div id="featurestsdetatil" class="card-body card-dashboard">
+              <span id="hide_sp"> Click on view Remarks for specific feature</span>
+              {% for feature in data.demo_f_related.all %}
+              <div class="feature-container" id="featurestsdetatil_{{feature.id}}" style="display: none;">
+                <h4> Feature - {{ feature.features_list }}</h4>
+                <table class="table table-striped table-hover table-bordered datatable" id="my-feature-table_{{ feature.id }}">  <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Added By</th>
+                  <th>Added At</th>
+                </tr>
+                </thead>
+                  <tbody>
+                  {% for dt in feature.demo_feature_related.all %}
+                  <tr>
+                    <td>{{ dt.status }}</td>
+                    <td>{{ dt.added_by }}</td>
+                    <td>{{ dt.created_at }}</td>
+                  </tr>
+                  {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -358,7 +363,6 @@
           <form method="post" action="{% url 'add_demo_remarks' data.id %}">
             {% csrf_token %}
             <div class="modal-header bg-light border-bottom">
-
               <h5 class="modal-title" id="centeredModalLabel">Add Remarks</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -369,7 +373,7 @@
               </div>
               <div class="mb-3">
                 <!-- <label for="row_remark_id" class="form-label">Row Remark ID</label> -->
-                <input type="hidden" name="row_remark_id" id="row_remark_id">
+                <input type="text" name="row_remark_id" value="{{data.id}}" id="row_remark_id">
               </div>
               <div class="mb-3" id="Remark-repeater">
                 <!-- <label for="Remark-count" class="form-label">Number of Remarks</label> -->
@@ -392,15 +396,13 @@
             <div class="modal-footer py-3 px-5">
               <div class="d-flex justify-content-end">
                 <button type="reset" class="btn btn-secondary me-2">Reset</button>
-                <button type="submit"  onclick="localStorage.setItem('typer', 'remark_added'); console.log('Value added to Local Storage!')" class="btn btn-primary">Submit</button>
+                <button type="submit" onclick="localStorage.setItem('typer', 'remark_added'); console.log('Value added to Local Storage!')" class="btn btn-primary">Submit</button>
               </div>
             </div>
           </form>
         </div>
       </div>
     </div>
-    
-
     <!--/ Zero configuration table -->
 
     <div class="modal fade" id="centeredModalFeture" tabindex="-1" aria-labelledby="centeredModalLabel2" aria-hidden="true">
@@ -418,7 +420,6 @@
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
-  
             </div>
           </div>
         </div>
@@ -428,17 +429,15 @@
       <div class="modal fade" id="centeredModalupdate" tabindex="-1" aria-labelledby="centeredModalLabel3" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
- 
-
             <form>
                 {% csrf_token %}
             <div class="modal-header">
-              
               <h5 class="modal-title" id="centeredModalLabel3"></h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="form-group col-md-12 mb-2">
-            <input type="hidden" class="form-control"  id='sts_id' name="sts_id"> 
+              <input type="hidden" class="form-control" id='feture_id' name="feture_id">
+            <input type="hidden" class="form-control"  id='sts_id' name="sts_id">
             <input type="hidden" class="form-control" value="{{data.id}}" id = 'demo_id' name="demo_id">
             <div class="modal-body" id = 'FeturestsCenteredupdate'>
                 <input type="text" class="form-control" placeholder="Status" class="form-control" id="sts" name="sts">
@@ -454,10 +453,9 @@
                 </div>
             </div>
             </form>
-            
           </div>
         </div>
-      </div>    
+      </div>
 
       <div class="modal fade" id="centeredModalupdatefeature" tabindex="-1" aria-labelledby="centeredModalLabel4" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -471,7 +469,6 @@
               <div class="modal-body py-4 px-5">
                 <input type="hidden" id='feature_ids' name="feature_ids">
                 <input type="hidden" value="{{data.id}}" id = 'demo_ids' name="demo_ids">
-    
                 <div class="form-group mb-3">
                   <label for="Feature_name" class="form-label">Feature Name</label>
                   <input type="text" class="form-control" id="Feature_name" name="Feature_name" placeholder="Enter Feature Name">
@@ -487,7 +484,6 @@
                                               <option value="InActive" >InActive</option>
                   </select>
                 </div>
-
               </div>
               <div class="modal-footer py-3 px-5">
                 <div class="d-flex justify-content-end">
@@ -515,10 +511,8 @@
       <div class="col-md-12">
         <div class="fmb-3 features-repeater" id="features-repeater">
           <input type="hidden" id="feature_count" name="feature_count">
-        
           <div id="repeater-group_feature" data-repeater-list="repeater-group">
             <div class="input-group mb-1" id="feture_1">
-              
               <input type="hidden" name="Feature_ids" id="Feature_ids_1" value="1">
               <div class='form-floating'>
               <input type="text" placeholder="Features" class="form-control me-1 " name="features_1" id="example-Features-input_1">
@@ -526,16 +520,15 @@
             </div>
               <div class='form-floating'>
                 <input type="date" class="form-control ms-1" id="timeline_1" min="{% now 'Y-m-d' %}" max="{{ data.Timeline|date:'Y-m-d' }}" name="timeline_1">
-                <label for="timeline_1" class="col-form-label"> Feture Timeline </label>  
+                <label for="timeline_1" class="col-form-label"> Feture Timeline </label>
               </div>
               <span class="input-group-append ms-2" id="button-addon_1">
                 <button class="btn btn-danger mt-2" type="button" id="remove_feture_1" data-repeater-delete onclick="removeDiv(this)">
-                  <i class="ri-delete-bin-6-line"></i> 
+                  <i class="ri-delete-bin-6-line"></i>
                 </button>
               </span>
             </div>
           </div>
-        
           <button type="button" id="add_new_feature" data-repeater-create class="btn btn-primary mt-2">
             <i class=" ri-add-line"></i> Add new Feature
           </button>
@@ -553,9 +546,41 @@
 </div>
 </div>
 </div>
+      <div class="modal fade" id="centeredModalsts" tabindex="-1" aria-labelledby="centeredModalstsLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="centeredModalstsLabel">Add Reason For Rejection</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
 
+          <form method="post" action="{% url 'save_reject_desc' %}">
+            {% csrf_token %}
+              <div class="form-group col-md-12 mb-2">
+                <input type="hidden" name="row__id" id="row__id">
+                  <input type="hidden" name="row__type" id="row__type" value="DEMO">
+              </div>
+              <div class="form-group col-12 mb-2 ">
 
-        <!-- //////////////////////////////////////////////////////////////// -->
+                      <div class="input-group mb-1" id = "desc">
+                          <textarea placeholder="Add Reason" class="form-control" id="example-reason" name="reason" required></textarea>
+                      </div>
+              </div>
+        </div>
+        <div class="modal-footer">
+            <div class="form-actions col-12 mb-2">
+                <div class="text-right">
+                    <button type="submit" class="btn btn-primary">Submit <i class="ft-thumbs-up position-right"></i></button>
+                    <button type="reset" class="btn btn-warning">Reset <i class="ft-refresh-cw position-right"></i></button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </form>
+        </div>
+      </div>
+    </div>
+  </div>
 
 
 
@@ -566,21 +591,13 @@
     {% endblock %}
 
     {% block js %}
-    <!-- <script src="https://code.jquery.com/jquery-3.6.3.min.js"></script> -->
-    <!-- <script src="https://code.jquery.com/jquery-3.7.1.js"  crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"  crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdn.datatables.net/2.0.3/js/dataTables.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdn.datatables.net/2.0.3/js/dataTables.bootstrap5.js" referrerpolicy="no-referrer"></script> -->
-    
-
-   <script>
-
-$(document).ready(function() {
-  $('.delete-feature').click(function(event) {
+<script>
+  $(document).ready(function() {
+    $('.delete-feature').click(function(event) {
     event.preventDefault(); // Prevent default form submission
     const delete_feature_div = document.getElementById('delete_feature_div');
     var featureId = $(this).data('id'); // Get feature ID from data attribute
-
+    if (confirm('Are you sure you want to delete this?')) {
     $.ajax({
       url: "{% url 'delete_feature' %}", // Use URL template tag
       type: 'POST', // Use POST for delete requests
@@ -592,13 +609,11 @@ $(document).ready(function() {
       dataType: 'json', // Expect a JSON response
       success: function(data) {
         if (data.success) {
-          
           delete_feature_div.innerHTML = data.message
           localStorage.setItem('typer', "feture_state");
           location.reload();
 
         } else {
-       
           delete_feature_div.innerHTML = data.message
         }
       },
@@ -607,13 +622,11 @@ $(document).ready(function() {
         delete_feature_div.innerHTML = data.message
       }
     });
+    }
   });
 });
-
-    $(document).ready(function() {
-
-
-
+    </script>
+    <script>
       const buttons = document.querySelectorAll('.new-btns'); // Assuming your buttons have this class
   function hideAllTables() {
     // Select all feature containers
@@ -638,11 +651,31 @@ buttons.forEach(button => {
     }
     scrollToElement(`featurestsdetatil_${featureId}`);
   });
-  
 });
+$(document).ready(function() {
+$('#update_data_feature').click(function() {
+        id = $('#feature_ids').val();
+        Feature_name = $('#Feature_name').val();
+        Feature_timeline = $('#Feature_timeline').val();
+        Feature_sts = $('#Feature_sts').val();
+        if (confirm('Are you sure you want to update this feature?')) {
+        $.ajax
+        ({
+        url: "{% url 'update_feature_detail_demo'  %}",
+        data: {"id": id, "status":  Feature_sts,"Feature_timeline":Feature_timeline,"Feature_name":Feature_name,"csrfmiddlewaretoken": '{{ csrf_token }}',"username": '{{request.user.email}}' },
+        type: 'POST',
+        success: function(result)
+        {
+          location.reload();
+        },
+        error: function(jqXHR, textStatus, error) {
+          location.reload();
+        }
+        });
+        }
 
+      });
 $('#update_status_feature').click(function() {
-
 sts_id = $("#sts_id").val();
 status = $("#sts").val();
 demo_id = $("#demo_id").val();
@@ -658,10 +691,8 @@ $.ajax({
     },
     type: 'POST',
     success: function(result) {
-                // Store data
       localStorage.setItem('myData', sts_id);
       localStorage.setItem('typer', "sts_add");
-
       window.location.reload();
         $('#centeredModalupdate').modal('hide');  // Hide modal dialog
         $('.modal-backdrop').remove();             // Remove backdrop elements
@@ -676,31 +707,7 @@ $.ajax({
     }
 });
 });
-
-      $('#update_data_feature').click(function(){
-        id = $('#feature_ids').val();
-        Feature_name = $('#Feature_name').val();
-        Feature_timeline = $('#Feature_timeline').val();
-        Feature_sts = $('#Feature_sts').val();
-        $.ajax
-        ({ 
-        url: "{% url 'update_feature_detail_demo'  %}",
-        data: {"id": id, "status":  Feature_sts, "Feature_timeline":Feature_timeline,"Feature_name":Feature_name, 'csrfmiddlewaretoken': '{{ csrf_token }}', "username": '{{request.user.email}}' },
-        type: 'POST',
-        success: function(result)
-        {   
-          location.reload();
-        },
-        error: function(jqXHR, textStatus, error) {
-          location.reload();
-        }
-        });
-        
-
-           
-      });
-      
-      const last_action = localStorage.getItem('typer');
+const last_action = localStorage.getItem('typer');
       console.log('last_action', last_action);
       if (last_action == 'sts_add'){
         const retrievedData = localStorage.getItem('myData');
@@ -714,20 +721,13 @@ $.ajax({
       scrollToElement(`featurestsdetatil_${retrievedData}`);
       }
       }
-      
     });
 
 function scrollToElement(id) {
   const element = document.getElementById(id);
-  console.log(id);
   element.scrollIntoView();
 }
 
-
-
-   function set_id(button_){
-        document.getElementById('row_remark_id').value  = button_
-    }
 
     function update_feature(button, name, timeline, status){
     document.getElementById('feature_ids').value = button.value;
@@ -747,10 +747,9 @@ function scrollToElement(id) {
         // alert(button_.value);
         document.getElementById("FetureCentered").innerHTML = button_.value;
 
-        document.getElementById("centeredModalLabel2").innerHTML = centeredModalLabel2_val; 
+        document.getElementById("centeredModalLabel2").innerHTML = centeredModalLabel2_val;
         // document.getElementById('row_remark_id').value  = button_
     }
-    
     function removeDiv(FeatureDiv) {
           const delDiv = FeatureDiv.parentNode.parentNode;
           delDiv.parentNode.removeChild(delDiv);
@@ -758,7 +757,6 @@ function scrollToElement(id) {
 
     var Remark_count = 1
     document.getElementById('Remark_count').value = Remark_count;
-    
    </script>
 
 <script>
@@ -766,7 +764,17 @@ $(document).ready(function() {
   // Enable editing on click of "Edit" button
   $('.edit-btn').click(function() {
     $(this).prop('disabled', true); // Disable "Edit" button on click
-    $('.form-control').prop('disabled', false); // Enable all input fields
+    {% if request.user.role.name == 'Sales' %}
+    $('#Timeline_date_edit').prop('disabled', false); // Enable all input fields
+    {% elif request.user.role.name == 'Approval'  %}
+    $('#status_edit').prop('disabled', false);
+    $('#assign_edit').prop('disabled', false);
+    $('#kt_given').prop('disabled', false);
+    $('#Timeline_date_edit').prop('disabled', false);
+    $('#uploaded_file').prop('disabled', false);
+    {% elif request.user.role.name == 'Admin' %}
+    $('.form-control').prop('disabled', false);
+    {% endif %}
     $('.save-btn').prop('disabled', false); // Enable "Save" button
 
   });
@@ -775,7 +783,7 @@ $(document).ready(function() {
 
 </script>
 
-<script>  
+<script>
   var Features_count = 1
   document.getElementById('feature_count').value = Features_count;
   function removeDiv(FeatureDiv) {
@@ -790,24 +798,37 @@ $(document).ready(function() {
     newFeatureDiv.id = `feture_${Features_count}`;
     newFeatureDiv.innerHTML = `<input type="hidden" name="Feature_ids" id="Feature_ids_${Features_count}" value="${Features_count}">
                           <div class="form-floating">
-                          <input type="text" placeholder="Features" class="form-control me-1" 
+                          <input type="text" placeholder="Features" class="form-control me-1"
                             id="example-Features-input_${Features_count}" name="features_${Features_count}">
                             <label for="example-Features-input_${Features_count}" class="col-form-label">Feature</label></div>
                             <div class="form-floating">
                             <input type="date" class="form-control ms-1" id="timeline_${Features_count}" min="{% now 'Y-m-d' %}" max="{{ data.Timeline|date:'Y-m-d' }}" name="timeline_${Features_count}">
                             <label for="timeline_${Features_count}" class="col-form-label">Feture Timeline </label>
                             </div>
-                            <span class="input-group-append ms-2" 
-                            id="button-addon_${Features_count}"><button class="btn btn-danger mt-2" type="button" 
+                            <span class="input-group-append ms-2"
+                            id="button-addon_${Features_count}"><button class="btn btn-danger mt-2" type="button"
                             id = "remove_feture_${Features_count}" data-repeater-delete onclick="removeDiv(this)"><i class="ri-delete-bin-6-line"></i></button>
                              </span>`;
-  
     document.getElementById("repeater-group_feature").appendChild(newFeatureDiv);
     });
   var Remark_count = 1
   document.getElementById('Remark_count').value = Remark_count;
-  
-
   </script>
+
+<script>
+   function set_id_for(button_){
+        document.getElementById('row__id').value  = button_
+    }
+
+function handleStatusChange(selectedValue) {
+  if (selectedValue === 'Rejected') {
+     const modal = document.getElementById('centeredModalsts');
+    const modalInstance = new bootstrap.Modal(modal);
+    modalInstance.show();  // Display the modal
+    set_id_for({{data.id}});
+
+  }
+}
+</script>
 
 {% endblock %}

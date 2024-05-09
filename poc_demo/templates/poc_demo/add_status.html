@@ -3,20 +3,7 @@
 
 {% block poc_content %}  
   {% load static %}
-          {% if messages %}
-          <div class="messages text-center">
 
-<!--
-            {% for message in messages %}
-            {{message}}
-            {% endfor %} -->
-
-          {% for message in messages %}
-          <h4 {% if message.extra_tags %} class="alert alert-{{ message.extra_tags }}"{% else %}
-          class="alert alert-{{ message.tags }}"{% endif %}>{{ message }}</h4>
-          {% endfor %}
-          </div>
-          {% endif %}
 <div class="app-content content">
       <div class="content-wrapper">
         <div class="content-header row">
@@ -66,7 +53,7 @@
 
                                         <div class="form-actions col-12 mb-2">
                                         <div class="text-right">
-                                          <button type="submit" class="btn btn-primary">Add <i class="ft-thumbs-up position-right"></i></button>
+                                          <button type="submit" class="btn btn-primary" onclick="return confirm('Confirmation for add Status?')">Add <i class="ft-thumbs-up position-right"></i></button>
                                           <button type="reset" class="btn btn-warning">Reset <i class="ft-refresh-cw position-right"></i></button>
                                         </div>
                                         </div>

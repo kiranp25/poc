@@ -5,20 +5,7 @@
 {% block poc_content %}
   
   {% load static %}
-          {% if messages %}
-          <div class="messages text-center">
 
-<!--
-            {% for message in messages %}
-            {{message}}
-            {% endfor %} -->
-
-          {% for message in messages %}
-          <h4 {% if message.extra_tags %} class="alert alert-{{ message.extra_tags }}"{% else %}
-          class="alert alert-{{ message.tags }}"{% endif %}>{{ message }}</h4>
-          {% endfor %}
-          </div>
-          {% endif %}
     <div class="app-content content">
       <div class="content-wrapper">
         <div class="content-header row">
@@ -57,7 +44,7 @@
                   </div>
 
                   <div class="col-12 text-center mt-4">
-                    <button type="submit" class="btn btn-primary btn-lg"><i class="ft-thumbs-up position-right"></i>Save Changes <i class="ft-thumbs-up position-right"></i></button>
+                    <button type="submit" class="btn btn-primary btn-lg" onclick="return confirm('Do you want to save changes?')"><i class="ft-thumbs-up position-right"></i>Save Changes <i class="ft-thumbs-up position-right"></i></button>
                   </div>
                 </form>
 

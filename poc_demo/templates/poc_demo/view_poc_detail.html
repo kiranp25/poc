@@ -34,11 +34,9 @@
       border-color: #007bff;
       color: #fff;
   }
-
   </style>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.datatables.net/2.0.3/css/dataTables.bootstrap5.css" rel="stylesheet">
-
 <div class="app-content content">
     <div class="content-wrapper">
       <div class="content-header row">
@@ -47,33 +45,17 @@
         <!-- Zero configuration table -->
     <section id="configuration">
 
-          {% if messages %}
-          <div class="messages text-center">
-
-<!--
-            {% for message in messages %}
-            {{message}}
-            {% endfor %} -->
-
-          {% for message in messages %}
-          <h4 {% if message.extra_tags %} class="alert alert-{{ message.extra_tags }}"{% else %}
-          class="alert alert-{{ message.tags }}"{% endif %}>{{ message }}</h4>
-          {% endfor %}
-          </div>
-          {% endif %}
-
         <div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="card-title">POC view</h4>
+                        <h4 class="card-title">Project:</h4>
                         <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
                         <ol class="breadcrumb">
                           <li class="breadcrumb-item active"><a onclick="scrollToElement('poc_detail')"></a>Detail</li>
                           <li class="breadcrumb-item"><a onclick="scrollToElement('Remarks_div')">Remarks</a></li>
                           <li class="breadcrumb-item"><a onclick="scrollToElement('Feature_div')">Feature</a></li>
                         </ol>
-
                     </div>
                     {% if request.user.role.name == 'Sales' %}
                       {% if data.description %}
@@ -87,7 +69,7 @@
                     <!-- strt -->
                     <div class="poc-view row" id="poc_detail">
                       <div class="col-md-6">
-                        <form method="POST" action="{% url 'edit_poc' data.id %}">
+                        <form method="POST" action="{% url 'edit_poc' data.id %}" enctype="multipart/form-data">
                           {% csrf_token %}
                           <div class="card shadow-sm rounded-3 p-3 mt-2 bg-light">
                             <div class="row">
@@ -95,14 +77,17 @@
                                 <h5 class="card-title mb-3 text-primary">Details</h5>
                                 <div class="mb-3">
                                   <label for="customer_name" class="form-label fw-bold">Customer Name:</label>
+                                  {% comment 'in feature' %}
                                   <select name="Customer_name" class="form-control" id="customer_name"  required disabled>
                                     {% for customer in customer %}
                                     <option value="{{ customer.id }}" {% if data.Customer_name == customer  %} selected {% endif %}>{{ customer }}</option>
                                     {% endfor %}
                                   </select>
+                                   {% endcomment %}
+                                  <input type="text" name="Customer_name" class="form-control" id="customer_name" value="{{ data.Customer_name }}" disabled readonly>
                                 </div>
                                 <div class="mb-3">
-                                  {% if request.user.role.name != "Manager" %}
+                                  {% if request.user.role.name == "Approval" %}
                                   <label for="product_name" class="form-label fw-bold">Product Name:</label>
                                   <select name="product_name" class="form-control" id="product_name"  required disabled>
                                     {% for prd in product %}
@@ -117,7 +102,7 @@
                                 </div>
                                 <div class="mb-3">
                                   <label for="added_by" class="form-label fw-bold">Added By:</label>
-                                  <input type="text" id = 'added_by' class="form-control" value="{{ data.added_by }}"  readonly>
+                                  <input type="text" id = 'added_by' class="form-control" value="{{ data.added_by }}" disabled readonly>
                                 </div>
                                  <div class="mb-3">
                                      <label class="form-label fw-bold" for="poc_type">Activity Type:
@@ -128,8 +113,25 @@
                                     <option value="{{ id }}" {% if data.poc_type == type %}selected{% endif %}>{{ type }}</option>
                                     {% endfor %}
                                       </select>
-
+                                   {% if request.user.role.name == "Sales" %}
+                                   <input type="text" name="poc_type"  value="{{data.poc_type}}" readonly hidden>
+                                   {% endif %}
                                  </div>
+
+                                {% if request.user.role.name == "Approval" %}
+                                <div class="mb-3">
+                                    <label for="uploaded_file" class="form-label fw-bold">Upload Documentaions (PDF or ZIP only):</label>
+                                    <input type="file" id="uploaded_file" name="uploaded_file" class="form-control" accept=".zip,.pdf"  disabled>
+                                    <small class="text-muted">Allowed file types: PDF, ZIP</small>
+
+                                </div>
+                                {% endif %}
+                                {% if data.documentation %}
+                                        <div>
+                                            <p>Uploaded File: <a href="{{ data.documentation.url }}" target="_blank">{{ data.documentation.name }}</a></p>
+                                            <p>To replace the file, upload a new one:</p>
+                                        </div>
+                                    {% endif %}
 
 
                                 <!-- product -->
@@ -146,12 +148,13 @@
                                 </div>
                                 <div class="mb-3">
                                   <label for="status_edit" class="form-label fw-bold">Status:</label>
-
-                                  <select name="status" class="form-control" id="status_edit"  required disabled>
+                                  <select name="status" class="form-control" id="status_edit"  required disabled onchange="handleStatusChange(this.value)">
                                       {% if data.status.name == 'Rejected'  and request.user.role.name == 'Sales' %}
                                         <option value="{{data.status.name}}" selected> {{data.status.name}} </option>
                                     {% elif request.user.role.name == 'Sales' %}
                                         <option value="{{data.status.name}}" selected> {{data.status.name}} </option>
+                                     {% elif data.status.name == 'Rejected'  and request.user.role.name == 'Approval' %}
+                                           <option value="{{data.status.name}}" selected> {{data.status.name}} </option>
                                       {% else %}
                                           {% for sts in status %}
                                           <option value="{{ sts.name }}" {% if data.status == sts  %} selected {% endif %}>{{ sts }}</option>
@@ -161,7 +164,7 @@
                                 </div>
 
                                 <div class="mb-3">
-                                  {% if request.user.role.name == "Manager" %}
+                                  {% if request.user.role.name == "Approval" %}
                                     <label for="assign_edit" class="form-label fw-bold">Assign To:</label>
                                     <select name="assign_edit" class="form-control" id="assign_edit" required disabled>
                                         {% if data.assign_to == None %}
@@ -172,38 +175,34 @@
                                       {% endfor %}
                                     {% else %}
                                       <label for="assign_edit_text" class="form-label fw-bold">Assign To:</label>
-                                      <input type="text" class="form-control" id="assign_edit_text" name="assign_edit_text" value="{{ data.assign_to }}" readonly>
+                                      <input type="text" class="form-control" id="assign_edit_text" name="assign_edit_text" value="{{ data.assign_to }}" disabled readonly>
                                     {% endif %}
                                     </select>
-
                                 </div>
-
-
                                 <div class="mb-3">
-                                  {% if request.user.role.name == "Manager" %}
-                                    <label for="kt_given" class="form-label fw-bold">KT given:</label>
+                                  {% if request.user.role.name == "Approval" %}
+                                    <label for="kt_given" class="form-label fw-bold">KT Given:</label>
                                     <select name="kt_given" class="form-control" id="kt_given" required disabled>
-
                                       <option value="True" {% if data.kt_given == True %} selected {% endif %}> Provided </option>
                                       <option value="False" {% if data.kt_given == False  %} selected {% endif %}> Not Provided </option>
-
+                                      </select>
                                     {% else %}
-                                      <label for="Kt_given_" class="form-label fw-bold">KT given:</label>
-                                      <input type="text" class="form-control" id="Kt_given_" name="Kt_given_" value="{% if  data.kt_given == True %}Provided{% else %}Not Provided {% endif %}" readonly>
+                                      <label for="Kt_given_" class="form-label fw-bold">KT Given:</label>
+                                      <input type="text" class="form-control" id="Kt_given_" name="Kt_given_" value="{% if  data.kt_given == True %}Provided{% else %}Not Provided {% endif %}" disabled readonly>
                                     {% endif %}
-                                    </select>
 
                                 </div>
-
-
                               </div>
                             </div>
-
                             <div class="text-end">
-                              {% if request.user.role.name in permission_for_edit %}
+                              {% if data.status.name != 'InActive' %}
+                              {% if 'edit_poc' in permission_names  %}
                               <button type="button" class="btn btn-primary edit-btn">Edit</button>
-
-                              <button type="submit" class="btn btn-success save-btn" disabled>Save Changes</button>
+                              <button type="submit" class="btn btn-success save-btn" onclick="return confirm('Do you want to save changes?')" disabled>Save Changes</button>
+                              {% elif request.user.role.name == 'Sales' and data.status.name == 'Rejected' %}
+                              <button type="button" class="btn btn-primary edit-btn">Edit</button>
+                              <button type="submit" class="btn btn-success save-btn" onclick="return confirm('Do you want to save changes?')" disabled>Save Changes</button>
+                              {% endif %}
                               {% endif %}
                             </div>
                           </div>
@@ -216,17 +215,19 @@
                               <h5 class="card-title mb-3 text-primary">Remarks</h5>
                             </div>
                             <div class="col-sm-6 text-end">
-                              {% if request.user.role.name in permission_for_edit or request.user.role.name == 'Support' %}
-                              <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#centeredModal" id="{{data.id}}" onclick="set_id(this.id)" {% if request.user.role.name  == "Support" and  data.status.name == 'Pending' %}hidden {% endif %}>
+                              {% if data.status.name != 'InActive' %}
+                              {% if 'add_remark' in permission_names %}
+                              <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#centeredModal" id="{{data.id}}"  {% if request.user.role.name  == "Support" and  data.status.name == 'Pending' %}hidden {% endif %}>
                                 <i class="fas fa-plus"></i> Add Remarks
                                 {% endif %}
+                              {% endif %}
                               </button>
                             </div>
                           </div>
                           <table class="table table-striped table-hover table-bordered datatable" id="poc_remark_table">
                             <thead>
                               <tr>
-                                <th scope="col">Remark</th>
+                                <th scope="col">Remarks</th>
                                 <th scope="col">Remark By</th>
                                 <th scope="col">Date</th>
                               </tr>
@@ -244,12 +245,7 @@
                         </div>
                       </div>
                     </div>
-
-
                     <!-- end -->
-
-
-
         </div>
         </div>
         </div>
@@ -264,11 +260,15 @@
               <h5 class="card-title mb-3 text-primary">Features</h5>
             </div>
             <div class="col-sm-6 text-end">
-              {% if request.user.role.name in permission_for_edit %}
+              {% comment "Optional note" %}
+              {% if data.status.name != 'InActive' %}
+               {% if 'add_feature' in permission_names %}
               <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addFeatureModal" id="{{data.id}}" >
                 <i class="fas fa-plus"></i> Add Feature
               </button>
               {% endif %}
+              {% endif %}
+              {% endcomment %}
             </div>
           </div>
           <table class="table table-striped table-hover table-bordered datatable" id="poc_data_table_feature">
@@ -291,9 +291,8 @@
                     <button class="btn btn-sm btn-primary new-btns " data-toggle="tooltip" data-placement="top" title="View" id="fet_{{ feature.id }}" value="{{ feature.id }}">
                       View Remarks
                     </button>
-                    {% if request.user.role.name in permission_for_edit %}
+                    {% if "edit_feature" in permission_names %}
                     <button class="btn btn-sm btn-primary"  data-bs-toggle="modal" data-toggle="tooltip" data-placement="top" title="Edit" id="{{ feature.id }}_update_feture" value="{{ feature.id }}" onclick="update_feature(this,'{{ feature.features_list }}','{{ feature.timeline|date:'Y-m-d' }}','{{ feature.status }}')" data-bs-target="#centeredModalupdatefeature">
-
                     <i class="ri-edit-circle-fill" alt="update"></i>
                     </button>
                     {% endif %}
@@ -302,11 +301,11 @@
                       <i class="ri-file-add-line"></i>Remark
                     </button>
                     {% endif %}
-                    {% if request.user.role.name in permission_for_delete %}
+                    {% if "delete_feature" in permission_names %}
                     <a class="btn btn-sm btn-danger delete-feature" data-id="{{ feature.id }}" href="#">
                       <i class="ri-delete-bin-line"></i>
+                      </a>
                       {% endif %}
-                    </a>
                   </div>
                 </td>
               </tr>
@@ -324,38 +323,32 @@
           <div class="card-content collapse show">
             <div id="featurestsdetatil" class="card-body card-dashboard">
               <span id="hide_sp"> Click on view Remarks for specific feature</span>
-
               {% for feature in data.poc_f_related.all %}
-                <div class="feature-container" id="featurestsdetatil_{{feature.id}}" style="display: none;">
-                  <h4> Feature - {{ feature.features_list }}</h4>
-
-                  <table class="table table-striped table-hover table-bordered datatable" id="my-feature-table_{{ feature.id }}">  <thead>
-                      <tr>
-                        <th>Status</th>
-                        <th>Added By</th>
-                        <th>Added At</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for dt in feature.feature_related.all %}
-                      <tr>
-                        <td>{{ dt.status }}</td>
-                        <td>{{ dt.added_by }}</td>
-                        <td>{{ dt.created_at }}</td>
-                      </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
+              <div class="feature-container" id="featurestsdetatil_{{feature.id}}" style="display: none;">
+                <h4> Feature - {{ feature.features_list }}</h4>
+                <table class="table table-striped table-hover table-bordered datatable" id="my-feature-table_{{ feature.id }}">  <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Added By</th>
+                  <th>Added At</th>
+                </tr>
+                </thead>
+                  <tbody>
+                  {% for dt in feature.feature_related.all %}
+                  <tr>
+                    <td>{{ dt.status }}</td>
+                    <td>{{ dt.added_by }}</td>
+                    <td>{{ dt.created_at }}</td>
+                  </tr>
+                  {% endfor %}
+                  </tbody>
+                </table>
+              </div>
               {% endfor %}
             </div>
           </div>
         </div>
       </div>
-
-
-
-
     </div>
     </section>
 
@@ -376,7 +369,7 @@
               </div>
               <div class="mb-3">
                 <!-- <label for="row_remark_id" class="form-label">Row Remark ID</label> -->
-                <input type="hidden" name="row_remark_id" id="row_remark_id">
+                <input type="text" name="row_remark_id" value="{{data.id}}" id="row_remark_id">
               </div>
               <div class="mb-3" id="Remark-repeater">
                 <!-- <label for="Remark-count" class="form-label">Number of Remarks</label> -->
@@ -406,8 +399,6 @@
         </div>
       </div>
     </div>
-
-
     <!--/ Zero configuration table -->
 
     <div class="modal fade" id="centeredModalFeture" tabindex="-1" aria-labelledby="centeredModalLabel2" aria-hidden="true">
@@ -425,7 +416,6 @@
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
-
             </div>
           </div>
         </div>
@@ -435,12 +425,9 @@
       <div class="modal fade" id="centeredModalupdate" tabindex="-1" aria-labelledby="centeredModalLabel3" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
-
-
             <form>
                 {% csrf_token %}
             <div class="modal-header">
-
               <h5 class="modal-title" id="centeredModalLabel3"></h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -462,7 +449,6 @@
                 </div>
             </div>
             </form>
-
           </div>
         </div>
       </div>
@@ -514,7 +500,6 @@
     <div class="modal-content">
       <form method="post" action="{% url 'add_feature' data.id %}">  {% csrf_token %}
         <div class="modal-header bg-light border-bottom">
-
           <h5 class="modal-title" id="addFeatureModalLabel">Add Feature</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
@@ -523,10 +508,8 @@
       <div class="col-md-12">
         <div class="fmb-3 features-repeater" id="features-repeater">
           <input type="hidden" id="feature_count" name="feature_count">
-
           <div id="repeater-group_feature" data-repeater-list="repeater-group">
             <div class="input-group mb-1" id="feture_1">
-
               <input type="hidden" name="Feature_ids" id="Feature_ids_1" value="1">
               <div class='form-floating'>
               <input type="text" placeholder="Features" class="form-control me-1 " name="features_1" id="example-Features-input_1">
@@ -543,7 +526,6 @@
               </span>
             </div>
           </div>
-
           <button type="button" id="add_new_feature" data-repeater-create class="btn btn-primary mt-2">
             <i class=" ri-add-line"></i> Add new Feature
           </button>
@@ -561,9 +543,41 @@
 </div>
 </div>
 </div>
+      <div class="modal fade" id="centeredModalsts" tabindex="-1" aria-labelledby="centeredModalstsLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="centeredModalstsLabel">Add Reason For Rejection</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
 
+          <form method="post" action="{% url 'save_reject_desc' %}">
+            {% csrf_token %}
+              <div class="form-group col-md-12 mb-2">
+                <input type="hidden" name="row__id" id="row__id">
+                  <input type="hidden" name="row__type" id="row__type" value="POC">
+              </div>
+              <div class="form-group col-12 mb-2 ">
 
-        <!-- //////////////////////////////////////////////////////////////// -->
+                      <div class="input-group mb-1" id = "desc">
+                          <textarea placeholder="Add Reason" class="form-control" id="example-reason" name="reason" required></textarea>
+                      </div>
+              </div>
+        </div>
+        <div class="modal-footer">
+            <div class="form-actions col-12 mb-2">
+                <div class="text-right">
+                    <button type="submit" class="btn btn-primary">Submit <i class="ft-thumbs-up position-right"></i></button>
+                    <button type="reset" class="btn btn-warning">Reset <i class="ft-refresh-cw position-right"></i></button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </form>
+        </div>
+      </div>
+    </div>
+  </div>
 
 
 
@@ -574,14 +588,13 @@
     {% endblock %}
 
     {% block js %}
-
-    <script>
-      $(document).ready(function() {
-      $('.delete-feature').click(function(event) {
-      event.preventDefault(); // Prevent default form submission
-      const delete_feature_div = document.getElementById('delete_feature_div');
-      var featureId = $(this).data('id'); // Get feature ID from data attribute
-
+<script>
+  $(document).ready(function() {
+    $('.delete-feature').click(function(event) {
+    event.preventDefault(); // Prevent default form submission
+    const delete_feature_div = document.getElementById('delete_feature_div');
+    var featureId = $(this).data('id'); // Get feature ID from data attribute
+    if (confirm('Are you sure you want to delete this?')) {
     $.ajax({
       url: "{% url 'delete_feature' %}", // Use URL template tag
       type: 'POST', // Use POST for delete requests
@@ -598,7 +611,6 @@
           location.reload();
 
         } else {
-
           delete_feature_div.innerHTML = data.message
         }
       },
@@ -607,28 +619,26 @@
         delete_feature_div.innerHTML = data.message
       }
     });
+    }
   });
 });
     </script>
     <script>
       const buttons = document.querySelectorAll('.new-btns'); // Assuming your buttons have this class
-
-function hideAllTables() {
-  // Select all feature containers
-  const featureContainers = document.querySelectorAll('.feature-container');
-  for (const container of featureContainers) {
-    container.style.display = 'none'; // Hide all containers initially
+  function hideAllTables() {
+    // Select all feature containers
+    const featureContainers = document.querySelectorAll('.feature-container');
+    for (const container of featureContainers) {
+      container.style.display = 'none'; // Hide all containers initially
+    }
   }
-}
 
 buttons.forEach(button => {
   button.addEventListener('click', async function (event) {
     const clickedButton = event.target;
     const featureId = clickedButton.value; // Assuming button value represents feature ID
-
     // Hide all tables first
     hideAllTables();
-
     // Show the relevant table container based on button value (feature ID)
     const tableToShow = document.getElementById(`featurestsdetatil_${featureId}`);
     const msgspm = document.getElementById(`hide_sp`);
@@ -636,22 +646,20 @@ buttons.forEach(button => {
       tableToShow.style.display = ''; // Unhide the specific container
       msgspm.style.display = 'none';
     }
+    scrollToElement(`featurestsdetatil_${featureId}`);
   });
 });
-
-    $(document).ready(function() {
-
-
-
-      $('#update_data_feature').click(function(){
+$(document).ready(function() {
+$('#update_data_feature').click(function() {
         id = $('#feature_ids').val();
         Feature_name = $('#Feature_name').val();
         Feature_timeline = $('#Feature_timeline').val();
         Feature_sts = $('#Feature_sts').val();
+        if (confirm('Are you sure you want to update this feature?')) {
         $.ajax
         ({
         url: "{% url 'update_feature_detail'  %}",
-        data: {"id": id, "status":  Feature_sts, "Feature_timeline":Feature_timeline,"Feature_name":Feature_name, 'csrfmiddlewaretoken': '{{ csrf_token }}', "username": '{{request.user.email}}' },
+        data: {"id": id, "status":  Feature_sts,"Feature_timeline":Feature_timeline,"Feature_name":Feature_name,"csrfmiddlewaretoken": '{{ csrf_token }}',"username": '{{request.user.email}}' },
         type: 'POST',
         success: function(result)
         {
@@ -661,45 +669,41 @@ buttons.forEach(button => {
           location.reload();
         }
         });
-
-
+        }
 
       });
+$('#update_status_feature').click(function() {
+sts_id = $("#sts_id").val();
+status = $("#sts").val();
+poc_id = $("#poc_id").val();
+sts_id_div = `#fet_${sts_id}`;
+$.ajax({
+    url: "{% url 'update_sts' data.id %}",
+    data: {
+        "sts_id": sts_id,
+        "status": status,
+        "poc_id": poc_id,
+        'csrfmiddlewaretoken': '{{ csrf_token }}',
+        "username": '{{ request.user.email }}'
+    },
+    type: 'POST',
+    success: function(result) {
+      localStorage.setItem('myData', sts_id);
+      localStorage.setItem('typer', "sts_add");
+      window.location.reload();
+        $('#centeredModalupdate').modal('hide');  // Hide modal dialog
+        $('.modal-backdrop').remove();             // Remove backdrop elements
+        // $('#sts_update_response').html('Status updated successfully!');  // Show success message
 
-      $('#update_status_feature').click(function() {
-    sts_id = $("#sts_id").val();
-    status = $("#sts").val();
-    poc_id = $("#poc_id").val();
-    sts_id_div = `#fet_${sts_id}`;
-
-    $.ajax({
-        url: "{% url 'update_sts' data.id %}",
-        data: {
-            "sts_id": sts_id,
-            "status": status,
-            "poc_id": poc_id,
-            'csrfmiddlewaretoken': '{{ csrf_token }}',
-            "username": '{{ request.user.email }}'
-        },
-        type: 'POST',
-        success: function(result) {                    // Store data
-          localStorage.setItem('myData', sts_id);
-          localStorage.setItem('typer', "sts_add");
-          window.location.reload();
-          $('#centeredModalupdate').modal('hide');  // Hide modal dialog
-          $('.modal-backdrop').remove();             // Remove backdrop elements
-          // $('#sts_update_response').html('Status updated successfully!');  // Show success message
-
-        },
-        error: function(jqXHR, textStatus, error) {
-            $('#sts_update_response').html(error);
-            setTimeout(function() {
-                $('#sts_update_response').html('');
-            }, 5000);
-        }
-    });
+    },
+    error: function(jqXHR, textStatus, error) {
+        $('#sts_update_response').html(error);
+        setTimeout(function() {
+            $('#sts_update_response').html('');
+        }, 5000);
+    }
 });
-
+});
 const last_action = localStorage.getItem('typer');
       console.log('last_action', last_action);
       if (last_action == 'sts_add'){
@@ -714,24 +718,13 @@ const last_action = localStorage.getItem('typer');
       scrollToElement(`featurestsdetatil_${retrievedData}`);
       }
       }
-
-    // $('#my_poc_view').dataTable();
     });
 
-
-    //     document.getElementById('feture_sts_id').value = button_.value;
-    // function view_sts_feature(button_){
-
-    // }
-
-  function scrollToElement(id) {
+function scrollToElement(id) {
   const element = document.getElementById(id);
   element.scrollIntoView();
 }
 
-   function set_id(button_){
-        document.getElementById('row_remark_id').value  = button_
-    }
 
     function update_feature(button, name, timeline, status){
     document.getElementById('feature_ids').value = button.value;
@@ -754,7 +747,6 @@ const last_action = localStorage.getItem('typer');
         document.getElementById("centeredModalLabel2").innerHTML = centeredModalLabel2_val;
         // document.getElementById('row_remark_id').value  = button_
     }
-
     function removeDiv(FeatureDiv) {
           const delDiv = FeatureDiv.parentNode.parentNode;
           delDiv.parentNode.removeChild(delDiv);
@@ -762,7 +754,6 @@ const last_action = localStorage.getItem('typer');
 
     var Remark_count = 1
     document.getElementById('Remark_count').value = Remark_count;
-
    </script>
 
 <script>
@@ -770,7 +761,17 @@ $(document).ready(function() {
   // Enable editing on click of "Edit" button
   $('.edit-btn').click(function() {
     $(this).prop('disabled', true); // Disable "Edit" button on click
-    $('.form-control').prop('disabled', false); // Enable all input fields
+    {% if request.user.role.name == 'Sales' %}
+    $('#Timeline_date_edit').prop('disabled', false); // Enable all input fields
+    {% elif request.user.role.name == 'Approval'  %}
+    $('#status_edit').prop('disabled', false);
+    $('#assign_edit').prop('disabled', false);
+    $('#kt_given').prop('disabled', false);
+    $('#Timeline_date_edit').prop('disabled', false);
+    $('#uploaded_file').prop('disabled', false);
+    {% elif request.user.role.name == 'Admin' %}
+    $('.form-control').prop('disabled', false);
+    {% endif %}
     $('.save-btn').prop('disabled', false); // Enable "Save" button
 
   });
@@ -805,14 +806,26 @@ $(document).ready(function() {
                             id="button-addon_${Features_count}"><button class="btn btn-danger mt-2" type="button"
                             id = "remove_feture_${Features_count}" data-repeater-delete onclick="removeDiv(this)"><i class="ri-delete-bin-6-line"></i></button>
                              </span>`;
-
     document.getElementById("repeater-group_feature").appendChild(newFeatureDiv);
     });
   var Remark_count = 1
   document.getElementById('Remark_count').value = Remark_count;
-
-
   </script>
 
+<script>
+   function set_id_for(button_){
+        document.getElementById('row__id').value  = button_
+    }
+
+function handleStatusChange(selectedValue) {
+  if (selectedValue === 'Rejected') {
+     const modal = document.getElementById('centeredModalsts');
+    const modalInstance = new bootstrap.Modal(modal);
+    modalInstance.show();  // Display the modal
+    set_id_for({{data.id}});
+
+  }
+}
+</script>
 
 {% endblock %}

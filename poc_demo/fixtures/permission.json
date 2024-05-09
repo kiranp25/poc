@@ -1,0 +1,178 @@
+[
+  {
+    "model": "poc_demo.custompermission",
+    "pk": 1,
+    "fields": {
+      "name": "add_user"
+    }
+  },
+  {
+    "model": "poc_demo.custompermission",
+    "pk": 2,
+    "fields": {
+      "name": "edit_user"
+    }
+  },
+  {
+    "model": "poc_demo.custompermission",
+    "pk": 3,
+    "fields": {
+      "name": "delete_user"
+    }
+  },
+  {
+    "model": "poc_demo.custompermission",
+    "pk": 4,
+    "fields": {
+      "name": "add_role"
+    }
+  },
+  {
+    "model": "poc_demo.custompermission",
+    "pk": 5,
+    "fields": {
+      "name": "edit_role"
+    }
+  },
+  {
+    "model": "poc_demo.custompermission",
+    "pk": 6,
+    "fields": {
+      "name": "delete_role"
+    }
+  },
+  {
+    "model": "poc_demo.custompermission",
+    "pk": 7,
+    "fields": {
+      "name": "add_status"
+    }
+  },
+  {
+    "model": "poc_demo.custompermission",
+    "pk": 8,
+    "fields": {
+      "name": "edit_status"
+    }
+  },
+  {
+    "model": "poc_demo.custompermission",
+    "pk": 9,
+    "fields": {
+      "name": "delete_status"
+    }
+  },
+  {
+    "model": "poc_demo.custompermission",
+    "pk": 10,
+    "fields": {
+      "name": "add_poc"
+    }
+  },
+  {
+    "model": "poc_demo.custompermission",
+    "pk": 11,
+    "fields": {
+      "name": "edit_poc"
+    }
+  },
+  {
+    "model": "poc_demo.custompermission",
+    "pk": 12,
+    "fields": {
+      "name": "delete_poc"
+    }
+  },
+  {
+    "model": "poc_demo.custompermission",
+    "pk": 13,
+    "fields": {
+      "name": "add_demo"
+    }
+  },
+  {
+    "model": "poc_demo.custompermission",
+    "pk": 14,
+    "fields": {
+      "name": "edit_demo"
+    }
+  },
+  {
+    "model": "poc_demo.custompermission",
+    "pk": 15,
+    "fields": {
+      "name": "delete_demo"
+    }
+  },
+  {
+    "model": "poc_demo.custompermission",
+    "pk": 16,
+    "fields": {
+      "name": "add_customer"
+    }
+  },
+  {
+    "model": "poc_demo.custompermission",
+    "pk": 17,
+    "fields": {
+      "name": "edit_customer"
+    }
+  },
+  {
+    "model": "poc_demo.custompermission",
+    "pk": 18,
+    "fields": {
+      "name": "delete_customer"
+    }
+  },
+  {
+    "model": "poc_demo.custompermission",
+    "pk": 19,
+    "fields": {
+      "name": "add_remark"
+    }
+  },
+  {
+    "model": "poc_demo.custompermission",
+    "pk": 20,
+    "fields": {
+      "name": "delete_remark"
+    }
+  },
+  {
+    "model": "poc_demo.custompermission",
+    "pk": 21,
+    "fields": {
+      "name": "add_feature"
+    }
+  },
+  {
+    "model": "poc_demo.custompermission",
+    "pk": 22,
+    "fields": {
+      "name": "edit_feature"
+    }
+  },
+  {
+    "model": "poc_demo.custompermission",
+    "pk": 23,
+    "fields": {
+      "name": "delete_feature"
+    }
+  },
+  {
+    "model": "poc_demo.custompermission",
+    "pk": 24,
+    "fields": {
+      "name": "approved_status"
+    }
+  },
+  {
+    "model": "poc_demo.custompermission",
+    "pk": 25,
+    "fields": {
+      "name": "manage_permissions"
+    }
+  }
+  ]
+
