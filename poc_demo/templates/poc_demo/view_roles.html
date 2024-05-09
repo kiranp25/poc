@@ -16,16 +16,7 @@
             <div class="card">
                 <!-- Form control repeater section start -->
                 <div class="card-body">
-                  {% if messages %}
-                  <div class="messages text-center">
-                  {% for message in messages %}
-                  <h4 {% if message.extra_tags %} class="alert alert-{{ message.extra_tags }}"{% else %} 
-                  class="alert alert-{{ message.tags }}"{% endif %}
-                  >{{ message }}</h4>
-                  {% endfor %}
-                  </div>
-                  {% endif %}
-                  
+
                                   
                   <div class="text-center"><h1>Roles</h1>
                   </div>

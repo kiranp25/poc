@@ -7,23 +7,62 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Prefetch
-from django.contrib.auth.models import User, Permission, Group
+from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from .form import CustomPasswordResetForm
+from  datetime import datetime
+from .validators import validate_file_extension
+from django.core.exceptions import ValidationError
 
 # Create your views here.
 User = get_user_model()
 
+from django.http import HttpResponseForbidden
+
+def user_has_permission(permission_name):
+
+    def decorator(view_func):
+        def wrapper(request, *args, **kwargs):
+            back_page = request.META.get('HTTP_REFERER')
+            # Check if the user has the required permission
+            if request.user.permissions.filter(name=permission_name).exists():
+                # If user has permission, call the view function
+                return view_func(request, *args, **kwargs)
+            else:
+                # If user doesn't have permission, return forbidden response
+                messages.error(request, f"You don't have permission to {permission_name}.", extra_tags = 'danger')
+                if permission_name != 'manage_permissions':
+                    return redirect(back_page)
+                else:
+                    return redirect('dashboard')
+        return wrapper
+    return decorator
+
 
 @login_required(login_url='loginpage')
 def dahboard(request):
+    permission_names = list(request.user.permissions.values_list('name', flat=True))
     user_types = request.user.role
     all_active_product = Product.objects.all()
-    all_poc = Poc_model.objects.all()
+
+    if request.user.role.name == "Admin":
+        all_poc = Poc_model.objects.all()
+        all_demo = Demo_model.objects.all()
+    elif request.user.role.name == "Approval":
+        all_poc = Poc_model.objects.filter(added_by__Belongs_to=request.user.id).all()
+        all_demo = Demo_model.objects.filter(added_by__Belongs_to=request.user.id).all()
+    elif request.user.role.name == "Sales":
+        all_poc = Poc_model.objects.filter(added_by=request.user.id).all()
+        all_demo = Demo_model.objects.filter(added_by=request.user.id).all()
+    elif request.user.role.name == "Support":
+        all_poc = Poc_model.objects.filter(assign_to=request.user.id).all()
+        all_demo = Demo_model.objects.filter(added_by=request.user.id).all()
+
+    all_customer = Customer.objects.all()
     all_users = User.objects.all()
-    all_demo = Demo_model.objects.all()
+
     context = {'name': 'kp', 'user_type': user_types, 'Products': all_active_product, "poc": all_poc, "demo": all_demo,
-               "user": all_users}
+               "user": all_users, "permission_names":permission_names, "all_customer":all_customer}
     return render(request, 'poc_demo/index.html', context)
 
 
@@ -51,8 +90,6 @@ def login_page(request):
                     login(request, user)
 
                     content_type = ContentType.objects.get_for_model(Poc_model)
-                    post_permission = Permission.objects.filter(content_type=content_type)
-                    # print([perm.codename for perm in post_permission])
                     return redirect('dashboard')
     except Exception as e:
         print(e)
@@ -66,7 +103,7 @@ def logout_page(request):
 
 @login_required(login_url='loginpage')
 def get_data_for(request, usertype):
-    flow = {"Admin": 'Admin', "Manager": 'Admin', "Sales": 'Manager', 'Support': 'Manager'}
+    flow = {"Admin": 'Admin', "Approval": 'Admin', "Sales": 'Approval', 'Support': 'Approval'}
     user_info = dict()
     # branch_list = cl_Branch.objects.filter(branch_name=request.POST.get('branch_list')).first()
     # needs to change with role_belongs_to from Roles models.
@@ -86,12 +123,9 @@ def get_data_for(request, usertype):
     return JsonResponse(user_info)
 
 
-@login_required(login_url='loginpage')
-def view_poc(request):
-    all_poc = Poc_model.objects.all()
-    pass
 
 def change_password(request, user_id):
+    permission_names = list(request.user.permissions.values_list('name', flat=True))
     if not request.user.is_superuser:
         return redirect('/')  # Redirect non-admin users
 
@@ -104,11 +138,13 @@ def change_password(request, user_id):
             return redirect('view_users')
     else:
         form = CustomPasswordResetForm(user)
-    return render(request, 'poc_demo/change_password.html', {'form': form})
+    return render(request, 'poc_demo/change_password.html', {'form': form, "permission_names":permission_names})
 
+@user_has_permission('add_poc')
 @login_required(login_url='loginpage')
 def add_poc(request):
     all_active_product = Product.objects.all()
+    permission_names = list(request.user.permissions.values_list('name', flat=True))
     sts = Status.objects.all()
     customer = Customer.objects.filter(status = 'Active')
     type_poc = poc_choice
@@ -116,6 +152,7 @@ def add_poc(request):
     context['type_poc'] = type_poc
     context['status'] = sts
     context['customer'] = customer
+    context['permission_names'] = permission_names
     product_list = [product for product in all_active_product]
 
     if request.method == 'POST':
@@ -166,7 +203,7 @@ def add_poc(request):
                     status_data = Feature_status.objects.create(feature=feature, status=status,
                                                                 added_by=added_by)  # Create the Status object linked to the Feature
                     features_lsts_added.append(status_data)
-                messages.success(request, "POC added successfully.")
+                messages.success(request, f"{type_poc} added successfully.")
                 new_remarks_list = []
                 for remark in remarks:
                     new_remarks_list.append({'poc_id': poc_ref, 'remarks': remark, 'status': status, 'added_by': added_by})
@@ -176,35 +213,49 @@ def add_poc(request):
                 Poc_remark.objects.bulk_create([Poc_remark(**data) for data in new_remarks_list])
         except Exception as e:
             print(e)
-            messages.error(request, f"POC not added {e}.", extra_tags="danger")
+            messages.error(request, f"{request.POST.get('poc_type')} not added {e}.", extra_tags="danger")
 
     context['product_list'] = product_list
     return render(request, 'poc_demo/add_poc.html', context)
 
 
-
+@user_has_permission('add_customer')
 @login_required(login_url='loginpage')
 def add_customer(request):
+    permission_names = list(request.user.permissions.values_list('name', flat=True))
     context = {}
     context['status'] = ['active', 'inactive']
+    context['permission_names'] = permission_names
+
     if request.method == 'POST':
+        print(request.POST)
         result = dict()
         try:
             existing_user = Customer.objects.filter(name=request.POST['customer_name']).first()
-            if existing_user:
-                messages.error(request, 'Customer  already exist! Please chose different name.', extra_tags="danger")
+            existing_user_email =  Customer.objects.filter(contact_email=request.POST['contact_email']).first()
+            if existing_user or existing_user_email:
+                messages.error(request, 'Customer  already exist! Please chose different name or email.', extra_tags="danger")
             else:
-                new_customer = Customer.objects.create(name=request.POST['customer_name'])
-                messages.success(request, 'Customer added successfully.')
+                if request.POST['customer_name']:
+                    Customer.objects.create(name=request.POST['customer_name'],location=request.POST['location_address'],
+                                            address=request.POST['address'],contact_person=request.POST['contact_person'],
+                                            contact_number=request.POST['contact_number'], contact_email=request.POST['contact_email'])
+                    messages.success(request, 'Customer added successfully.')
+                else:
+                    messages.error(request, f'Customer name not should be blank.', extra_tags="danger")
+
         except Exception as e:
             messages.error(request, f'Customer not added {e}.', extra_tags="danger")
         return redirect('add_customer')
     return render(request, 'poc_demo/add_customer.html', context)
 
 
+@user_has_permission('add_user')
 @login_required(login_url='loginpage')
 def add_user(request):
-    flow = {"Admin": ['Admin', 'Manager', 'Sales'], "Manager": ['Sales'], "Sales": ''}
+
+
+    flow = {"Admin": ['Admin', 'Approval', 'Sales'], "Approval": ['Sales'], "Sales": ''}
     user = User.objects.all()
     roles = Roles.objects.all()
 
@@ -219,6 +270,7 @@ def add_user(request):
     context['user_list'] = user_type_dict
     context['roles'] = roles
     context['status'] = sts
+    context['permission_names'] = list(request.user.permissions.values_list('name', flat=True))
     if request.method == 'POST':
         result = dict()
         try:
@@ -227,6 +279,9 @@ def add_user(request):
             if existing_user:
                 messages.error(request, 'Email address already in use! Please choose a different one.', extra_tags="danger")
             else:
+                sales_permission = ['add_poc', 'edit_poc', 'add_demo', 'edit_demo', 'add_customer', 'edit_customer', 'add_product', 'edit_product', 'add_remark']
+                approval_permission = ['edit_poc','edit_demo', 'approved_status', 'edit_feature', 'delete_feature', 'add_feature', 'add_remark']
+                support_permission = ['add_remark']
                 Belongs_to = User.objects.get(id=request.POST['Belongs_to'])
                 usertype = Roles.objects.get(name=request.POST['usertype'])
                 if usertype.name == 'Support':
@@ -242,6 +297,19 @@ def add_user(request):
                 new_user = User.objects.create(first_name=first_name, last_name=last_name, email=email,
                                                username=username, Belongs_to=Belongs_to, role=usertype, Status=status)
                 new_user.set_password(password)
+                if usertype.name == 'Approval':
+                    for permission_nm in approval_permission:
+                        permission, _ = CustomPermission.objects.get_or_create(name=permission_nm)
+                        new_user.permissions.add(permission)
+                elif usertype.name == 'Sales':
+                    for permission_nm in  sales_permission:
+                        permission, _ = CustomPermission.objects.get_or_create(name=permission_nm)
+                        new_user.permissions.add(permission)
+                elif usertype.name == 'Support':
+                    for permission_nm in support_permission:
+                        permission, _ = CustomPermission.objects.get_or_create(name=permission_nm)
+                        new_user.permissions.add(permission)
+
                 list_dict = {'poc': Poc_model, 'demo': Demo_model, 'fstatus': Feature_status,
                              'dstatus': Demo_Feature_status, 'user': User
                     , 'premark': Poc_remark, 'dremark': Demo_remark, 'pfeature': Feature, 'dfeature': Demo_feature}
@@ -274,12 +342,14 @@ def add_user(request):
 
 @login_required(login_url='loginpage')
 def view_users(request):
+    permission_names = list(request.user.permissions.values_list('name', flat=True))
     user = User.objects.all()
     if request.method == 'POST':
         pass
     context = {
         "users": user,
-        "status": status_choice
+        "status": status_choice,
+        "permission_names": permission_names
     }
 
     return render(request, 'poc_demo/user_view.html', context)
@@ -287,19 +357,22 @@ def view_users(request):
 @login_required(login_url='loginpage')
 def view_customer(request):
     customer = Customer.objects.all()
+    permission_names = list(request.user.permissions.values_list('name', flat=True))
     if request.method == 'POST':
         pass
     context = {
         "customer": customer,
+        "permission_names": permission_names
     }
 
     return render(request, 'poc_demo/view_customer.html', context)
 
+@user_has_permission('edit_user')
 @login_required(login_url='loginpage')
 def edit_user(request, id):
     all_user = User.objects.all()
     user = get_object_or_404(User, pk=id)  # Fetch user by ID
-    flow = {"Admin": ['Admin', 'Manager', 'Sales'], "Manager": ['Sales'], "Sales": ''}
+    flow = {"Admin": ['Admin', 'Approval', 'Sales'], "Approval": ['Sales'], "Sales": ''}
     roles = Roles.objects.all()
 
     sts = status_choice
@@ -313,32 +386,52 @@ def edit_user(request, id):
             if existing_user:
                 messages.error(request, 'Email address already in use! Please choose a different one.', extra_tags="danger")
             else:
+                sales_permission = ['add_poc', 'edit_poc', 'add_demo', 'edit_demo', 'add_customer', 'edit_customer',
+                                    'add_product', 'edit_product', 'add_remark']
+                approval_permission = ['edit_poc', 'edit_demo', 'approved_status', 'edit_feature', 'delete_feature',
+                                       'add_feature', 'add_remark']
+                support_permission = ['add_remark']
+
                 user.first_name = request.POST['first_name']
                 user.last_name = request.POST['last_name']
                 user.email = request.POST['email']
                 if request.POST['Belongs_to'] != 'None':
                     user.Belongs_to = User.objects.get(id=request.POST['Belongs_to'])
-
-                user.role = Roles.objects.get(name=request.POST['usertype'])
+                new_role = Roles.objects.get(name=request.POST['usertype'])
+                user.role = new_role
                 user.Status = request.POST.get('status')
+                user.permissions.clear()
+                if new_role.name == 'Approval':
+                    for permission_nm in approval_permission:
+                        permission, _ = CustomPermission.objects.get_or_create(name=permission_nm)
+                        user.permissions.add(permission)
+                elif new_role.name == 'Sales':
+                    for permission_nm in  sales_permission:
+                        permission, _ = CustomPermission.objects.get_or_create(name=permission_nm)
+                        user.permissions.add(permission)
+                elif new_role.name == 'Support':
+                    for permission_nm in support_permission:
+                        permission, _ = CustomPermission.objects.get_or_create(name=permission_nm)
+                        user.permissions.add(permission)
+
                 user.save()
+
                 messages.success(request, f'User: {user.email} updated successfully.')
         except Exception as e:
             messages.error(request, f'User not updated {e}.', extra_tags="danger")
             return redirect('view_users')
-    context = {'user': user,
-               'roles': roles,
-               'status': sts,
-               'all_user': all_user
-               }
+    context = {'user': user, 'roles': roles, 'status': sts, 'all_user': all_user,
+               'permission_names': list(request.user.permissions.values_list('name', flat=True))}
     return render(request, 'poc_demo/edit_user.html', context)
 
 
+@user_has_permission('add_product')
 @login_required(login_url='loginpage')
 def add_product(request):
     context = dict()
     sts = status_choice
     context['status'] = sts
+    context['permission_names'] = list(request.user.permissions.values_list('name', flat=True))
     if request.method == 'POST':
         result = dict()
         try:
@@ -366,18 +459,18 @@ def add_product(request):
 
 def view_product(request):
     product = Product.objects.all()
-    context = {
-        "products": product,
-        "status": status_choice
-    }
+    context = {"products": product, "status": status_choice,
+               'permission_names': list(request.user.permissions.values_list('name', flat=True))}
     return render(request, 'poc_demo/view_products.html', context)
 
 
+@user_has_permission('add_role')
 @login_required(login_url='loginpage')
 def add_role(request):
     context = dict()
     sts = status_choice
     context['status'] = sts
+    context['permission_names'] = list(request.user.permissions.values_list('name', flat=True))
     if request.method == 'POST':
         result = dict()
         try:
@@ -406,19 +499,18 @@ def view_roles(request):
     roles = Roles.objects.all()
     if request.method == 'POST':
         pass
-    context = {
-        "roles": roles,
-        "status": status_choice
-    }
+    context = {"roles": roles, "status": status_choice,
+               'permission_names': list(request.user.permissions.values_list('name', flat=True))}
     return render(request, 'poc_demo/view_roles.html', context)
 
 
+@user_has_permission('edit_role')
 @login_required(login_url='loginpage')
 def edit_role(request, id):
     try:
         # .exclude(pk=user.id)
         role = get_object_or_404(Roles, pk=id)
-        roles_defined = ['Admin', 'Manager', 'Sales', 'Support']
+        roles_defined = ['Admin', 'Approval', 'Sales', 'Support']
         if request.method == "POST":
             Role_name = (request.POST['role_name']).strip()
             existing = Roles.objects.filter(name=Role_name.lower()).exclude(pk=id).first()
@@ -431,17 +523,16 @@ def edit_role(request, id):
                 messages.success(request, f"Role: {request.POST['role_name']} updated.")
     except Exception as e:
         messages.error(request, f"Role {request.POST['role_name']} not updated {e}.", extra_tags="danger")
-    context = {'role': role,
-               'status': status_choice,
-               'roles_defined': roles_defined
-
-               }
+    context = {'role': role, 'status': status_choice, 'roles_defined': roles_defined,
+               'permission_names': list(request.user.permissions.values_list('name', flat=True))}
     return render(request, 'poc_demo/edit_role.html', context)
 
 
+@user_has_permission('edit_customer')
 @login_required(login_url='loginpage')
 def edit_customer(request, id):
     context = {}
+    context['permission_names'] = list(request.user.permissions.values_list('name', flat=True))
     try:
         # .exclude(pk=user.id)
         customer = get_object_or_404(Customer, pk=id)
@@ -457,6 +548,11 @@ def edit_customer(request, id):
             else:
                 customer.name = request.POST['customer_name']
                 customer.status = request.POST.get('status')
+                customer.location = request.POST['location_address']
+                customer.address = request.POST['address']
+                customer.contact_email = request.POST['contact_email']
+                customer.contact_number = request.POST['contact_number']
+                customer.contact_person = request.POST['contact_person']
                 customer.save()
                 messages.success(request, f"Customer "
                                           f": {request.POST['customer_name']} updated.")
@@ -467,9 +563,11 @@ def edit_customer(request, id):
 
 
 
+@user_has_permission('add_status')
 @login_required(login_url='loginpage')
 def add_status(request):
     context = dict()
+    context['permission_names'] = list(request.user.permissions.values_list('name', flat=True))
     if request.method == 'POST':
         result = dict()
         try:
@@ -493,17 +591,18 @@ def add_status(request):
     return render(request, 'poc_demo/add_status.html', context)
 
 
+
 @login_required(login_url='loginpage')
 def view_status(request):
     new_sts = Status.objects.all()
+
     if request.method == 'POST':
         pass
-    context = {
-        "status": new_sts
-    }
+    context = {"status": new_sts, 'permission_names': list(request.user.permissions.values_list('name', flat=True))}
     return render(request, 'poc_demo/status_view.html', context)
 
 
+@user_has_permission('edit_status')
 @login_required(login_url='loginpage')
 def edit_status(request, id):
     try:
@@ -517,10 +616,11 @@ def edit_status(request, id):
                 messages.success(request, f"Status: {request.POST['status_name']} updated.")
     except Exception as e:
         messages.error(request, f"Status: {request.POST['status_name']} not updated.", extra_tags="danger")
-    context = {'status': status, }
+    context = {'status': status, 'permission_names': list(request.user.permissions.values_list('name', flat=True))}
     return render(request, 'poc_demo/edit_status.html', context)
 
 
+@user_has_permission('edit_product')
 @login_required(login_url='loginpage')
 def edit_product(request, id):
     try:
@@ -535,18 +635,18 @@ def edit_product(request, id):
                 messages.success(request, f"Product: {request.POST['product_name']} updated.")
     except Exception as e:
         messages.error(request, f"Product: {request.POST['product_name']} not updated {e}.", extra_tags="danger")
-    context = {
-        'product': product,
-        'status': status_choice
-    }
+    context = {'product': product, 'status': status_choice,
+               'permission_names': list(request.user.permissions.values_list('name', flat=True))}
     return render(request, 'poc_demo/edit_product.html', context)
 
 
 @login_required(login_url='loginpage')
 def view_poc(request):
+    permission_names = list(request.user.permissions.values_list('name', flat=True))
+    print(permission_names)
     if request.user.role.name == "Admin":
-        all_active_product = Poc_model.objects.prefetch_related('poc_f_related', 'poc_r_related').all().order_by('-updated_at')
-    elif request.user.role.name == "Manager":
+        all_active_product = Poc_model.objects.prefetch_related('poc_f_related', 'poc_r_related',).all().order_by('-updated_at')
+    elif request.user.role.name == "Approval":
         all_active_product = Poc_model.objects.filter(added_by__Belongs_to=request.user.id).prefetch_related(
             'poc_f_related', 'poc_r_related').all().order_by('-updated_at')
     elif request.user.role.name == "Sales":
@@ -557,13 +657,15 @@ def view_poc(request):
                                                                                                   'poc_r_related').all().order_by('-updated_at')
     search_query = request.GET.get('search', '')
 
+
     if search_query:
         if search_query:
             all_active_product = all_active_product.filter(
-                Q(Customer_name__icontains=search_query) |
+                Q(Customer_name__name__icontains=search_query) |
                 Q(Requested_date__icontains=search_query) |
                 Q(Timeline__icontains=search_query) |
-                Q(added_by__icontains=search_query)
+                Q(added_by__username__icontains=search_query) |
+                Q(Product_name__Product_name__icontains=search_query)
             )
     paginator = Paginator(all_active_product, 10)
     page_number = request.GET.get('page')
@@ -571,10 +673,12 @@ def view_poc(request):
     context = {'paginator': paginator, 'page': page}
     context["data"] = all_active_product
     context['search_query'] = search_query
+    context['permission_names'] = permission_names
 
     return render(request, 'poc_demo/view_poc.html', context)
 
 
+@user_has_permission('add_remark')
 def add_remarks(request, id):
     try:
         if request.method == 'POST':
@@ -600,6 +704,7 @@ def add_remarks(request, id):
         return redirect('view_poc_detail', id=id)
 
 
+@user_has_permission('add_feature')
 def add_feature(request, id):
     try:
         if request.method == 'POST':
@@ -617,41 +722,100 @@ def add_feature(request, id):
                 status_data = Feature_status.objects.create(feature=feature, status="active",
                                                             added_by=added_by)  # Create the Status object linked to the Feature
                 features_lsts_added.append(status_data)
-            messages.success(request, f"New feature: {','.join(features_lsts_added)} added successfully.")
+            messages.success(request, f"New feature added successfully.")
             return redirect('view_poc_detail', id=id)
     except Exception as e:
-        messages.error(request, f"New feature not added {e}.", extra_tags="danger")
+        messages.error(request, f"New feature not added  {e}.", extra_tags="danger")
         return redirect('view_poc_detail', id=id)
 
 
+@user_has_permission('edit_poc')
 @login_required(login_url='loginpage')
 def edit_poc(request, id):
+    get_poc = Poc_model.objects.get(pk=id)
+    get_changes = []
+    new_remarks_list = []
+
     try:
         if request.method == 'POST':
-            get_poc = Poc_model.objects.get(pk=id)
-            
+            print('&&&&&&&&&&&&&&&&&&&&&&&&&&')
+            datetime_object = datetime.strptime(request.POST['Timeline_date'], "%Y-%m-%d")
+            if get_poc.Timeline != datetime_object.date():
+                get_changes.append('Timeline')
+                new_remarks_list.append({'poc_id': get_poc,'remarks':f"Timeline changed {get_poc.Timeline} to {request.POST['Timeline_date']}" , 'status': get_poc.status, 'added_by': request.user})
+            if request.POST.get('poc_type'):
+                if get_poc.poc_type != request.POST.get('poc_type'):
+                    get_changes.append('Project Type')
+                    new_remarks_list.append({'poc_id': get_poc,
+                                             'remarks': f"Project Type changed {get_poc.poc_type} to {request.POST.get('poc_type')}",
+                                             'status': get_poc.status, 'added_by': request.user})
+            if request.POST.get('kt_given'):
+                sts = False
+                sts_for = 'Not Provided'
+                if get_poc.kt_given == False:
+                    old_sts = 'Not Provided'
+                else:
+                    old_sts = 'Provided'
+                if request.POST['kt_given'] == 'True':
+                    sts = True
+                    sts_for = "Provided"
+                if get_poc.kt_given != sts:
+
+                    get_changes.append('KT Given')
+                    new_remarks_list.append({'poc_id': get_poc,
+                                             'remarks': f"changes in KT is  {old_sts} to {sts_for}",
+                                             'status': get_poc.status, 'added_by': request.user})
+
+            if request.POST.get('assign_edit'):
+                if request.POST['assign_edit'] != 'None':
+                    new_user = User.objects.get(pk=request.POST.get('assign_edit'))
+                    if get_poc.assign_to != new_user:
+                        get_changes.append('Assign To project')
+                        new_remarks_list.append({'poc_id': get_poc,
+                                                 'remarks': f"Project Assign changed  {get_poc.assign_to} to {new_user}",
+                                                 'status': get_poc.status, 'added_by': request.user})
+            if request.POST.get('status'):
+                new_sts = Status.objects.get(name=request.POST['status'])
+                if get_poc.status != new_sts:
+                    get_changes.append('Status')
+                    new_remarks_list.append({'poc_id': get_poc,
+                                             'remarks': f"Project Status changed  {get_poc.status} to {new_sts}",
+                                             'status': get_poc.status, 'added_by': request.user})
+
             if request.user.role.name == 'Sales' and get_poc.description:
                 status = Status.objects.get(name='Pending')
+                print("stsststst")
                 get_poc.description = ''
             else:
                 status = Status.objects.get(name=request.POST['status'])
-            if request.POST.get('product_name'):
-                product_name = Product.objects.get(Product_name=request.POST['product_name'])
-                get_poc.Product_name = product_name
 
-            get_poc.Customer_name = Customer.objects.get(id=request.POST['Customer_name'])
+            # if request.POST.get('product_name'):
+            #     product_name = Product.objects.get(Product_name=request.POST['product_name'])
+            #     get_poc.Product_name = product_name
+
+            # get_poc.Customer_name = Customer.objects.get(id=request.POST['Customer_name'])
             get_poc.Timeline = request.POST['Timeline_date']
-            get_poc.poc_type = request.POST['poc_type']
+            if request.POST.get('poc_type'):
+                get_poc.poc_type = request.POST.get('poc_type')
             if request.POST.get('kt_given'):
                 get_poc.kt_given = request.POST['kt_given']
             get_poc.status = status
             if request.POST.get('assign_edit'):
                 if request.POST['assign_edit'] != 'None':
                     get_poc.assign_to = User.objects.get(pk=request.POST.get('assign_edit'))
+
+            if request.FILES.get('uploaded_file'):
+                uploaded_file = request.FILES['uploaded_file']
+                if uploaded_file.name.endswith(('.zip', '.pdf')):
+                    ext = (uploaded_file.name).split(".")[-1]
+                    uploaded_file.name = f"{get_poc.Product_name.Product_name +'_'+ get_poc.poc_type +'_documentations'}.{ext}"
+                    get_poc.documentation = uploaded_file
             get_poc.save()
-            messages.success(request, 'POC updated.')
+
+            Poc_remark.objects.bulk_create([Poc_remark(**data) for data in new_remarks_list])
+            messages.success(request, f"{get_poc.poc_type} updated.")
     except Exception as e:
-        messages.error(request, f"POC not edited {e}.", extra_tags="danger")
+        messages.error(request, f"{get_poc.poc_type} not edited {e}.", extra_tags="danger")
     return redirect('view_poc_detail', id=id)
 
 
@@ -659,24 +823,28 @@ def edit_poc(request, id):
 def update_sts(request, id):
     if request.method == 'POST':
         try:
+            print(request.POST, "(**********************************)")
             sts_id = request.POST['sts_id']
             status = request.POST['status']
             poc_id = request.POST['poc_id']
-            obj = Poc_model.objects.get(poc_id = poc_id)
+            obj = Poc_model.objects.get(id = poc_id)
             print("___________________",obj.status)
             added_by = CustomUser.objects.get(id=request.user.id)
             featureobj = Feature.objects.get(pk=sts_id)
             Feature_status.objects.create(feature=featureobj, status=status, added_by=added_by)
             # return redirect('view_poc_detail', id=id)
+            messages.success(request, 'added status for feature')
             return HttpResponse(
                 f'<div class="messages text-center alert alert-danger"> <h2> status  added.</h2> </div>')
 
         except Exception as e:
             # return redirect('view_poc_detail', id=id)
+            messages.error(request, f'status not added {e}', extra_tags = 'danger')
             return HttpResponse(
                 f'<div class="messages text-center alert alert-danger"> <h2> status not added {e}.</h2> </div>')
 
 
+@user_has_permission('edit_feature')
 @login_required(login_url='loginpage')
 def update_feature_detail(request):
     if request.method == 'POST':
@@ -705,10 +873,27 @@ def update_feature_detail(request):
 
 @login_required(login_url='loginpage')
 def view_poc_detail(request, id):
+    permission_names = list(request.user.permissions.values_list('name', flat=True))
+
     poc = Poc_model.objects.prefetch_related('poc_f_related', 'poc_r_related').get(id=id)
-    permission_for_edit = ['Admin', 'Sales', 'Manager']
+    edited = False
+    if request.user.permissions.filter(name="edit_poc").exists():
+        edited = True
+    add_remarked = False
+    if request.user.permissions.filter(name="add_remark").exists():
+        add_remarked = True
+    add_feature = False
+    if request.user.permissions.filter(name="add_feature").exists():
+        add_feature = True
+
+    edit_feature = False
+    if request.user.permissions.filter(name="edit_feature").exists():
+        edit_feature = True
+
+    permission_for_edit = edited
+
     permission_for_delete = ['Admin', 'Sales']
-    permission_for_ADD_STATUS = ['Admin', 'Sales', 'Manager', 'Support']
+    permission_for_ADD_STATUS = ['Admin', 'Sales', 'Approval', 'Support']
     html_feture_only = ''' '''
     html_feture_sts_only = ''' '''
     html = ''' '''
@@ -736,6 +921,8 @@ def view_poc_detail(request, id):
     permition = [1, 2, 3]
     if request.method == 'POST':
         try:
+            print(request.POST)
+            print("((((((((((((((((((((((())))))))))))))))))))))")
             Remark_count = request.POST['Remark_count']
             remarks = request.POST.getlist('remarks')
             # status= request.POST['status'] 
@@ -761,8 +948,12 @@ def view_poc_detail(request, id):
                                                              "permission_for_edit": permission_for_edit,
                                                              "permission_for_ADD_STATUS": permission_for_ADD_STATUS,
                                                              "permission_for_delete": permission_for_delete,
+                                                             "add_remarked": add_remarked,
+                                                             "add_feature": add_feature,
+                                                             "edit_feature": edit_feature,
                                                              "type_poc": type_poc,
-                                                             "customer": customer
+                                                             "customer": customer,
+                                                             "permission_names": permission_names
                                                              })
 
 
@@ -786,12 +977,14 @@ def get_detail_sts(request):
     return JsonResponse(sts_data)
 
 
+@user_has_permission('delete_role')
 @login_required(login_url='loginpage')
 def delete_role(request, id):
     try:
         role = Roles.objects.get(pk=id)
         if role.name != 'Admin':
-            Roles.objects.get(pk=id).delete()
+            role.status = '2'
+            role.save()
             messages.success(request, 'Role deleted.')
         else:
             messages.error(request, f'Admin Role cant deleted.', extra_tags='danger')
@@ -800,6 +993,8 @@ def delete_role(request, id):
         messages.error(request, f'Role not deleted {e}.', extra_tags='danger')
     return redirect('view_roles')
 
+
+@user_has_permission('delete_customer')
 @login_required(login_url='loginpage')
 def delete_customer(request, id):
     try:
@@ -817,11 +1012,14 @@ def delete_customer(request, id):
     return redirect('view_customer')
 
 
+@user_has_permission('delete_poc')
 @login_required(login_url='loginpage')
 def delete_poc(request, id):
     try:
         if request.user.role.name in  ['Admin','Sales']:
-            Poc_model.objects.get(pk=id).delete()
+            poc = Poc_model.objects.get(pk=id)
+            poc.status = Status.objects.filter(name='InActive').first()
+            poc.save()
             messages.success(request, 'POC deleted.')
         else:
             messages.error(request, ' POC not deleted. Not Allowed to this user', extra_tags='danger')
@@ -830,11 +1028,14 @@ def delete_poc(request, id):
     return redirect('view_poc')
 
 
+@user_has_permission('delete_demo')
 @login_required(login_url='loginpage')
 def delete_demo(request, id):
     try:
         if request.user.role.name in  ['Admin','Sales']:
-            Demo_model.objects.get(pk=id).delete()
+            demo = Demo_model.objects.get(pk=id)
+            demo.status = Status.objects.filter(name='InActive').first()
+            demo.save()
             messages.success(request, 'DEMO deleted.')
         else:
             messages.error(request, ' DEMO not deleted. Not Allowed to this user', extra_tags='danger')
@@ -843,21 +1044,35 @@ def delete_demo(request, id):
     return redirect('view_demo')
 
 
+@user_has_permission('delete_product')
 @login_required(login_url='loginpage')
 def delete_product(request, id):
     try:
-        Product.objects.get(pk=id).delete()
-        messages.success(request, 'Product deleted.')
+        check = True
+        product = Product.objects.get(pk=id)
+        if Poc_model.objects.filter(Product_name=product):
+            messages.error(request, f'Product not deleted,Project exist with related product.', extra_tags='danger')
+            check = False
+        if Demo_model.objects.filter(Product_name=product):
+            messages.error(request, f'Product not deleted,Demo exist with related product.', extra_tags='danger')
+            check = False
+        if check:
+            Product.status = '2'
+            product.save()
+            messages.success(request, 'Product deleted.')
     except Exception as e:
         messages.error(request, f'Product not deleted {e}.', extra_tags='danger')
     return redirect('view_product')
 
 
+@user_has_permission('delete_user')
 @login_required(login_url='loginpage')
 def delete_user(request, id):
     try:
         if id != 1:
-            User.objects.get(pk=id).delete()
+            user = User.objects.get(pk=id)
+            user.Status = "2"
+            user.save()
             messages.success(request, 'User deleted.')
         else:
             messages.error(request,'Admin User cant Deleted', extra_tags='danger')
@@ -866,6 +1081,7 @@ def delete_user(request, id):
     return redirect('view_users')
 
 
+@user_has_permission('delete_status')
 @login_required(login_url='loginpage')
 def delete_status(request, id):
     try:
@@ -876,6 +1092,7 @@ def delete_status(request, id):
     return redirect('view_status')
 
 
+@user_has_permission('add_demo')
 @login_required(login_url='loginpage')
 def add_demo(request):
     all_active_product = Product.objects.all()
@@ -936,6 +1153,8 @@ def add_demo(request):
 
 @login_required(login_url='loginpage')
 def view_demo(request):
+    permission_names = list(request.user.permissions.values_list('name', flat=True))
+    print(permission_names)
     if request.user.role_id == 1:
         all_active_product = Demo_model.objects.prefetch_related('demo_f_related', 'demo_r_related').all()
     elif request.user.role_id == 3:
@@ -952,26 +1171,29 @@ def view_demo(request):
     if search_query:
         if search_query:
             all_active_product = all_active_product.filter(
-                Q(Customer_name__icontains=search_query) |
+                Q(Customer_name__name__icontains=search_query) |
                 Q(Requested_date__icontains=search_query) |
                 Q(Timeline__icontains=search_query) |
-                Q(added_by__icontains=search_query)
+                Q(added_by__username__icontains=search_query) |
+                Q(Product_name__Product_name__icontains=search_query)
             )
+
     paginator = Paginator(all_active_product, 10)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
     context = {'paginator': paginator, 'page': page}
     context["data"] = all_active_product
     context['search_query'] = search_query
-
+    context['permission_names'] = permission_names
     return render(request, 'poc_demo/view_demo.html', context)
 
 
 @login_required(login_url='loginpage')
 def view_demo_detail(request, id):
-    permission_for_edit = ['Admin', 'Sales', 'Manager']
-    permission_for_delete = ['Admin', 'Sales', 'Manager']
-    permission_for_ADD_STATUS = ['Admin', 'Sales', 'Manager', 'Support']
+    permission_names = list(request.user.permissions.values_list('name', flat=True))
+    permission_for_edit = ['Admin', 'Sales', 'Approval']
+    permission_for_delete = ['Admin', 'Sales', 'Approval']
+    permission_for_ADD_STATUS = ['Admin', 'Sales', 'Approval', 'Support']
     demo = Demo_model.objects.prefetch_related('demo_f_related', 'demo_r_related').get(id=id)
     html_feture_only = ''' '''
     html_feture_sts_only = ''' '''
@@ -1024,41 +1246,102 @@ def view_demo_detail(request, id):
                                                               "permission_for_edit": permission_for_edit,
                                                               "permission_for_ADD_STATUS": permission_for_ADD_STATUS,
                                                               "permission_for_delete": permission_for_delete,
-                                                              'customer': customer
+                                                              'customer': customer,
+                                                              "permission_names": permission_names
                                                               })
 
 
+
+@user_has_permission('edit_demo')
 @login_required(login_url='loginpage')
 def edit_demo(request, id):
+    get_demo = Demo_model.objects.get(pk=id)
+    new_remarks_list = []
+    get_changes = []
     try:
         if request.method == 'POST':
-            get_demo = Demo_model.objects.get(pk=id)
+            print('&&&&&&&&&&&&&&&&&&&&&&&&&&')
+            datetime_object = datetime.strptime(request.POST['Timeline_date'], "%Y-%m-%d")
+            if get_demo.Timeline != datetime_object.date():
+                get_changes.append('Timeline')
+                new_remarks_list.append({'poc_id': get_demo,
+                                         'remarks': f"Timeline changed {get_demo.Timeline} to {request.POST['Timeline_date']}",
+                                         'status': get_demo.status, 'added_by': request.user})
+            if request.POST.get('demo_type'):
+                if get_demo.demo_type != request.POST.get('demo_type'):
+                    get_changes.append('Project Type')
+                    new_remarks_list.append({'demo_id': get_demo,
+                                             'remarks': f"Project Type changed {get_demo.demo_type} to {request.POST.get('demo_type')}",
+                                             'status': get_demo.status, 'added_by': request.user})
+            if request.POST.get('kt_given'):
+                sts = False
+                sts_for = 'Not Provided'
+                if get_demo.kt_given == False:
+                    old_sts = 'Not Provided'
+                else:
+                    old_sts = 'Provided'
+                if request.POST['kt_given'] == 'True':
+                    sts = True
+                    sts_for = "Provided"
+                if get_demo.kt_given != sts:
+                    get_changes.append('KT Given')
+                    new_remarks_list.append({'demo_id': get_demo,
+                                             'remarks': f"changes in KT is  {old_sts} to {sts_for}",
+                                             'status': get_demo.status, 'added_by': request.user})
+
+            if request.POST.get('assign_edit'):
+                if request.POST['assign_edit'] != 'None':
+                    new_user = User.objects.get(pk=request.POST.get('assign_edit'))
+                    if get_demo.assign_to != new_user:
+                        get_changes.append('Assign To project')
+                        new_remarks_list.append({'demo_id': get_demo,
+                                                 'remarks': f"Project Assign changed  {get_demo.assign_to} to {new_user}",
+                                                 'status': get_demo.status, 'added_by': request.user})
+            if request.POST.get('status'):
+                new_sts = Status.objects.get(name=request.POST['status'])
+                if get_demo.status != new_sts:
+                    get_changes.append('Status')
+                    new_remarks_list.append({'demo_id': get_demo,
+                                             'remarks': f"Project Status changed  {get_demo.status} to {new_sts}",
+                                             'status': get_demo.status, 'added_by': request.user})
+
             if request.user.role.name == 'Sales' and get_demo.description:
                 status = Status.objects.get(name='Pending')
                 get_demo.description = ''
             else:
                 status = Status.objects.get(name=request.POST['status'])
 
-            if request.POST.get('product_name'):
-                product_name = Product.objects.get(Product_name=request.POST['product_name'])
-                get_demo.Product_name = product_name
+            # if request.POST.get('product_name'):
+            #     product_name = Product.objects.get(Product_name=request.POST['product_name'])
+            #     get_poc.Product_name = product_name
 
-            get_demo.Customer_name = Customer.objects.get(id=request.POST['Customer_name'])
+            # get_poc.Customer_name = Customer.objects.get(id=request.POST['Customer_name'])
             get_demo.Timeline = request.POST['Timeline_date']
-            get_demo.status = status
+            if request.POST.get('poc_type'):
+                get_demo.poc_type = request.POST.get('poc_type')
             if request.POST.get('kt_given'):
                 get_demo.kt_given = request.POST['kt_given']
-
+            get_demo.status = status
             if request.POST.get('assign_edit'):
                 if request.POST['assign_edit'] != 'None':
                     get_demo.assign_to = User.objects.get(pk=request.POST.get('assign_edit'))
+
+            if request.FILES.get('uploaded_file'):
+                uploaded_file = request.FILES['uploaded_file']
+                if uploaded_file.name.endswith(('.zip', '.pdf')):
+                    ext = (uploaded_file.name).split(".")[-1]
+                    uploaded_file.name = f"{get_demo.Product_name.Product_name + '_' + get_demo.demo_type + '_documentations'}.{ext}"
+                    get_demo.documentation = uploaded_file
             get_demo.save()
+
+            Demo_remark.objects.bulk_create([Demo_remark(**data) for data in new_remarks_list])
             messages.success(request, 'Demo Updated.')
     except Exception as e:
         messages.error(request, f"Demo not updated {e}.", extra_tags="danger")
     return redirect('view_demo_detail', id=id)
 
 
+@user_has_permission('add_remark')
 @login_required(login_url='loginpage')
 def add_demo_remarks(request, id):
     try:
@@ -1074,13 +1357,14 @@ def add_demo_remarks(request, id):
                     {'demo_id': get_demo, 'remarks': remark, 'status': get_demo.status, 'added_by': added_by})
             # new_remarks = Poc_remark()
             Demo_remark.objects.bulk_create([Demo_remark(**data) for data in new_remarks_list])
-            messages.success(request, f'Demo remark {",".join(new_remarks_list)} added.')
+            messages.success(request, f'Demo remark added.')
             return redirect('view_demo_detail', id=id)
     except Exception as e:
-        messages.error(request, f'Demo remark: {",".join(new_remarks_list)} not added {e}.',  extra_tags="danger")
+        messages.error(request, f'Demo remark: not added {e}.',  extra_tags="danger")
         return redirect('view_demo_detail', id=id)
 
 
+@user_has_permission('add_feature')
 @login_required(login_url='loginpage')
 def add_demo_feature(request, id):
     try:
@@ -1141,6 +1425,7 @@ def demo_update_sts(request, id):
                 f'<div class="messages text-center alert alert-danger"> <h2> status not added {e}.</h2> </div>')
 
 
+@user_has_permission('edit_feature')
 @login_required(login_url='loginpage')
 def update_feature_detail_demo(request):
     if request.method == 'POST':
@@ -1166,6 +1451,7 @@ def update_feature_detail_demo(request):
                 f'<div cla  ss="messages text-center alert alert-danger"> <h2>  not updated {e}.</h2> </div>')
 
 
+@user_has_permission('delete_feature')
 def delete_feature(request):
     if request.method == 'POST':
         try:
@@ -1180,7 +1466,7 @@ def delete_feature(request):
             else:
                 feature = get_object_or_404(Feature, pk=int(request.POST['id']))  # Adjust model access logic
                 feature.delete()
-                get_poc = get_object_or_404(Poc_model, pk=feature.demo_id.id)
+                get_poc = get_object_or_404(Poc_model, pk=feature.poc_id.id)
                 if request.user.role.name == 'Sales' and get_poc.description:
                     get_poc.status = Status.objects.get(name='Pending')
                     get_poc.description = ''
@@ -1193,6 +1479,7 @@ def delete_feature(request):
     else:
         return JsonResponse({'success': False, 'message': 'Invalid request method'})
 
+@user_has_permission('approved_status')
 def approved_status(request, pk,  param1=None):
     try:
         print(request.GET['param2'])
@@ -1255,3 +1542,34 @@ def save_reject_desc(request):
             return redirect('view_poc')
         elif request.POST['row__type'] == 'DEMO':
             return redirect('view_demo')
+
+
+
+@user_has_permission('manage_permissions')
+def manage_permissions(request, id):
+    context = {}
+    context['all_permissions'] = CustomPermission.objects.all().order_by('id')
+    context['users'] = User.objects.get(pk=id)
+    if request.method == 'POST':
+        user_id = request.POST.get('user')
+        permissions = request.POST.getlist('permissions')
+
+        # Retrieve the user based on the selected user_id
+        user = CustomUser.objects.get(pk=user_id)
+        # Clear existing permissions for the user and add selected permissions
+        if user.role.name == 'Admin':
+            user.permissions.clear()
+            permission, _ = CustomPermission.objects.get_or_create(name="manage_permissions")
+            user.permissions.add(permission)
+        else:
+            user.permissions.clear()
+        for permission_name in permissions:
+            if permission_name != "manage_permissions":
+                permission, _ = CustomPermission.objects.get_or_create(name=permission_name)
+                user.permissions.add(permission)
+        # Save user permissions
+        user.save()
+        messages.success(request,"Permissions saved successfully!")
+        return redirect('manage_permissions', id)
+    # If GET request or form not submitted, render the permissions form
+    return render(request, 'poc_demo/permissions.html', context)

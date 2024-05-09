@@ -209,18 +209,15 @@
             </a>
           </li>
           <li>
-            <a href="{% url 'add_product' %}">
-              <i class="bi bi-circle"></i><span>Add Products</span>
-            </a>
-          </li>
-          <li>
             <a href="{% url 'add_role' %}">
               <i class="bi bi-circle"></i><span>Add Roles</span>
             </a>
           </li>
-          
+
+
         </ul>
       </li><!-- End Add admin section Nav -->
+
 
 
       <li class="nav-item">
@@ -253,86 +250,52 @@
       </li><!-- End View admin section Nav -->
       {% endif %}
 
-      <li class="nav-item">
-        <a class="nav-link collapsed" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-journal-text"></i><span>POC</span><i class="bi bi-chevron-down ms-auto"></i>
-        </a>
-        <ul id="forms-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-          {% if request.user.role.name == 'Sales' or request.user.role.name == "Admin" %}
-          <li>
-            
-            <a href="{% url 'add_poc' %}">
-              <i class="bi bi-circle"></i><span>Add POC</span>
-            </a>
-
-          </li>
-          {% endif %}
-          <li>
-            <a href="{% url 'view_poc' %}">
-              <i class="bi bi-circle"></i><span>View POC</span>
-            </a>
-          </li>
-        </ul>
-      </li><!-- End POC Nav -->
-
-
 
       <li class="nav-item">
-        <a class="nav-link collapsed" data-bs-target="#tables-nav" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-layout-text-window-reverse"></i><span>Demo</span><i class="bi bi-chevron-down ms-auto"></i>
+        <a class="nav-link" href="{% url 'view_poc' %}">
+          <i class="bi bi-grid"></i>
+          <span>Projects</span>
         </a>
-        <ul id="tables-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-          <li>
-            {% if request.user.role.name == 'Sales' or request.user.role.name == "Admin" %}
-            <a href="{% url 'add_demo' %}">
-              <i class="bi bi-circle"></i><span>Add Demo</span>
-            </a>
-            {% endif %}
-          </li>
-          <li>
-            <a href="{% url 'view_demo' %}">
-              <i class="bi bi-circle"></i><span>View Demo</span>
-            </a>
-          </li>
-        </ul>
-      </li><!-- End Tables Nav -->
-
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" data-bs-target="#forms-nav_bar" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-journal-text"></i><span>Customer</span><i class="bi bi-chevron-down ms-auto"></i>
-        </a>
-        <ul id="forms-nav_bar" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-          {% if request.user.role.name == 'Sales' or request.user.role.name == "Admin" %}
-          <li>
-
-            <a href="{% url 'add_customer' %}">
-              <i class="bi bi-circle"></i><span>Add</span>
-            </a>
-
-          </li>
-          {% endif %}
-          <li>
-            <a href="{% url 'view_customer' %}">
-              <i class="bi bi-circle"></i><span>View Customer</span>
-            </a>
-          </li>
-        </ul>
       </li>
 
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'view_demo' %}">
+          <i class="bi bi-grid"></i>
+          <span>Demo</span>
+        </a>
+      </li>
 
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'view_customer' %}">
+          <i class="bi bi-grid"></i>
+          <span>Customer</span>
+        </a>
+      </li>
 
+       {% if 'add_product' in permission_names %}
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'view_product' %}">
+          <i class="bi bi-grid"></i>
+          <span>Product</span>
+        </a>
+      </li>
+      {% endif %}
 
-    </ul>
-
-    
   </aside><!-- End Sidebar-->
   <main id="main" class="main">
+                {% if messages %}
+                <div class="messages text-center">
+                {% for message in messages %}
+                <h4 {% if message.extra_tags %} class="alert alert-{{ message.extra_tags }}"{% else %}
+                class="alert alert-{{ message.tags }}"{% endif %}>{{ message }}</h4>
+                {% endfor %}
+                </div>
+                {% endif %}
 
     {% block poc_content %}  
 
     {% endblock %}
-  
+
   </main>
 
   <!-- ======= Footer ======= -->
@@ -372,3 +335,4 @@
 </body>
 
 </html>
+

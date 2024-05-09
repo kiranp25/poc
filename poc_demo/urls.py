@@ -49,6 +49,7 @@ urlpatterns = [
     path('get_detail_sts_demo/',views.get_detail_sts_demo, name='get_detail_sts_demo'),
     path('add_demo_feature/<int:id>', views.add_demo_feature, name='add_demo_feature'),
     path('demo_update_sts/<int:id>', views.demo_update_sts, name='demo_update_sts'),
+    path('manage_permissions/<int:id>', views.manage_permissions, name='manage_permissions'),
     path('update_feature_detail_demo', views.update_feature_detail_demo, name='update_feature_detail_demo'),
     path('save_reject_desc/', views.save_reject_desc, name='save_reject_desc'),
 

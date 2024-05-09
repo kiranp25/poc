@@ -15,15 +15,6 @@
 
             <div class="card">
               <div class="card-body">
-                {% if messages %}
-                <div class="messages text-center">
-                {% for message in messages %}
-                <h4 {% if message.extra_tags %} class="alert alert-{{ message.extra_tags }}"{% else %} 
-                class="alert alert-{{ message.tags }}"{% endif %}
-                >{{ message }}</h4>
-                {% endfor %}
-                </div>
-                {% endif %}
 
                 <!-- Form control repeater section start -->
                 <div class="text-center text-muted"><h1>Users</h1></div>
@@ -32,7 +23,9 @@
                     <div class="row">
 
                 <div class="col-sm-12  text-end">
+                  {% if "add_customer" in permission_names %}
                     <a href="{% url 'add_customer' %}" class="btn btn-primary btn-sm m-2">Add Customer</a>
+                  {% endif %}
                 </div>
             </div>
                       <table class="datatable table table-striped table-bordered">
@@ -40,7 +33,9 @@
                           <tr>
                             <th scope="col">Name</th>
                             <th scope="col">Status</th>
+                            {% if "edit_customer" in permission_names or "delete_customer" in permission_names%}
                             <th scope="col">Action</th>
+                            {% endif %}
                           </tr>
                         </thead>
                         <tbody>
@@ -49,12 +44,18 @@
                           <tr>
                             <td>{{ customer.name }}</td>
                             <td>{{ customer.status }}</td>
+                            {% if "edit_customer" in permission_names or "delete_customer" in permission_names%}
                             <td>
-                              <div class="btn-group btn-group-sm" role="group">  
+                              <div class="btn-group btn-group-sm" role="group">
+                                {% if "edit_customer" in permission_names %}
                                 <a href="{% url 'edit_customer' customer.id %}" class="btn btn-primary">Edit</a>
+                                {% endif %}
+                                {% if "delete_customer" in permission_names %}
                                 <a href="#" onclick="return confirmDelete('{% url 'delete_customer' customer.id %}')" class="btn btn-danger btn-sm ms-1">Delete</a>
-                              </div>
+                                {% endif %}
+                               </div>
                             </td>
+                            {% endif %}
                           </tr>
                           {% endfor %}
                           {% else %}

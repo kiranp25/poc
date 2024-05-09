@@ -1,0 +1,101 @@
+
+
+{% extends "poc_demo/base.html" %}
+
+{% block poc_content %}
+  {% load static %}
+<style>
+.user-selection {
+  margin-bottom: 15px;
+}
+
+.permission-management {
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.select-all-container {
+  margin-bottom: 10px;
+}
+
+.permission-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.permission-list li {
+  margin-bottom: 5px;
+}
+</style>
+
+    <div class="app-content content">
+      <div class="content-wrapper">
+        <div class="content-header row">
+        </div>
+        <div class="content-body">
+
+
+            <div class="card">
+                <!-- Form control repeater section start -->
+                <section id="form-control-repeater">
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="user-selection">
+      <label for="user">User:</label>
+      <select name="user" id="user">
+        <option value="{{ users.id }}" selected>{{ users.username }}</option>
+      </select>
+    </div>
+
+    <div class="permission-management">
+      <h2>Permissions</h2>
+      <div class="select-all-container">
+        <input type="checkbox" id="select-all">
+        <label for="select-all" id="select-all-label">Select All</label>
+      </div>
+
+ <div class="container">
+  <div class="row">
+    <div class="col">
+      <ul class="permission-list">
+        {% for permission in all_permissions %}
+          <li>
+            <input type="checkbox" id="{{permission}}" name="permissions" value="{{ permission }}"
+              {% if permission in users.permissions.all %}checked{% endif %} >
+            <label for="{{permission}}">{{ permission }}</label>
+          </li>
+          {% if forloop.counter|divisibleby:10 and not forloop.last %}
+            </ul></div><div class="col"><ul class="permission-list">
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+        <hr>
+        <button type="submit" class="btn btn-info" onclick="return confirm('Do you want to save changes in permissions?')">Save Permissions</button><hr>
+    </div>
+  </form>
+</section>
+                </div>
+        </div>
+      </div>
+    </div>
+    <!-- ////////////////////////////////////////////////////////////////////////////-->
+    {%endblock %}
+    {% block js %}
+<script>
+    $(document).ready(function() {
+    $('#select-all').change(function() {
+        var isChecked = $(this).prop('checked');
+        // Update permission checkboxes and label text
+        $('input[name="permissions"]').prop('checked', isChecked);
+        $('#select-all-label').text(isChecked ? 'Deselect All' : 'Select All');
+    });
+});
+</script>
+    {% endblock %}
+

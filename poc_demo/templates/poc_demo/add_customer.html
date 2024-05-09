@@ -4,20 +4,6 @@
 
 {% block poc_content %}  
   {% load static %}
-          {% if messages %}
-          <div class="messages text-center">
-
-<!--
-            {% for message in messages %}
-            {{message}}
-            {% endfor %} -->
-
-          {% for message in messages %}
-          <h4 {% if message.extra_tags %} class="alert alert-{{ message.extra_tags }}"{% else %}
-          class="alert alert-{{ message.tags }}"{% endif %}>{{ message }}</h4>
-          {% endfor %}
-          </div>
-          {% endif %}
     <div class="app-content content">
       <div class="content-wrapper">
         <div class="content-header row">
@@ -33,7 +19,7 @@
                         <div class="col-md-6">
                           <div class="card">
                             <div class="card-header">
-                                <h4 class="card-title" id="tel-repeater">Add Users</h4>
+                                <h4 class="card-title" id="tel-repeater">Add Customer</h4>
                                 <a class="heading-elements-toggle"><i class="ft-ellipsis-h font-medium-3"></i></a>
                                 <div class="heading-elements">
                                     <ul class="list-inline mb-0">
@@ -50,19 +36,52 @@
 
 <form class="row g-3 cool-form" method="post">
   {% csrf_token %}
-  <div class="col-md-12">
+  <div class="col-md-6">
     <div class="form-floating mb-2">
-      <input type="Text" class="form-control" id="customer_name" name="customer_name" placeholder="Username">
-      <label for="customer_name">customer_name</label>
+      <input type="text" class="form-control" id="customer_name" name="customer_name" placeholder="Username" required>
+      <label for="customer_name">Customer Name</label>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="form-floating mb-2">
+      <input type="text" class="form-control" id="location_address" name="location_address" placeholder="Location Address" required>
+      <label for="location_address">Location Address</label>
+    </div>
+  </div>
+    <div class="col-md-6">
+    <div class="form-floating mb-2">
+      <input type="text" class="form-control" id="address" name="address" placeholder="Enter Address Here" required>
+      <label for="address">Address</label>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="form-floating mb-2">
+      <input type="text" class="form-control" id="contact_person" name="contact_person" placeholder="Contact Person" required>
+      <label for="contact_person">Contact Person</label>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="form-floating mb-2">
+      <input type="tel" class="form-control" id="contact_number" name="contact_number" placeholder="Contact Number" required>
+      <label for="contact_number">Contact Number</label>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="form-floating mb-2">
+      <input type="email" class="form-control" id="contact_email" name="contact_email" placeholder="Email Address" required>
+      <label for="contact_email">Email Address</label>
     </div>
   </div>
   <div class="form-actions col-12 mb-2">
     <div class="text-right">
-      <button type="submit" class="btn btn-primary">Submit <i class="ft-thumbs-up position-right"></i></button>
+      <button type="submit" class="btn btn-primary" onclick="return confirm('Confirmation for Adding Customer?')">
+        Submit <i class="ft-thumbs-up position-right"></i>
+      </button>
       <button type="reset" class="btn btn-warning">Reset <i class="ft-refresh-cw position-right"></i></button>
     </div>
   </div>
 </form>
+
 
                                 </div>
                             </div>
