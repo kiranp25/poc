@@ -2,6 +2,8 @@
 
 {% block poc_content %}
 {% load static %}
+
+
 <style>
 
   body {
@@ -117,21 +119,42 @@
                                    <input type="text" name="poc_type"  value="{{data.poc_type}}" readonly hidden>
                                    {% endif %}
                                  </div>
-
-                                {% if request.user.role.name == "Approval" %}
+ {% if request.user.role.name == "Approval" %}
                                 <div class="mb-3">
-                                    <label for="uploaded_file" class="form-label fw-bold">Upload Documentaions (PDF or ZIP only):</label>
+                                    <label for="uploaded_file" class="form-label fw-bold">Upload Document:</label>
                                     <input type="file" id="uploaded_file" name="uploaded_file" class="form-control" accept=".zip,.pdf"  disabled>
-                                    <small class="text-muted">Allowed file types: PDF, ZIP</small>
+                                    <small class="text-muted">Allowed file types: PDF, ZIP</small><br>
+                                  {% if request.user.role.name == 'Approval' %}
+                                <small class="text-muted">To replace the file, upload a new one:</small>
+                              {% endif %}
+
 
                                 </div>
                                 {% endif %}
-                                {% if data.documentation %}
-                                        <div>
-                                            <p>Uploaded File: <a href="{{ data.documentation.url }}" target="_blank">{{ data.documentation.name }}</a></p>
-                                            <p>To replace the file, upload a new one:</p>
-                                        </div>
-                                    {% endif %}
+                                <p class="form-label fw-bold">Documents:</p>
+  {% if data.documentation %}
+        <div class="row">
+
+          <div class="col-10">
+              <a href="{{ data.documentation.url }}" class="logo d-flex align-items-center">
+            <img src="{% static 'images/pngwing.com.png' %}" alt="OlaTech">
+
+          </a>{{ document }}<br>
+            {% if '.pdf' in data.documentation.name %}
+            <i class="bx bxs-download"></i> {{ document }}
+          {% elif '.zip' in data.documentation.name %}
+            <i class="bx bxs-download"></i>  {{ document }}{% endif %}
+
+           {% if '.pdf' in data.documentation.name %}
+            <i class="bx bxs-file-pdf"></i> {{ document }}
+          {% elif '.zip' in data.documentation.name %}
+            <i class="bx bxs-archive"></i>  {{ document }}{% endif %}
+          </div>
+        </div>
+    {% else %}
+                                <h4> no documents uploaded</h4>
+                                {% endif %}
+
 
 
                                 <!-- product -->

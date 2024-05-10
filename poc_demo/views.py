@@ -11,8 +11,8 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from .form import CustomPasswordResetForm
 from  datetime import datetime
-from .validators import validate_file_extension
-from django.core.exceptions import ValidationError
+from django.conf import settings
+from django.core.mail import send_mail
 
 # Create your views here.
 User = get_user_model()
@@ -20,7 +20,6 @@ User = get_user_model()
 from django.http import HttpResponseForbidden
 
 def user_has_permission(permission_name):
-
     def decorator(view_func):
         def wrapper(request, *args, **kwargs):
             back_page = request.META.get('HTTP_REFERER')
@@ -44,7 +43,6 @@ def dahboard(request):
     permission_names = list(request.user.permissions.values_list('name', flat=True))
     user_types = request.user.role
     all_active_product = Product.objects.all()
-
     if request.user.role.name == "Admin":
         all_poc = Poc_model.objects.all()
         all_demo = Demo_model.objects.all()
@@ -135,6 +133,15 @@ def change_password(request, user_id):
         if form.is_valid():
             form.save()
             messages.success(request, 'Password reset successfully.')
+            subject = 'Password reset successfully'
+            message = f'Hi {request.user.email}, password changed successfully.'
+            email_from = settings.EMAIL_HOST_USER
+            recipient_list = ['kiran.p@olatechs.com', ]
+            try:
+                send_mail(subject, message, email_from, recipient_list)
+            except Exception as e:
+                print(e)
+
             return redirect('view_users')
     else:
         form = CustomPasswordResetForm(user)
@@ -876,6 +883,10 @@ def view_poc_detail(request, id):
     permission_names = list(request.user.permissions.values_list('name', flat=True))
 
     poc = Poc_model.objects.prefetch_related('poc_f_related', 'poc_r_related').get(id=id)
+    document = ''
+    if poc.documentation.name:
+        document = poc.documentation.name.split("/")[1]
+
     edited = False
     if request.user.permissions.filter(name="edit_poc").exists():
         edited = True
@@ -898,6 +909,7 @@ def view_poc_detail(request, id):
     html_feture_sts_only = ''' '''
     html = ''' '''
     type_poc = poc_choice
+
     for feature in poc.poc_f_related.all():
         elated_objects_count = feature.feature_related.count() + 1
         for data in feature.feature_related.all().order_by('-created_at'):
@@ -953,7 +965,8 @@ def view_poc_detail(request, id):
                                                              "edit_feature": edit_feature,
                                                              "type_poc": type_poc,
                                                              "customer": customer,
-                                                             "permission_names": permission_names
+                                                             "permission_names": permission_names,
+                                                             "document": document
                                                              })
 
 
@@ -1198,6 +1211,10 @@ def view_demo_detail(request, id):
     html_feture_only = ''' '''
     html_feture_sts_only = ''' '''
     html = ''' '''
+    document = ''
+    if demo.documentation.name:
+        document = demo.documentation.name.split("/")[1]
+
     for feature in demo.demo_f_related.all():
         elated_objects_count = feature.demo_feature_related.count() + 1
         for data in feature.demo_feature_related.all().order_by('-created_at'):
@@ -1247,7 +1264,8 @@ def view_demo_detail(request, id):
                                                               "permission_for_ADD_STATUS": permission_for_ADD_STATUS,
                                                               "permission_for_delete": permission_for_delete,
                                                               'customer': customer,
-                                                              "permission_names": permission_names
+                                                              "permission_names": permission_names,
+                                                              "document": document
                                                               })
 
 
