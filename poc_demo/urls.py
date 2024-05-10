@@ -1,5 +1,12 @@
 from django.urls import path
 from . import views
+from django.contrib.auth.views import (
+    LogoutView,
+    PasswordResetView,
+    PasswordResetDoneView,
+    PasswordResetConfirmView,
+    PasswordResetCompleteView
+)
 
 urlpatterns = [
     path('', views.dahboard, name='dashboard'),
@@ -52,7 +59,16 @@ urlpatterns = [
     path('manage_permissions/<int:id>', views.manage_permissions, name='manage_permissions'),
     path('update_feature_detail_demo', views.update_feature_detail_demo, name='update_feature_detail_demo'),
     path('save_reject_desc/', views.save_reject_desc, name='save_reject_desc'),
-
+    path('password-reset/', PasswordResetView.as_view(template_name='poc_demo/password_reset.html'),
+         name='password-reset'),
+    path('password-reset/done/', PasswordResetDoneView.as_view(template_name='poc_demo/password_reset_done.html'),
+         name='password_reset_done'),
+    path('password-reset-confirm/<uidb64>/<token>/',
+         PasswordResetConfirmView.as_view(template_name='poc_demo/password_reset_confirm.html'),
+         name='password_reset_confirm'),
+    path('password-reset-complete/',
+         PasswordResetCompleteView.as_view(template_name='poc_demo/password_reset_complete.html'),
+         name='password_reset_complete'),
 
 
     
