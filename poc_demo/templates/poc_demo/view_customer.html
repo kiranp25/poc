@@ -17,7 +17,7 @@
               <div class="card-body">
 
                 <!-- Form control repeater section start -->
-                <div class="text-center text-muted"><h1>Users</h1></div>
+                <div class="text-center text-muted mt-4"><h1>Customers</h1></div>
                 <section id="form-control-repeater">
                   <div class="container">
                     <div class="row">
@@ -32,6 +32,10 @@
                         <thead>
                           <tr>
                             <th scope="col">Name</th>
+                            <th scope="col">Address</th>
+                            <th scope="col">Contact Person</th>
+                            <th scope="col">Contact Number</th>
+                            <th scope="col">Email</th>
                             <th scope="col">Status</th>
                             {% if "edit_customer" in permission_names or "delete_customer" in permission_names%}
                             <th scope="col">Action</th>
@@ -43,6 +47,10 @@
                           {% for customer in customer %}
                           <tr>
                             <td>{{ customer.name }}</td>
+                            <td>{{ customer.address }}</td>
+                            <td>{{ customer.contact_person }}</td>
+                            <td>{{ customer.contact_number }}</td>
+                            <td>{{ customer.contact_email }}</td>
                             <td>{{ customer.status }}</td>
                             {% if "edit_customer" in permission_names or "delete_customer" in permission_names%}
                             <td>

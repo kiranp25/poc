@@ -156,7 +156,7 @@ def change_password(request, user_id):
 @user_has_permission('add_poc')
 @login_required(login_url='loginpage')
 def add_poc(request):
-    all_active_product = Product.objects.all()
+    all_active_product = Product.objects.filter(status='1')
     permission_names = list(request.user.permissions.values_list('name', flat=True))
     sts = Status.objects.all()
     customer = Customer.objects.filter(status='Active')
@@ -289,11 +289,6 @@ def add_user(request):
     context = {}
     context['users'] = [i.first_name for i in user]
     user_type_dict = dict()
-    for emp in user:
-        if emp.User_Type not in user_type_dict:
-            user_type_dict[emp.User_Type] = []
-        user_type_dict[emp.User_Type].append(emp.first_name)
-    context['user_list'] = user_type_dict
     context['roles'] = roles
     context['status'] = sts
     context['permission_names'] = list(request.user.permissions.values_list('name', flat=True))
@@ -599,7 +594,7 @@ def add_status(request):
             if Status.objects.filter(name=(sts.strip()).lower()).count() > 0:
                 messages.error(request, f'Status : {sts} alredy exist.', extra_tags="danger")
             else:
-                Status.objects.create(name=sts, added_by=CustomUser.objects.get(id=request.user.id))
+                Status.objects.create(name=sts)
                 messages.success(request, f"Status: {sts} added successfully.")
 
             return redirect('add_status')
@@ -890,9 +885,9 @@ def edit_poc(request, id):
                     uploaded_file.name = f"{get_poc.Product_name.Product_name + '_' + get_poc.poc_type + '_documentations'}.{ext}"
                     get_poc.documentation = uploaded_file
                     new_remarks_list.append({'poc_id': get_poc,
-                                             'remarks': f"New Documentation Uploaded To Project. Name :{uploaded_file.name}",
+                                             'remarks': f"New document uploaded for project. Name :{uploaded_file.name}",
                                              'status': get_poc.status, 'added_by': request.user})
-                    get_changes.append(f"New Documentation Uploaded To Project.<br> Name : <b>{uploaded_file.name}</b>")
+                    get_changes.append(f"New documentation uploaded for project.<br> Name : <b>{uploaded_file.name}</b>")
 
             message = '<ul>'
             for i in get_changes:
@@ -1253,12 +1248,14 @@ def delete_status(request, id):
 @user_has_permission('add_demo')
 @login_required(login_url='loginpage')
 def add_demo(request):
-    all_active_product = Product.objects.all()
+    all_active_product = Product.objects.all(status='Active')
     customer = Customer.objects.filter(status='Active')
+    permission_names = list(request.user.permissions.values_list('name', flat=True))
     sts = Status.objects.all()
     context = {}
     context['customer'] = customer
     context['status'] = sts
+    context['permission_names'] = permission_names
     product_list = [product for product in all_active_product]
 
     if request.method == 'POST':
