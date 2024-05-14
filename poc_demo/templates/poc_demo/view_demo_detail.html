@@ -135,22 +135,17 @@
                                 {% endif %}
                                 <p class="form-label fw-bold">Documents:</p>
   {% if data.documentation %}
-        <div class="row">
+          <div class="row">
 
-          <div class="col-9" style="display: flex;align-items: center;">
-           {% if '.pdf' in data.documentation.name %}
-            <i class="bx bxs-file-pdf"></i> {{ document }}
-          {% elif '.zip' in data.documentation.name %}
-            <i class="bx bxs-archive"></i>  {{ document }}{% endif %}
+            <div class="col-10">
+                <a target="_blank" href="{{ data.documentation.url }}" class="logo align-items-center">
+              <img src="{% static 'images/pngwing.com.png' %}" alt="OlaTech">
 
+            </a>{{ document }}
+
+            </div>
           </div>
-          <div class="col-2">
-               <a href="{{ data.documentation.url }}" class="logo d-flex align-items-center">
-            <img src="{% static 'images/pngwing.com.png' %}" alt="OlaTech">
-          </a>
-          </div>
-        </div>
-    {% else %}
+      {% else %}
                                 <h4> no documents uploaded</h4>
                                 {% endif %}
                                 <!-- product -->

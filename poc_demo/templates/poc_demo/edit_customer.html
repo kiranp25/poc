@@ -17,7 +17,7 @@
                     <div class="col-sm-3"></div>
                     <div class="col-sm-6">
                         <section id="form-control-repeater" class="container-fluid py-4">
-  <h1 class="text-center mb-4">Edit Status - {{ customer.name }}</h1>
+  <h1 class="text-center mb-4">Edit Customer - {{ customer.name }}</h1>
 
 <form class="row g-3 needs-validation" method="post" novalidate>
   {% csrf_token %}
@@ -76,6 +76,7 @@
       <label for="contact_number">Contact Number</label>
       <div class="invalid-feedback">Please provide a valid contact number.</div>
     </div>
+    <div id="error-message" style="color: red;"></div>
   </div>
 
   <div class="col-lg-6 mb-2">
@@ -87,7 +88,7 @@
   </div>
 
   <div class="col-12 text-center mt-4">
-    <button type="submit" class="btn btn-primary btn-lg" onclick="return confirm('Do you want to save changes?')">Save Changes <i class="ft-thumbs-up position-right"></i></button>
+    <button type="submit" class="btn btn-primary btn-lg" id = 'submitbtn' onclick="return confirm('Do you want to save changes?')">Save Changes <i class="ft-thumbs-up position-right"></i></button>
   </div>
 </form>
 </section>
@@ -107,6 +108,21 @@
       </div>
     </div>
     {%endblock %}
-    {% block js %}  
+    {% block js %}
+
+<script>
+document.getElementById('contact_number').addEventListener('input', function() {
+    var phoneNumber = this.value;
+    var pattern = /^\d{10}$/; // Assuming a 10-digit phone number
+
+    if (!pattern.test(phoneNumber)) {
+        document.getElementById('error-message').textContent = 'Please enter a valid 10-digit mobile number.';
+        document.getElementById('submitbtn').disabled = true;
+    } else {
+        document.getElementById('error-message').textContent = '';
+        document.getElementById('submitbtn').disabled = false;
+    }
+});
+</script>
     {% endblock %}
 

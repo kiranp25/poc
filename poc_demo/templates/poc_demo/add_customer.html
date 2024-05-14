@@ -65,6 +65,7 @@
       <input type="tel" class="form-control" id="contact_number" name="contact_number" placeholder="Contact Number" required>
       <label for="contact_number">Contact Number</label>
     </div>
+      <div id="error-message" style="color: red;"></div>
   </div>
   <div class="col-md-6">
     <div class="form-floating mb-2">
@@ -74,7 +75,7 @@
   </div>
   <div class="form-actions col-12 mb-2">
     <div class="text-right">
-      <button type="submit" class="btn btn-primary" onclick="return confirm('Confirmation for Adding Customer?')">
+      <button type="submit" id ='submitbtn' class="btn btn-primary" onclick="return confirm('Confirmation for Adding Customer?')">
         Submit <i class="ft-thumbs-up position-right"></i>
       </button>
       <button type="reset" class="btn btn-warning">Reset <i class="ft-refresh-cw position-right"></i></button>
@@ -101,5 +102,19 @@
 
     
     {% block js %}
+<script>
+document.getElementById('contact_number').addEventListener('input', function() {
+    var phoneNumber = this.value;
+    var pattern = /^\d{10}$/; // Assuming a 10-digit phone number
+
+    if (!pattern.test(phoneNumber)) {
+        document.getElementById('error-message').textContent = 'Please enter a valid 10-digit mobile number.';
+        document.getElementById('submitbtn').disabled = true;
+    } else {
+        document.getElementById('error-message').textContent = '';
+        document.getElementById('submitbtn').disabled = false;
+    }
+});
+</script>
     {% endblock %}
 

@@ -91,12 +91,16 @@
 
                   <div class="col-md-12">
                     <div class="form-floating mb-3">
-                      <select class="form-select" name="product_name" id="product_name" aria-label="product_name" required>
+                      <select class="form-select" name="product_name" id="product_name" aria-label="product_name" required >
                         <option value="" disabled></option>
+                        {% if product_list %}
                         {% for product in product_list %}
 
                         <option value="{{product}}">{{product}}</option>
                         {% endfor %}
+                        {% else %}
+                        <option>No data Found</option>
+                        {% endif %}
                       </select>
                       <label for="product_name">Product Name</label>
                     </div>
