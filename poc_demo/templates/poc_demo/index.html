@@ -14,6 +14,17 @@
   </div><!-- End Page Title -->
 
   <section class="section dashboard">
+{% if request.user.role.name == 'Admin' %}
+            {% if 'manage_permissions' not in permission_names %}
+      <div class="alert alert-warning" role="alert">
+                    <form action="{% url 'save_permission' request.user.id %}" method="post">
+                        {% csrf_token %} Click here to Save All Permissions to Admin User
+                        <button class="btn btn-primary" type="submit" onclick="return confirm('Confirm?')" >Set</button>
+                    </form>
+      </div>
+      <hr>
+        {% endif %}
+      {% endif %}
     <div class="row">
 
       <!-- Left side columns -->

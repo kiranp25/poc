@@ -43,7 +43,6 @@ class CustomPermission(models.Model):
 
 class CustomUser(AbstractUser):
     role = models.ForeignKey('Roles', on_delete=models.SET_NULL, blank=True, null=True)
-    User_Type = models.CharField(max_length=30, choices=user_type_choice)
     Belongs_to = models.ForeignKey('self', on_delete=models.SET_NULL, blank=True, null=True)
     Status = models.CharField(max_length=30, choices=status_choice, default="1")
     permissions = models.ManyToManyField(CustomPermission)
@@ -164,6 +163,7 @@ class Roles(models.Model):
     # added_by = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True)
+
 
     # role_belongs_to = models.ForeignKey('self', on_delete=models.SET_NULL, blank=True, null=True)
     def __str__(self):
