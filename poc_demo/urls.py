@@ -57,6 +57,7 @@ urlpatterns = [
     path('add_demo_feature/<int:id>', views.add_demo_feature, name='add_demo_feature'),
     path('demo_update_sts/<int:id>', views.demo_update_sts, name='demo_update_sts'),
     path('manage_permissions/<int:id>', views.manage_permissions, name='manage_permissions'),
+    path('save_permission/<int:id>', views.save_permission, name='save_permission'),
     path('update_feature_detail_demo', views.update_feature_detail_demo, name='update_feature_detail_demo'),
     path('save_reject_desc/', views.save_reject_desc, name='save_reject_desc'),
     path('password-reset/', PasswordResetView.as_view(template_name='poc_demo/password_reset.html'),
