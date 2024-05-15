@@ -2,6 +2,8 @@
 
 {% block poc_content %}
 {% load static %}
+
+
 <style>
 
   body {
@@ -34,11 +36,9 @@
       border-color: #007bff;
       color: #fff;
   }
-
   </style>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.datatables.net/2.0.3/css/dataTables.bootstrap5.css" rel="stylesheet">
-
 <div class="app-content content">
     <div class="content-wrapper">
       <div class="content-header row">
@@ -140,13 +140,13 @@
             <div class="col-10">
                 <a target="_blank" href="{{ data.documentation.url }}" class="logo align-items-center">
               <img src="{% static 'images/pngwing.com.png' %}" alt="OlaTech">
-
-            </a>{{ document }}
+            {{ document }}
+            </a>
 
             </div>
           </div>
-      {% else %}
-                                <h4> no documents uploaded</h4>
+                        {% else %}
+                                <h5> no documents uploaded</h5>
                                 {% endif %}
                                 <!-- product -->
                               </div>
@@ -210,14 +210,13 @@
                             </div>
                             <div class="text-end">
                               {% if data.status.name != 'InActive' %}
-                              {% if 'edit_demo' in permission_names  %}
-                              <button type="button" class="btn btn-primary edit-btn">Edit</button>
-                              <button type="submit" class="btn btn-success save-btn" onclick="return confirm('Do you want to save changes?')" disabled>Save Changes</button>
-                              {% elif request.user.role.name == 'Sales' and data.status.name == 'Rejected' %}
-                              <button type="button" class="btn btn-primary edit-btn">Edit</button>
-                              <button type="submit" class="btn btn-success save-btn" onclick="return confirm('Do you want to save changes?')" disabled>Save Changes</button>
+                                  {% if 'edit_demo' in permission_names  %}
+                                     {% if is_edit and edit_allow %}
+                                      <button type="button" class="btn btn-primary edit-btn">Edit</button>
+                                      <button type="submit" class="btn btn-success save-btn" onclick="return confirm('Do you want to save changes?')" disabled>Save Changes</button>
+                                  {% endif %}
                               {% endif %}
-                              {% endif %}
+                                {% endif %}
                             </div>
                           </div>
                         </form>
@@ -231,8 +230,10 @@
                             <div class="col-sm-6 text-end">
                               {% if data.status.name != 'InActive' %}
                               {% if 'add_remark' in permission_names %}
+                                {% if is_support %}
                               <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#centeredModal" id="{{data.id}}"  {% if request.user.role.name  == "Support" and  data.status.name == 'Pending' %}hidden {% endif %}>
                                 <i class="fas fa-plus"></i> Add Remarks
+                                {% endif %}
                                 {% endif %}
                               {% endif %}
                               </button>
@@ -274,15 +275,16 @@
               <h5 class="card-title mb-3 text-primary">Features</h5>
             </div>
             <div class="col-sm-6 text-end">
-              {% comment "Optional note" %}
+
               {% if data.status.name != 'InActive' %}
                {% if 'add_feature' in permission_names %}
+                {% if is_allowed %}
               <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addFeatureModal" id="{{data.id}}" >
                 <i class="fas fa-plus"></i> Add Feature
               </button>
               {% endif %}
+                {% endif %}
               {% endif %}
-              {% endcomment %}
             </div>
           </div>
           <table class="table table-striped table-hover table-bordered datatable" id="poc_data_table_feature">
@@ -305,17 +307,17 @@
                     <button class="btn btn-sm btn-primary new-btns " data-toggle="tooltip" data-placement="top" title="View" id="fet_{{ feature.id }}" value="{{ feature.id }}">
                       View Remarks
                     </button>
-                    {% if "edit_feature" in permission_names %}
+                    {% if "edit_feature" in permission_names and is_allowed %}
                     <button class="btn btn-sm btn-primary"  data-bs-toggle="modal" data-toggle="tooltip" data-placement="top" title="Edit" id="{{ feature.id }}_update_feture" value="{{ feature.id }}" onclick="update_feature(this,'{{ feature.features_list }}','{{ feature.timeline|date:'Y-m-d' }}','{{ feature.status }}')" data-bs-target="#centeredModalupdatefeature">
                     <i class="ri-edit-circle-fill" alt="update"></i>
                     </button>
                     {% endif %}
-                    {% if request.user.role.name in permission_for_ADD_STATUS %}
+                    {% if request.user.role.name in permission_for_ADD_STATUS and is_support %}
                     <button class="btn btn-sm btn-primary" data-bs-toggle="modal" value="{{ feature.id }}" onclick="update_sts(this)" data-bs-target="#centeredModalupdate" {% if request.user.role.name  == "Support" and  data.status.name == 'Pending' %}hidden {% endif %}>
                       <i class="ri-file-add-line"></i>Remark
                     </button>
                     {% endif %}
-                    {% if "delete_feature" in permission_names %}
+                    {% if "delete_feature" in permission_names and is_allowed %}
                     <a class="btn btn-sm btn-danger delete-feature" data-id="{{ feature.id }}" href="#">
                       <i class="ri-delete-bin-line"></i>
                       </a>
@@ -331,7 +333,7 @@
       <div class="col-md-6">
         <div class="card">
           <div class="card-header">
-            <h4 class="card-title">Feature Remarks Details </h4>
+            <h4 class="card-title">Feature Remarks Details   </h4>
             <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
           </div>
           <div class="card-content collapse show">

@@ -1,5 +1,3 @@
-import base64
-
 from django.shortcuts import render, redirect, HttpResponse, get_object_or_404
 from .models import *
 from django.http import JsonResponse
@@ -8,21 +6,14 @@ from django.db.models import Q
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
-from django.db.models import Prefetch
-from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from .form import CustomPasswordResetForm
 from datetime import datetime
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
-from celery import Celery
 import threading
-from django.template.loader import render_to_string
 
-# Create your views here.
 User = get_user_model()
-from django.http import HttpResponseForbidden
-
 app_name = 'POC_DEMO'
 
 
@@ -34,7 +25,7 @@ def mail_for_action(subject, message, recipient_list):
         msg.content_subtype = "html"  # Main content is now text/html
         threading.Thread(target=msg.send).start()
     except Exception as e:
-        print(e)
+        pass
 
 
 def user_has_permission(permission_name):
@@ -63,18 +54,21 @@ def dahboard(request):
     permission_names = list(request.user.permissions.values_list('name', flat=True))
     user_types = request.user.role
     all_active_product = Product.objects.all()
-    if request.user.role.name == "Admin":
-        all_poc = Poc_model.objects.all()
-        all_demo = Demo_model.objects.all()
-    elif request.user.role.name == "Approval":
-        all_poc = Poc_model.objects.filter(added_by__Belongs_to=request.user.id).all()
-        all_demo = Demo_model.objects.filter(added_by__Belongs_to=request.user.id).all()
-    elif request.user.role.name == "Sales":
-        all_poc = Poc_model.objects.filter(added_by=request.user.id).all()
-        all_demo = Demo_model.objects.filter(added_by=request.user.id).all()
-    elif request.user.role.name == "Support":
-        all_poc = Poc_model.objects.filter(assign_to=request.user.id).all()
-        all_demo = Demo_model.objects.filter(added_by=request.user.id).all()
+    all_poc = Poc_model.objects.all()
+    all_demo = Demo_model.objects.all()
+
+    # if request.user.role.name == "Admin":
+    #     all_poc = Poc_model.objects.all()
+    #     all_demo = Demo_model.objects.all()
+    # elif request.user.role.name == "Approval":
+    #     all_poc = Poc_model.objects.filter(added_by__Belongs_to=request.user.id).all()
+    #     all_demo = Demo_model.objects.filter(added_by__Belongs_to=request.user.id).all()
+    # elif request.user.role.name == "Sales":
+    #     all_poc = Poc_model.objects.filter(added_by=request.user.id).all()
+    #     all_demo = Demo_model.objects.filter(added_by=request.user.id).all()
+    # elif request.user.role.name == "Support":
+    #     all_poc = Poc_model.objects.filter(assign_to=request.user.id).all()
+    #     all_demo = Demo_model.objects.filter(added_by=request.user.id).all()
     all_customer = Customer.objects.all()
     all_users = User.objects.all()
     context = {'name': 'kp', 'user_type': user_types, 'Products': all_active_product, "poc": all_poc, "demo": all_demo,
@@ -91,13 +85,13 @@ def login_page(request):
             try:
                 user = User.objects.get(email=email)
             except User.DoesNotExist:
-                messages.error(request, 'User dose not exist.', extra_tags="danger")
+                messages.error(request, 'User does not exist.', extra_tags="danger")
                 return redirect('loginpage')
 
             if user:
                 user = authenticate(username=user.username, password=password)
                 if user is None:
-                    messages.warning(request, 'invalid password.')
+                    messages.warning(request, 'Invalid password!')
                     return redirect('loginpage')
                 else:
                     login(request, user)
@@ -105,7 +99,7 @@ def login_page(request):
                     content_type = ContentType.objects.get_for_model(Poc_model)
                     return redirect('dashboard')
     except Exception as e:
-        print(e)
+        pass
     return render(request, 'poc_demo/login.html', {})
 
 
@@ -126,9 +120,6 @@ def get_data_for(request, usertype):
     for data in users:
         if data.id not in user_dict:
             user_dict[data.id] = data.username
-
-    # type_user_list = [i.first_name + " " +i.last_name for i in users]
-    # print(type_user_list, usertype, type(usertype))
 
     user_info = {
         'list_of': user_dict,
@@ -167,62 +158,107 @@ def add_poc(request):
     context['customer'] = customer
     context['permission_names'] = permission_names
     product_list = [product for product in all_active_product]
-
     if request.method == 'POST':
         try:
             product_name = Product.objects.get(Product_name=request.POST['product_name'])
-            if not True:
-                pass
-            else:
-                customer_name = Customer.objects.get(id=request.POST['CustomerName'])
-                feature_count = request.POST['feature_count']
-                features_list = request.POST.getlist('Feature_ids')
-                features = request.POST.getlist('features')
-                Remark_count = request.POST['Remark_count']
-                remarks = request.POST.getlist('remarks')
-                type_poc = request.POST.get('poc_type')
-                status = Status.objects.get(name=request.POST['status'])
-                added_by = CustomUser.objects.get(id=request.user.id)
-                Timeline = request.POST['timeline']
-                remarks_list = ",".join(remarks)
+            customer_name = Customer.objects.get(id=request.POST['CustomerName'])
+            feature_count = request.POST['feature_count']
+            features_list = request.POST.getlist('Feature_ids')
+            features = request.POST.getlist('features')
+            Remark_count = request.POST['Remark_count']
+            remarks = request.POST.getlist('remarks')
+            type_poc = request.POST.get('poc_type')
+            status = Status.objects.get(name=request.POST['status'])
+            added_by = CustomUser.objects.get(id=request.user.id)
+            Timeline = request.POST['timeline']
+            remarks_list = ",".join(remarks)
 
-                new_poc = Poc_model(Customer_name=customer_name, Product_name=product_name, status=status,
-                                    added_by=added_by, Timeline=Timeline, poc_type=type_poc)
-                new_poc.save()
-                html_message = f'You have a new {type_poc} project for Approval.\n\nAdded By: {added_by.email}.'
-                mail_for_action(f'New Project Added: {type_poc}',
-                                html_message,
-                                [added_by.Belongs_to.email])
+            new_poc = Poc_model(Customer_name=customer_name, Product_name=product_name, status=status,
+                                added_by=added_by, Timeline=Timeline, poc_type=type_poc)
+            new_poc.save()
+            style = ''' <style>
+            table {
+              border-collapse: collapse;
+              width: 100%;
+            }
+            th, td {
+              padding: 8px;
+              border: 1px solid #ddd;
+            }
+            th {
+              text-align: left;
+              background-color: #f2f2f2;
+            }
+            </style>'''
+            html_message = f"""\
+            <html>
+            <head>
+            {style}
+            </head>
+            <body>
+            <h2>You have a new {type_poc} project for Approval</h2>
+            <p>Added By: {added_by.email}</p>
+            <table>
+              <tr>
+                <th>Field</th>
+                <th>Value</th>
+              </tr>
+              <tr>
+                <td>Customer Name</td>
+                <td>{customer_name}</td>
+              </tr>
+              <tr>
+                <td>Product Name</td>
+                <td>{product_name}</td>
+              </tr>
+                <td>Remarks</td>
+                <td>{remarks_list}</td>  </tr>
+              <tr>
+                <td>Type of Project</td>
+                <td>{type_poc}</td>
+              </tr>
+              <tr>
+                <td>Status</td>
+                <td>{status.name}</td>  </tr>
+              <tr>
+                <td>Timeline</td>
+                <td>{Timeline}</td>
+              </tr>
+            </table>
+            </body>
+            </html>
+            """
+            mail_for_action(f'New Project Added: {type_poc}',
+                            html_message,
+                            [added_by.Belongs_to.email])
 
-                poc_ref = Poc_model.objects.get(pk=new_poc.id)
+            poc_ref = Poc_model.objects.get(pk=new_poc.id)
 
-                new_feature_list = []
-                for feture in features:
-                    new_feature_list.append(
-                        {'poc_id': poc_ref, 'features_list': feture, 'status': status, 'added_by': added_by})
-                new_feature_list = []
-                for j in features_list:
-                    new_feature_list.append({'poc_id': poc_ref, 'features_list': request.POST[f'features_{j}'],
-                                             'timeline': request.POST[f'timeline_{j}'], 'status': status,
-                                             'added_by': added_by})
-                    # Access created features and their status objects:
-                features_lsts_added = []
-                for data in new_feature_list:
-                    feature = Feature.objects.create(**data)  # Create the Feature object
-                    status_data = Feature_status.objects.create(feature=feature, status=status,
-                                                                added_by=added_by)  # Create the Status object linked to the Feature
-                    features_lsts_added.append(status_data)
-                messages.success(request, f"{type_poc} added successfully.")
-                new_remarks_list = []
-                for remark in remarks:
-                    new_remarks_list.append(
-                        {'poc_id': poc_ref, 'remarks': remark, 'status': status, 'added_by': added_by})
-                Poc_remark.objects.bulk_create([Poc_remark(**data) for data in new_remarks_list])
-                return redirect('add_poc')
+            new_feature_list = []
+            for feture in features:
+                new_feature_list.append(
+                    {'poc_id': poc_ref, 'features_list': feture, 'status': status, 'added_by': added_by})
+            new_feature_list = []
+            for j in features_list:
+                new_feature_list.append({'poc_id': poc_ref, 'features_list': request.POST[f'features_{j}'],
+                                         'timeline': request.POST[f'timeline_{j}'], 'status': status,
+                                         'added_by': added_by})
+                # Access created features and their status objects:
+            features_lsts_added = []
+            for data in new_feature_list:
+                feature = Feature.objects.create(**data)  # Create the Feature object
+                status_data = Feature_status.objects.create(feature=feature, status=status,
+                                                            added_by=added_by)  # Create the Status object linked to the Feature
+                features_lsts_added.append(status_data)
+            messages.success(request, f" Project {type_poc} added successfully.")
+            new_remarks_list = []
+            for remark in remarks:
+                new_remarks_list.append(
+                    {'poc_id': poc_ref, 'remarks': remark, 'status': status, 'added_by': added_by})
+            Poc_remark.objects.bulk_create([Poc_remark(**data) for data in new_remarks_list])
+            return redirect('add_poc')
         except Exception as e:
-            print(e)
-            messages.error(request, f"{request.POST.get('poc_type')} not added {e}.", extra_tags="danger")
-
+            messages.error(request, f"Project {request.POST.get('poc_type')} not added.", extra_tags="danger")
     context['product_list'] = product_list
     return render(request, 'poc_demo/add_poc.html', context)
 
@@ -236,14 +272,13 @@ def add_customer(request):
     context['permission_names'] = permission_names
 
     if request.method == 'POST':
-        print(request.POST)
         result = dict()
         html_msg = ''
         try:
             existing_user = Customer.objects.filter(name=request.POST['customer_name']).first()
             existing_user_email = Customer.objects.filter(contact_email=request.POST['contact_email']).first()
             if existing_user or existing_user_email:
-                messages.error(request, 'Customer  already exist! Please chose different name or email.',
+                messages.error(request, 'Customer already exist! Please choose different name or email.',
                                extra_tags="danger")
             else:
                 if request.POST['customer_name']:
@@ -267,14 +302,14 @@ def add_customer(request):
                                 <p> Best regards, <br>[Your Company Name] </p>'''
 
                 else:
-                    messages.error(request, f'Customer name not should be blank.', extra_tags="danger")
+                    messages.error(request, f'Customer name should not be blank.', extra_tags="danger")
 
             email_list = User.objects.values('email').filter(role__name='Sales')
             email_list = [item['email'] for item in email_list]
             if html_msg:
                 mail_for_action(f'New customer added!', html_msg, email_list)
         except Exception as e:
-            messages.error(request, f'Customer not added {e}.', extra_tags="danger")
+            messages.error(request, f'Customer not added.', extra_tags="danger")
         return redirect('add_customer')
     return render(request, 'poc_demo/add_customer.html', context)
 
@@ -303,8 +338,7 @@ def add_user(request):
             else:
                 sales_permission = ['add_poc', 'edit_poc', 'add_demo', 'edit_demo', 'add_customer', 'edit_customer',
                                     'add_product', 'edit_product', 'add_remark']
-                approval_permission = ['edit_poc', 'edit_demo', 'approved_status', 'edit_feature', 'delete_feature',
-                                       'add_feature', 'add_remark']
+                approval_permission = ['edit_poc', 'edit_demo', 'approved_status', 'add_remark']
                 support_permission = ['add_remark']
                 Belongs_to = User.objects.get(id=request.POST['Belongs_to'])
                 usertype = Roles.objects.get(name=request.POST['usertype'])
@@ -350,7 +384,7 @@ def add_user(request):
 
                 messages.success(request, 'User added successfully.')
         except Exception as e:
-            messages.error(request, f'User not added {e}.', extra_tags="danger")
+            messages.error(request, f'User not added', extra_tags="danger")
         return redirect('add_users')
     return render(request, 'poc_demo/add_user.html', context)
 
@@ -435,7 +469,7 @@ def edit_user(request, id):
 
                 messages.success(request, f'User: {user.email} updated successfully.')
         except Exception as e:
-            messages.error(request, f'User not updated {e}.', extra_tags="danger")
+            messages.error(request, f'User: {user.email} not updated.', extra_tags="danger")
             return redirect('view_users')
     context = {'user': user, 'roles': roles, 'status': sts, 'all_user': all_user,
                'permission_names': list(request.user.permissions.values_list('name', flat=True))}
@@ -455,20 +489,17 @@ def add_product(request):
             Product_name = (request.POST['product_name']).strip()
             existing_product = Product.objects.filter(Product_name=Product_name.lower()).first()
             if existing_product:
-                messages.error(request, f"Product {Product_name} already Exist!",
+                messages.error(request, f"Product {Product_name} already exist!",
                                extra_tags="danger")
             else:
-                # Belongs_to = Users.objects.get(name=request.POST['Belongs_to'])
-                status = request.POST.get('status')  #request.POST.get('status')
+                status = request.POST.get('status')
                 new_product = Product(Product_name=Product_name, status=status,
                                       added_by=CustomUser.objects.get(id=request.user.id))
                 new_product.save()
                 messages.success(request, f"Product: {Product_name} added successfully.")
                 # request.session['success_message'] = 'Successfully added!'
         except Exception as e:
-            print(e)
-            messages.error(request, f"Product not added {e}.", extra_tags="danger")
-            # request.session['error_message'] = 'not added!'
+            messages.error(request, f"Product not added.", extra_tags="danger")
             error_message = 'not added'
         return redirect('add_product')
     return render(request, 'poc_demo/add_product.html', context)
@@ -496,17 +527,15 @@ def add_role(request):
             Role_name = (request.POST['role_name']).strip()
             existing = Roles.objects.filter(name=Role_name.lower()).first()
             if existing:
-                messages.error(request, f"Role {Role_name} already Exist!",
+                messages.error(request, f"Role: {Role_name} already Exist!",
                                extra_tags="danger")
             else:
                 status = request.POST.get('status')
                 new_role = Roles(name=Role_name, status=status)
                 new_role.save()
                 messages.success(request, f"Role: {request.POST['role_name']} added successfully.")
-                # request.session['success_message'] = 'Successfully added!'
         except Exception as e:
-            # request.session['error_message'] = 'not added!'
-            messages.error(request, f"Role: {request.POST['role_name']} not added {e}.", extra_tags="danger")
+            messages.error(request, f"Role: {request.POST['role_name']} not added.", extra_tags="danger")
         return redirect('add_role')
     return render(request, 'poc_demo/add_roles.html', context)
 
@@ -532,14 +561,14 @@ def edit_role(request, id):
             Role_name = (request.POST['role_name']).strip()
             existing = Roles.objects.filter(name=Role_name.lower()).exclude(pk=id).first()
             if existing:
-                messages.error(request, f"Role {Role_name} not updated, Role name already taken!", extra_tags="danger")
+                messages.error(request, f"Role: {Role_name} not updated, Role name already taken!", extra_tags="danger")
             else:
                 role.name = request.POST['role_name']
                 role.status = request.POST.get('status')
                 role.save()
                 messages.success(request, f"Role: {request.POST['role_name']} updated.")
     except Exception as e:
-        messages.error(request, f"Role {request.POST['role_name']} not updated {e}.", extra_tags="danger")
+        messages.error(request, f"Role {request.POST['role_name']} not updated.", extra_tags="danger")
     context = {'role': role, 'status': status_choice, 'roles_defined': roles_defined,
                'permission_names': list(request.user.permissions.values_list('name', flat=True))}
     return render(request, 'poc_demo/edit_role.html', context)
@@ -561,7 +590,7 @@ def edit_customer(request, id):
             customer_name = (request.POST['customer_name']).strip()
             existing = Roles.objects.filter(name=customer_name.lower()).exclude(pk=id).first()
             if existing:
-                messages.error(request, f"Role {customer_name} not updated, Role name already taken!",
+                messages.error(request, f"Customer: {customer_name} not updated, customer name already taken!",
                                extra_tags="danger")
             else:
                 customer.name = request.POST['customer_name']
@@ -576,7 +605,7 @@ def edit_customer(request, id):
                                           f": {request.POST['customer_name']} updated.")
 
     except Exception as e:
-        messages.error(request, f"Customer {request.POST['customer_name']} not updated {e}.", extra_tags="danger")
+        messages.error(request, f"Customer {request.POST['customer_name']} not updated.", extra_tags="danger")
 
     return render(request, 'poc_demo/edit_customer.html', context)
 
@@ -592,7 +621,7 @@ def add_status(request):
             # Belongs_to = Users.objects.get(name=request.POST['Belongs_to'])
             sts = request.POST['status_name']
             if Status.objects.filter(name=(sts.strip()).lower()).count() > 0:
-                messages.error(request, f'Status : {sts} alredy exist.', extra_tags="danger")
+                messages.error(request, f'Status : {sts} already exist!', extra_tags="danger")
             else:
                 Status.objects.create(name=sts)
                 messages.success(request, f"Status: {sts} added successfully.")
@@ -601,10 +630,8 @@ def add_status(request):
 
             # request.session['success_message'] = 'Successfully added!'
         except Exception as e:
-            # request.session['error_message'] = 'not added!'
             error_message = 'not added'
-            messages.error(request, f"Status not added {e}.", extra_tags="danger")
-            print(e)
+            messages.error(request, f"Status not added.", extra_tags="danger")
         return redirect('add_status')
     return render(request, 'poc_demo/add_status.html', context)
 
@@ -626,7 +653,7 @@ def edit_status(request, id):
         status = get_object_or_404(Status, pk=id)
         if request.method == "POST":
             if Status.objects.filter(name=request.POST['status_name'].lower()).exclude(pk=id).first():
-                messages.error(request, f"Status: {request.POST['status_name']} alredy exist.", extra_tags="danger")
+                messages.error(request, f"Status: {request.POST['status_name']} already exist!", extra_tags="danger")
             else:
                 status.name = request.POST['status_name']
                 status.save()
@@ -644,14 +671,14 @@ def edit_product(request, id):
         product = get_object_or_404(Product, pk=id)
         if request.method == "POST":
             if Product.objects.filter(Product_name=request.POST['product_name'].lower()).exclude(pk=id).first():
-                messages.error(request, f"Product: {request.POST['product_name']} alredy exist.", extra_tags="danger")
+                messages.error(request, f"Product: {request.POST['product_name']} already exist!", extra_tags="danger")
             else:
                 product.Product_name = request.POST['product_name']
                 product.status = request.POST.get('status')  #request.POST.get('status')
                 product.save()
                 messages.success(request, f"Product: {request.POST['product_name']} updated.")
     except Exception as e:
-        messages.error(request, f"Product: {request.POST['product_name']} not updated {e}.", extra_tags="danger")
+        messages.error(request, f"Product: {request.POST['product_name']} not updated.", extra_tags="danger")
     context = {'product': product, 'status': status_choice,
                'permission_names': list(request.user.permissions.values_list('name', flat=True))}
     return render(request, 'poc_demo/edit_product.html', context)
@@ -660,21 +687,22 @@ def edit_product(request, id):
 @login_required(login_url='loginpage')
 def view_poc(request):
     permission_names = list(request.user.permissions.values_list('name', flat=True))
-    print(permission_names)
-    if request.user.role.name == "Admin":
-        all_active_product = Poc_model.objects.prefetch_related('poc_f_related', 'poc_r_related', ).all().order_by(
-            '-updated_at')
-    elif request.user.role.name == "Approval":
-        all_active_product = Poc_model.objects.filter(added_by__Belongs_to=request.user.id).prefetch_related(
-            'poc_f_related', 'poc_r_related').all().order_by('-updated_at')
-    elif request.user.role.name == "Sales":
-        all_active_product = Poc_model.objects.filter(added_by=request.user.id).prefetch_related('poc_f_related',
-                                                                                                 'poc_r_related').all().order_by(
-            '-updated_at')
-    elif request.user.role.name == "Support":
-        all_active_product = Poc_model.objects.filter(assign_to=request.user.id).prefetch_related('poc_f_related',
-                                                                                                  'poc_r_related').all().order_by(
-            '-updated_at')
+    all_active_product = Poc_model.objects.prefetch_related('poc_f_related', 'poc_r_related', ).all().order_by(
+        '-updated_at')
+    # if request.user.role.name == "Admin":
+    #     all_active_product = Poc_model.objects.prefetch_related('poc_f_related', 'poc_r_related', ).all().order_by(
+    #         '-updated_at')
+    # elif request.user.role.name == "Approval":
+    #     all_active_product = Poc_model.objects.filter(added_by__Belongs_to=request.user.id).prefetch_related(
+    #         'poc_f_related', 'poc_r_related').all().order_by('-updated_at')
+    # elif request.user.role.name == "Sales":
+    #     all_active_product = Poc_model.objects.filter().prefetch_related('poc_f_related',
+    #                                                                                              'poc_r_related').all().order_by(
+    #         '-updated_at')
+    # elif request.user.role.name == "Support":
+    #     all_active_product = Poc_model.objects.filter(assign_to=request.user.id).prefetch_related('poc_f_related',
+    #                                                                                               'poc_r_related').all().order_by(
+    #         '-updated_at')
     search_query = request.GET.get('search', '')
 
     if search_query:
@@ -685,7 +713,8 @@ def view_poc(request):
                 Q(Timeline__icontains=search_query) |
                 Q(added_by__username__icontains=search_query) |
                 Q(Product_name__Product_name__icontains=search_query) |
-                Q(status__name__icontains=search_query)
+                Q(status__name__icontains=search_query) |
+                Q(assign_to__username__icontains=search_query)
             )
     paginator = Paginator(all_active_product, 10)
     page_number = request.GET.get('page')
@@ -706,12 +735,7 @@ def add_remarks(request, id):
             remarks = request.POST.getlist('remarks')
             added_by = CustomUser.objects.get(id=request.user.id)
             rid = request.POST['row_remark_id']
-            # status= request.POST['status'] 
             get_poc = Poc_model.objects.get(pk=rid)
-            # get_poc.Remarks += remarks_list
-            # get_poc.Remarks = ",".join(get_poc.Remarks.split(',') + remarks)
-            # # print(remarks_list)
-            # get_poc.save()
             new_remarks_list = []
             html_message = '<div> New remark added!'
             for remark in remarks:
@@ -773,7 +797,7 @@ def add_feature(request, id):
             messages.success(request, f"New feature added successfully.")
             return redirect('view_poc_detail', id=id)
     except Exception as e:
-        messages.error(request, f"New feature not added  {e}.", extra_tags="danger")
+        messages.error(request, f"feature not added.", extra_tags="danger")
         return redirect('view_poc_detail', id=id)
 
 
@@ -783,9 +807,40 @@ def edit_poc(request, id):
     get_poc = Poc_model.objects.get(pk=id)
     get_changes = []
     new_remarks_list = []
-
+    allow = False
+    edit_allow = False
+    is_support = False
+    is_edit = False
     try:
-        if request.method == 'POST':
+        if request.user.role.name == 'Sales' and get_poc.status.name == 'Rejected' and request.user == get_poc.added_by:
+            edit_allow = True
+            support_is = True
+        elif request.user.role.name in ['Approval', 'Admin']:
+            if request.user.id == get_poc.added_by.Belongs_to.id:
+                edit_allow = True
+                is_support = True
+                is_edit = True
+            else:
+                edit_allow = False
+                is_support = False
+                is_edit = True
+        elif request.user.role.name in ['Support']:
+            edit_allow = True
+            is_support = True
+            is_edit = False
+        else:
+            messages.error(request, 'You have no permissions for edit')
+
+        if request.user.role.name == 'Sales':
+            if get_poc.status.name == 'Rejected' or get_poc.status.name == 'Pending':
+                allow = True
+            else:
+                allow = False
+                messages.error(request, 'You have no permissions for edit')
+        elif request.user.role.name == 'Admin' or request.user.role.name == 'Approval':
+            allow = True
+
+        if request.method == 'POST' and allow and edit_allow:
             datetime_object = datetime.strptime(request.POST['Timeline_date'], "%Y-%m-%d")
             if get_poc.Timeline != datetime_object.date():
                 get_changes.append(f"Timeline changed {get_poc.Timeline} to {request.POST['Timeline_date']}")
@@ -811,7 +866,7 @@ def edit_poc(request, id):
                 if get_poc.kt_given != sts:
                     get_changes.append(f"changes in KT is  {old_sts} to {sts_for}")
                     new_remarks_list.append({'poc_id': get_poc,
-                                             'remarks': f"changes in KT is  {old_sts} to {sts_for}",
+                                             'remarks': f"Status for KT given {old_sts} to {sts_for}",
                                              'status': get_poc.status, 'added_by': request.user})
 
             if request.POST.get('assign_edit'):
@@ -856,7 +911,7 @@ def edit_poc(request, id):
 
             if request.user.role.name == 'Sales' and get_poc.description:
                 status = Status.objects.get(name='Pending')
-                print("stsststst")
+
                 get_poc.description = ''
                 list_mail = [request.user.Belongs_to.email]
                 mail_for_action(f'Project Request for Approve',
@@ -887,7 +942,8 @@ def edit_poc(request, id):
                     new_remarks_list.append({'poc_id': get_poc,
                                              'remarks': f"New document uploaded for project. Name :{uploaded_file.name}",
                                              'status': get_poc.status, 'added_by': request.user})
-                    get_changes.append(f"New documentation uploaded for project.<br> Name : <b>{uploaded_file.name}</b>")
+                    get_changes.append(
+                        f"New documentation uploaded for project.<br> Name : <b>{uploaded_file.name}</b>")
 
             message = '<ul>'
             for i in get_changes:
@@ -919,9 +975,9 @@ def edit_poc(request, id):
                             list_mail)
             get_poc.save()
             Poc_remark.objects.bulk_create([Poc_remark(**data) for data in new_remarks_list])
-            messages.success(request, f"{get_poc.poc_type} updated.")
+            messages.success(request, f"Project {get_poc.poc_type} updated.")
     except Exception as e:
-        messages.error(request, f"{get_poc.poc_type} not edited {e}.", extra_tags="danger")
+        messages.error(request, f"Project {get_poc.poc_type} not updated.", extra_tags="danger")
     return redirect('view_poc_detail', id=id)
 
 
@@ -929,23 +985,20 @@ def edit_poc(request, id):
 def update_sts(request, id):
     if request.method == 'POST':
         try:
-            print(request.POST, "(**********************************)")
             sts_id = request.POST['sts_id']
             status = request.POST['status']
             poc_id = request.POST['poc_id']
             obj = Poc_model.objects.get(id=poc_id)
-            print("___________________", obj.status)
             added_by = CustomUser.objects.get(id=request.user.id)
             featureobj = Feature.objects.get(pk=sts_id)
             Feature_status.objects.create(feature=featureobj, status=status, added_by=added_by)
             # return redirect('view_poc_detail', id=id)
-            messages.success(request, 'added status for feature')
+            messages.success(request, 'Status added for feature')
             return HttpResponse(
                 f'<div class="messages text-center alert alert-danger"> <h2> status  added.</h2> </div>')
-
         except Exception as e:
             # return redirect('view_poc_detail', id=id)
-            messages.error(request, f'status not added {e}', extra_tags='danger')
+            messages.error(request, f'Status not added for feature', extra_tags='danger')
             return HttpResponse(
                 f'<div class="messages text-center alert alert-danger"> <h2> status not added {e}.</h2> </div>')
 
@@ -993,18 +1046,53 @@ def update_feature_detail(request):
 
             messages.success(request, f"Feature: {request.POST['Feature_name']} updated.")
             return HttpResponse(
-                '<div class="messages text-center alert alert-success"> <h2>  updated.</h2> </div>')  #just for testing purpose you can remove it.
+                '<div class="messages text-center alert alert-success"> <h2>  updated.</h2> </div>')
         except Exception as e:
-            messages.error(request, f"Feture not updated {e}.", extra_tags="danger")
+            messages.error(request, f"Feature not updated.", extra_tags="danger")
             return HttpResponse(
                 f'<div class="messages text-center alert alert-danger"> <h2>  not updated {e}.</h2> </div>')
 
 
 @login_required(login_url='loginpage')
 def view_poc_detail(request, id):
+    edit_allow = False
+    is_support = False
+    is_edit = False
+    is_allowed = False
     permission_names = list(request.user.permissions.values_list('name', flat=True))
-
     poc = Poc_model.objects.prefetch_related('poc_f_related', 'poc_r_related').get(id=id)
+    if request.user.role.name == 'Sales' and request.user == poc.added_by:
+        if poc.status.name == 'Rejected':
+            edit_allow = True
+            is_support = True
+            is_edit = True
+        if poc.status.name not in ['Rejected', 'pending']:
+            edit_allow = True
+            is_support = True
+
+    elif request.user.role.name in ['Approval', 'Admin']:
+        if request.user.id == poc.added_by.Belongs_to.id:
+            edit_allow = True
+            is_edit = True
+            is_support = True
+
+            if poc.status.name == 'Pending':
+                is_edit = False
+
+        if request.user.role.name == 'Admin':
+            is_support = True
+            is_allowed = True
+
+    elif request.user.role.name in ['Support']:
+        if poc.assign_to == request.user:
+            edit_allow = False
+            is_edit = False
+            is_support = True
+    else:
+        edit_allow = False
+        is_support = False
+        is_edit = False
+
     document = ''
     if poc.documentation.name:
         document = poc.documentation.name.split("/")[1]
@@ -1055,7 +1143,6 @@ def view_poc_detail(request, id):
     permition = [1, 2, 3]
     if request.method == 'POST':
         try:
-            print(request.POST)
             Remark_count = request.POST['Remark_count']
             remarks = request.POST.getlist('remarks')
             # status= request.POST['status'] 
@@ -1088,7 +1175,7 @@ def view_poc_detail(request, id):
 
             return redirect('view_poc_detail', id=id)
         except Exception as e:
-            print(e)
+            pass
     return render(request, 'poc_demo/view_poc_detail.html', {'data': poc,
                                                              'status': status_list,
                                                              'html': html,
@@ -1106,7 +1193,11 @@ def view_poc_detail(request, id):
                                                              "type_poc": type_poc,
                                                              "customer": customer,
                                                              "permission_names": permission_names,
-                                                             "document": document
+                                                             "document": document,
+                                                             "edit_allow": edit_allow,
+                                                             "is_support": is_support,
+                                                             "is_edit": is_edit,
+                                                             "is_allowed": is_allowed
                                                              })
 
 
@@ -1121,12 +1212,6 @@ def get_detail_sts(request):
         for data in get_data:
             sts_data[f'new_{data.id}'] = {'status': data.status, 'added_by': data.added_by.username,
                                           'time': data.created_at, 'feature': feature.features_list}
-    # branch_list = cl_Branch.objects.filter(branch_name=request.POST.get('branch_list')).first()
-    # user_type_id = Roles.objects.get(name=flow[usertype])  
-    # users  = Users.objects.filter(roles=user_type_id).all()
-    # type_user_list = [i.name for i in users]
-    # print(type_user_list, usertype, type(usertype))
-
     return JsonResponse(sts_data)
 
 
@@ -1140,10 +1225,10 @@ def delete_role(request, id):
             role.save()
             messages.success(request, 'Role deleted.')
         else:
-            messages.error(request, f'Admin Role cant deleted.', extra_tags='danger')
+            messages.error(request, f'Admin role can`t deleted.', extra_tags='danger')
         pass
     except Exception as e:
-        messages.error(request, f'Role not deleted {e}.', extra_tags='danger')
+        messages.error(request, f'Role not deleted.', extra_tags='danger')
     return redirect('view_roles')
 
 
@@ -1156,12 +1241,12 @@ def delete_customer(request, id):
             # Customer.objects.get(pk=id).delete()
             customer.status = 'InActive'
             customer.save()
-            messages.success(request, 'Customer deleted.')
+            messages.success(request, f'Customer {customer.name} deleted.')
         else:
-            messages.error(request, f'Only Admin Allowed.', extra_tags='danger')
+            messages.error(request, f'Only Admin can delete permission.', extra_tags='danger')
         pass
     except Exception as e:
-        messages.error(request, f'Customer not deleted {e}.', extra_tags='danger')
+        messages.error(request, f'Customer not deleted.', extra_tags='danger')
     return redirect('view_customer')
 
 
@@ -1173,11 +1258,11 @@ def delete_poc(request, id):
             poc = Poc_model.objects.get(pk=id)
             poc.status = Status.objects.filter(name='InActive').first()
             poc.save()
-            messages.success(request, 'POC deleted.')
+            messages.success(request, 'Project deleted.')
         else:
-            messages.error(request, ' POC not deleted. Not Allowed to this user', extra_tags='danger')
+            messages.error(request, ' Project not deleted. you haven`t permission', extra_tags='danger')
     except Exception as e:
-        messages.error(request, f'Poc not deleted {e}.', extra_tags='danger')
+        messages.error(request, f'Project not deleted.', extra_tags='danger')
     return redirect('view_poc')
 
 
@@ -1191,9 +1276,9 @@ def delete_demo(request, id):
             demo.save()
             messages.success(request, 'DEMO deleted.')
         else:
-            messages.error(request, ' DEMO not deleted. Not Allowed to this user', extra_tags='danger')
+            messages.error(request, ' DEMO not deleted. you haven`t permission', extra_tags='danger')
     except Exception as e:
-        messages.error(request, f'DEMO not deleted {e}.', extra_tags='danger')
+        messages.error(request, f'DEMO not deleted.', extra_tags='danger')
     return redirect('view_demo')
 
 
@@ -1203,18 +1288,12 @@ def delete_product(request, id):
     try:
         check = True
         product = Product.objects.get(pk=id)
-        if Poc_model.objects.filter(Product_name=product):
-            messages.error(request, f'Product not deleted,Project exist with related product.', extra_tags='danger')
-            check = False
-        if Demo_model.objects.filter(Product_name=product):
-            messages.error(request, f'Product not deleted,Demo exist with related product.', extra_tags='danger')
-            check = False
         if check:
             Product.status = '2'
             product.save()
-            messages.success(request, 'Product deleted.')
+            messages.success(request, f'Product {product.Product_name} deleted.')
     except Exception as e:
-        messages.error(request, f'Product not deleted {e}.', extra_tags='danger')
+        messages.error(request, f'Product not deleted.', extra_tags='danger')
     return redirect('view_product')
 
 
@@ -1226,11 +1305,11 @@ def delete_user(request, id):
             user = User.objects.get(pk=id)
             user.Status = "2"
             user.save()
-            messages.success(request, 'User deleted.')
+            messages.success(request, f'User {user.email} deleted.')
         else:
-            messages.error(request, 'Admin User cant Deleted', extra_tags='danger')
+            messages.error(request, 'Admin user can`t deleted', extra_tags='danger')
     except Exception as e:
-        messages.error(request, f'User not deleted {e}.', extra_tags='danger')
+        messages.error(request, f'User not deleted', extra_tags='danger')
     return redirect('view_users')
 
 
@@ -1241,14 +1320,14 @@ def delete_status(request, id):
         Status.objects.get(pk=id).delete()
         messages.success(request, 'Status deleted.')
     except Exception as e:
-        messages.error(request, f'Status not deleted {e}.', extra_tags='danger')
+        messages.error(request, f'Status not deleted.', extra_tags='danger')
     return redirect('view_status')
 
 
 @user_has_permission('add_demo')
 @login_required(login_url='loginpage')
 def add_demo(request):
-    all_active_product = Product.objects.all(status='Active')
+    all_active_product = Product.objects.filter(status='1')
     customer = Customer.objects.filter(status='Active')
     permission_names = list(request.user.permissions.values_list('name', flat=True))
     sts = Status.objects.all()
@@ -1294,24 +1373,67 @@ def add_demo(request):
                 features_lsts_added.append(status_data)
             messages.success(request, "Demo added successfully.")
             new_remarks_list = []
-            html_template = f''' <div class="container">
-    <h1>New Demo Added</h1>
-    <p>A new demo has been added:</p>
-    <ul>
-      <li>Added By: <span class="highlight">{added_by}</span></li>
-    </ul>
-    <p>Status: <span class="highlight">Waiting for Approval</span></p>
-  </div>'''
+            style = ''' <style>
+                            table {
+                              border-collapse: collapse;
+                              width: 100%;
+                            }
+                            th, td {
+                              padding: 8px;
+                              border: 1px solid #ddd;
+                            }
+                            th {
+                              text-align: left;
+                              background-color: #f2f2f2;
+                            }
+                            </style>'''
+            html_message = f"""\
+                            <html>
+                            <head>
+                            {style}
+                            </head>
+                            <body>
+                            <h2>You have a new Demo project for Approval</h2>
+                            <p>Added By: {added_by.email}</p>
+                            <table>
+                              <tr>
+                                <th>Field</th>
+                                <th>Value</th>
+                              </tr>
+                              <tr>
+                                <td>Customer Name</td>
+                                <td>{customer_name}</td>
+                              </tr>
+                              <tr>
+                                <td>Product Name</td>
+                                <td>{product_name}</td>
+                              </tr>
+                                <td>Remarks</td>
+                                <td>{remarks_list}</td>  </tr>
+                              <tr>
+                                <td>Type of Project</td>
+                                <td>Demo</td>
+                              </tr>
+                              <tr>
+                                <td>Status</td>
+                                <td>{status.name}</td>  </tr>
+                              <tr>
+                                <td>Timeline</td>
+                                <td>{Timeline}</td>
+                              </tr>
+                            </table>
+                            </body>
+                            </html>
+                            """
             for remark in remarks:
                 new_remarks_list.append(
                     {'demo_id': demo_ref, 'remarks': remark, 'status': status, 'added_by': added_by})
             Demo_remark.objects.bulk_create([Demo_remark(**data) for data in new_remarks_list])
-            mail_for_action(f'New Demo Added: ', html_template,
+            mail_for_action(f'New Demo Added: ', html_message,
                             [added_by.email, added_by.Belongs_to.email])
             return redirect('add_demo')
         except Exception as e:
-            print(e)
-            messages.error(request, f"Demo not added {e}.", extra_tags="danger")
+            messages.error(request, f"Demo not added.", extra_tags="danger")
 
     context['product_list'] = product_list
     return render(request, 'poc_demo/add_demo.html', context)
@@ -1320,7 +1442,6 @@ def add_demo(request):
 @login_required(login_url='loginpage')
 def view_demo(request):
     permission_names = list(request.user.permissions.values_list('name', flat=True))
-    print(permission_names)
     if request.user.role_id == 1:
         all_active_product = Demo_model.objects.prefetch_related('demo_f_related', 'demo_r_related').all()
     elif request.user.role_id == 3:
@@ -1357,6 +1478,10 @@ def view_demo(request):
 
 @login_required(login_url='loginpage')
 def view_demo_detail(request, id):
+    edit_allow = False
+    is_support = False
+    is_edit = False
+    is_allowed = False
     permission_names = list(request.user.permissions.values_list('name', flat=True))
     permission_for_edit = ['Admin', 'Sales', 'Approval']
     permission_for_delete = ['Admin', 'Sales', 'Approval']
@@ -1365,6 +1490,39 @@ def view_demo_detail(request, id):
     html_feture_only = ''' '''
     html_feture_sts_only = ''' '''
     html = ''' '''
+
+    if request.user.role.name == 'Sales' and request.user == poc.added_by:
+        if demo.status.name == 'Rejected':
+            edit_allow = True
+            is_support = True
+            is_edit = True
+        if demo.status.name not in ['Rejected', 'pending']:
+            edit_allow = True
+            is_support = True
+
+    elif request.user.role.name in ['Approval', 'Admin']:
+        if request.user.id == demo.added_by.Belongs_to.id:
+            edit_allow = True
+            is_edit = True
+            is_support = True
+
+            if demo.status.name == 'Pending':
+                is_edit = False
+
+        if request.user.role.name == 'Admin':
+            is_support = True
+            is_allowed = True
+
+    elif request.user.role.name in ['Support']:
+        if demo.assign_to == request.user:
+            edit_allow = False
+            is_edit = False
+            is_support = True
+    else:
+        edit_allow = False
+        is_support = False
+        is_edit = False
+
     document = ''
     if demo.documentation.name:
         document = demo.documentation.name.split("/")[1]
@@ -1421,7 +1579,7 @@ def view_demo_detail(request, id):
 
             return redirect('view_demo_detail', id=id)
         except Exception as e:
-            print(e)
+            pass
     return render(request, 'poc_demo/view_demo_detail.html', {'data': demo,
                                                               'status': status_list,
                                                               'html': html,
@@ -1445,9 +1603,41 @@ def edit_demo(request, id):
     get_demo = Demo_model.objects.get(pk=id)
     new_remarks_list = []
     get_changes = []
+    allow = False
+    edit_allow = False
+    is_support = False
+    is_edit = False
+
     try:
-        if request.method == 'POST':
-            print('&&&&&&&&&&&&&&&&&&&&&&&&&&')
+        if request.user.role.name == 'Sales' and get_demo.status.name == 'Rejected' and request.user == get_demo.added_by:
+            edit_allow = True
+            support_is = True
+        elif request.user.role.name in ['Approval', 'Admin']:
+            if request.user.id == get_demo.added_by.Belongs_to.id:
+                edit_allow = True
+                is_support = True
+                is_edit = True
+            else:
+                edit_allow = False
+                is_support = False
+                is_edit = True
+        elif request.user.role.name in ['Support']:
+            edit_allow = True
+            is_support = True
+            is_edit = False
+        else:
+            messages.error(request, 'You have no permissions for edit')
+
+        if request.user.role.name == 'Sales':
+            if get_demo.status.name == 'Rejected' or get_demo.status.name == 'Pending':
+                allow = True
+            else:
+                allow = False
+                messages.error(request, 'You have no permissions for edit')
+        elif request.user.role.name == 'Admin' or request.user.role.name == 'Approval':
+            allow = True
+
+        if request.method == 'POST' and allow and edit_allow:
             datetime_object = datetime.strptime(request.POST['Timeline_date'], "%Y-%m-%d")
             if get_demo.Timeline != datetime_object.date():
                 get_changes.append(f"Timeline changed {get_demo.Timeline} to {request.POST['Timeline_date']}")
@@ -1463,7 +1653,7 @@ def edit_demo(request, id):
             if request.POST.get('kt_given'):
                 sts = False
                 sts_for = 'Not Provided'
-                if get_demo.kt_given == False:
+                if not get_demo.kt_given:
                     old_sts = 'Not Provided'
                 else:
                     old_sts = 'Provided'
@@ -1567,9 +1757,9 @@ def edit_demo(request, id):
             mail_for_action(f'Project Remarks Added! For Demo', html_message,
                             list_mail)
             Demo_remark.objects.bulk_create([Demo_remark(**data) for data in new_remarks_list])
-            messages.success(request, 'Demo Updated.')
+            messages.success(request, 'Demo successfully updated.')
     except Exception as e:
-        messages.error(request, f"Demo not updated {e}.", extra_tags="danger")
+        messages.error(request, f"Demo not updated.", extra_tags="danger")
     return redirect('view_demo_detail', id=id)
 
 
@@ -1607,7 +1797,7 @@ def add_demo_remarks(request, id):
 
             return redirect('view_demo_detail', id=id)
     except Exception as e:
-        messages.error(request, f'Demo remark: not added {e}.', extra_tags="danger")
+        messages.error(request, f'Demo remark not added.', extra_tags="danger")
         return redirect('view_demo_detail', id=id)
 
 
@@ -1639,13 +1829,13 @@ def add_demo_feature(request, id):
               <li>Added By: <span class="highlight">{added_by.email}</span></li>
             </ul>
           </div>'''
-            messages.success(request, f"New feature: {','.join(features_lsts_added)} added successfully.")
+            messages.success(request, f"New features: {','.join(features_lsts_added)} added successfully.")
             mail_for_action(f'New Feature Added for demo id {demo_ref.id}', html_,
                             [added_by.email, added_by.Belongs_to.email])
 
             return redirect('view_demo_detail', id=id)
     except Exception as e:
-        messages.error(request, f"New feature not added {e}.", extra_tags="danger")
+        messages.error(request, f"New features not added.", extra_tags="danger")
         return redirect('view_demo_detail', id=id)
 
 
@@ -1669,17 +1859,14 @@ def demo_update_sts(request, id):
         try:
             sts_id = request.POST['sts_id']
             status = request.POST['status']
-            demo_id = request.POST['demo_id']
             added_by = CustomUser.objects.get(id=request.user.id)
             featureobj = Demo_feature.objects.get(pk=sts_id)
             Demo_Feature_status.objects.create(feature=featureobj, status=status, added_by=added_by)
             messages.success(request, f" Status: {status} added.")
-            # return redirect('view_poc_detail', id=id)
             return HttpResponse(
                 f'<div class="messages text-center alert alert-danger"> <h2> status  added.</h2> </div>')
         except Exception as e:
-            messages.error(request, f"Status {request.POST['status']} not added.", extra_tags="danger")
-            # return redirect('view_poc_detail', id=id)
+            messages.error(request, f"Status: {request.POST['status']} not added.", extra_tags="danger")
             return HttpResponse(
                 f'<div class="messages text-center alert alert-danger"> <h2> status not added {e}.</h2> </div>')
 
@@ -1724,11 +1911,11 @@ def update_feature_detail_demo(request):
                             list_mail)
             messages.success(request, f"Feature : {feature.features_list} updated.")
             return HttpResponse(
-                '<div class="messages text-center alert alert-success"> <h2>  updated.</h2> </div>')  #just for testing purpose you can remove it.
+                '<div class="messages text-center alert alert-success"> <h2>  updated.</h2> </div>')
         except Exception as e:
-            messages.error(request, f"Feature : {feature.features_list} not updated {e}.", extra_tags="danger")
+            messages.error(request, f"Feature not updated.", extra_tags="danger")
             return HttpResponse(
-                f'<div cla  ss="messages text-center alert alert-danger"> <h2>  not updated {e}.</h2> </div>')
+                f'<div class="messages text-center alert alert-danger"> <h2>  not updated {e}.</h2> </div>')
 
 
 @user_has_permission('delete_feature')
@@ -1785,7 +1972,6 @@ def delete_feature(request):
 @user_has_permission('approved_status')
 def approved_status(request, pk, param1=None):
     try:
-        print(request.GET['param2'])
         if request.GET['param1'] in ['Accepted', 'Rejected'] and request.GET['param2'] in ['DEMO', 'POC']:
             if request.GET['param1'] == 'Accepted':
                 status_nm = 'Approved'
@@ -1800,8 +1986,7 @@ def approved_status(request, pk, param1=None):
                 mail_for_action(f'POC Request Approved',
                                 f'POC Request id {obj.id}  is Approved<br> Approved from {request.user.email}',
                                 list_mail)
-
-                messages.success(request, f"POC Request {request.GET['param1']}.")
+                messages.success(request, f"Project Request {request.GET['param1']}.")
                 return redirect('view_poc')
             if request.GET['param2'] == 'DEMO':
                 obj = Demo_model.objects.get(pk=pk)
@@ -1815,13 +2000,13 @@ def approved_status(request, pk, param1=None):
                 messages.success(request, f"DEMO Request {request.GET['param1']}.")
                 return redirect('view_demo')
         else:
-            messages.error(request, f"Wrong Request.", extra_tags="danger")
+            messages.error(request, f"Wrong Request!", extra_tags="danger")
             if request.GET['param2'] == 'POC':
                 return redirect('view_poc')
             if request.GET['param2'] == 'DEMO':
                 return redirect('view_demo')
     except Exception as e:
-        messages.error(request, f"Something Wrong {e}.", extra_tags="danger")
+        messages.error(request, f"Something wrong!", extra_tags="danger")
         if request.GET['param2'] == 'POC':
             return redirect('view_poc')
         if request.GET['param2'] == 'DEMO':
@@ -1830,7 +2015,6 @@ def approved_status(request, pk, param1=None):
 
 def save_reject_desc(request):
     try:
-        print(request.POST)
         if request.POST:
             if request.POST['row__type'] == 'POC':
                 obj = Poc_model.objects.get(pk=request.POST['row__id'])
@@ -1838,9 +2022,11 @@ def save_reject_desc(request):
                 obj.description = request.POST.get('reason')
                 obj.save()
                 list_mail = [request.user.email, obj.added_by.email]
-                messages.success(request, f'Rejected for reason : {request.POST.get("reason")}')
-                mail_for_action(f'Project Request id  {obj.id} is Rejected',
-                                f' Reason: {request.POST.get("reason")} <br>Rejected from {request.user.email}',
+                messages.success(request, f'Project approval request Rejected.reason : {request.POST.get("reason")}')
+                mail_for_action(f'Project approval request is Rejected',
+                                f' Reason: {request.POST.get("reason")} <br> Customer: {obj.Customer_name.name}<br>'
+                                f'<br>with product: {obj.Product_name.Product_name}<br>'
+                                f'Rejected from {request.user.email}',
                                 list_mail)
             elif request.POST['row__type'] == 'DEMO':
                 obj = Demo_model.objects.get(pk=request.POST['row__id'])
@@ -1848,19 +2034,21 @@ def save_reject_desc(request):
                 obj.description = request.POST.get('reason')
                 obj.save()
                 list_mail = [request.user.email, obj.added_by.email]
-                messages.success(request, f'Rejected for reason: {request.POST.get("reason")}')
-                mail_for_action(f'Demo Request id {obj.id} is Rejected',
-                                f' Reason: {request.POST.get("reason")} <br>Rejected from {request.user.email}',
+                messages.success(request, f'Demo approval request is Rejected. reason: {request.POST.get("reason")}')
+                mail_for_action(f'Demo approval request is Rejected',
+                                f' Reason: {request.POST.get("reason")} <br> Customer: {obj.Customer_name.name}<br>'
+                                f'<br>with product: {obj.Product_name.Product_name}<br>'
+                                f'Rejected from {request.user.email}',
                                 list_mail)
             else:
 
-                messages.error(request, 'Something Wrong', extra_tags='danger')
+                messages.error(request, 'Something Wrong with type of project!', extra_tags='danger')
         if request.POST['row__type'] == 'POC':
             return redirect('view_poc')
         elif request.POST['row__type'] == 'DEMO':
             return redirect('view_demo')
     except Exception as e:
-        messages.error(request, f"Something Wrong {e}.", extra_tags="danger")
+        messages.error(request, f"Something Wrong!", extra_tags="danger")
         if request.POST['row__type'] == 'POC':
             return redirect('view_poc')
         elif request.POST['row__type'] == 'DEMO':
@@ -1877,12 +2065,12 @@ def save_permission(request, id):
                 for permissions in all_permission:
                     permission, _ = CustomPermission.objects.get_or_create(name=permissions)
                     user.permissions.add(permission)
-                messages.success(request, "Added Permission to Admin")
+                messages.success(request, f"Congratulation! you have full access for {app_name}!")
             else:
-                messages.error(request, "You have no permission", extra_tags='danger')
+                messages.error(request, "You have no permission!", extra_tags='danger')
         return redirect('dashboard')
     except Exception as e:
-        messages.error(request, f'{e}', extra_tags='danger')
+        messages.error(request, f'Something Wrong!', extra_tags='danger')
         return redirect('dashboard')
 
 
@@ -1894,7 +2082,6 @@ def manage_permissions(request, id):
     if request.method == 'POST':
         user_id = request.POST.get('user')
         permissions = request.POST.getlist('permissions')
-
         # Retrieve the user based on the selected user_id
         user = CustomUser.objects.get(pk=user_id)
         # Clear existing permissions for the user and add selected permissions
@@ -1910,7 +2097,7 @@ def manage_permissions(request, id):
                 user.permissions.add(permission)
         # Save user permissions
         user.save()
-        messages.success(request, "Permissions saved successfully!")
+        messages.success(request, "Permission Added.")
         return redirect('manage_permissions', id)
     # If GET request or form not submitted, render the permissions form
     return render(request, 'poc_demo/permissions.html', context)
