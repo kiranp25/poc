@@ -41,6 +41,7 @@
                                         <th>Timeline</th>
                                         <th>Status</th>
                                         <th>Added By</th>
+                                        <th>Assign To</th>
                                         {% if  request.user.role.name  == 'Approval' or request.user.role.name  == 'Sales'  %}
                                         <th>Request</th>
                                         {% endif %}
@@ -62,30 +63,23 @@
                                         <td>{{i.Timeline}}</td>
                                         <td>{{i.status}}</td>
                                         <td>{{i.added_by}}</td>
+                                        <td >{% if i.assign_to %}
+
+                                            <p class="text-success">{{i.assign_to}}</p>
+
+                                        {% else %}
+                                            <p class="text-danger"> Not Assigned </p>
+                                        {% endif %}
+                                        </td>
+
                                         {% if  request.user.role.name  == 'Sales' %}
                                         <td>
                                             {% if i.status.name == 'Pending' %}
-                                            <a class="btn btn-info">Waiting For Confirmation</a>
-                                            {% elif i.status.name == 'Rejected' %}
-                                                <a class="btn btn-warning">Rejected</a>
-                                            {% elif i.status.name != 'Rejected' %}
-                                                <a class="btn btn-primary">Approved</a>
-                                            {% endif %}
-                                        </td>
-                                        {% endif %}
-                                        {% if  request.user.role.name  == 'Approval' %}
-                                        <td>
-                                        <!-- <td><button type ='button' class = 'btn btn-sm-primary'>add</button> -->
-<!--                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" id ='{{i.id}}' data-bs-target="#centeredModal" onclick="set_id(this.id)">-->
-<!--                                                ADD-->
-<!--                                              </button>-->
-                                            {% if i.status.name == 'Pending' %}
-                                            {% if "approved_status" in permission_names %}
-                                                <a onclick="return confirmApprove('{% url 'approved_status' i.id %}?param1=Accepted&param2=POC')" class="btn btn-primary" value="">Approve</a>
-                                                <a class="btn btn-danger" data-bs-toggle="modal" id ='{{i.id}}' data-bs-target="#centeredModal" onclick="set_id(this.id)">Reject</a>
-                                            {% else %}
-                                                <a class="btn btn-warning">Pending</a>
-                                            {% endif %}
+                                                {%if i.added_by.Belongs_to == request.user.Belongs_to %}
+                                                <a class="btn btn-info">Waiting For Confirmation</a>
+                                                {% else %}
+                                                <a class="btn btn-secondary">Pending</a>
+                                                {% endif %}
                                             {% elif i.status.name == 'Rejected' %}
                                                 <a class="btn btn-warning">Rejected</a>
                                             {% elif i.status.name != 'Rejected' %}
@@ -94,6 +88,24 @@
                                         </td>
                                         {% endif %}
 
+                                        {% if  request.user.role.name  == 'Approval' %}
+                                        <td>
+                                            {% if i.status.name == 'Pending' %}
+                                            {% if "approved_status" in permission_names and i.added_by.Belongs_to == request.user %}
+
+                                                <a onclick="return confirmApprove('{% url 'approved_status' i.id %}?param1=Accepted&param2=POC')" class="btn btn-primary" value="">Approve</a>
+                                                <a class="btn btn-danger" data-bs-toggle="modal" id ='{{i.id}}' data-bs-target="#centeredModal" onclick="set_id(this.id)">Reject</a>
+
+                                            {% else %}
+                                                <a class="btn btn-secondary">Pending</a>
+                                            {% endif %}
+                                            {% elif i.status.name == 'Rejected' %}
+                                                <a class="btn btn-warning">Rejected</a>
+                                            {% elif i.status.name != 'Rejected' %}
+                                                <a class="btn btn-primary">Approved</a>
+                                            {% endif %}
+                                        </td>
+                                        {% endif %}
                                     </tr>
                                     {% endfor %}
                                 
