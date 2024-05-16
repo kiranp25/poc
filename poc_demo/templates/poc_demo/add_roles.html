@@ -41,17 +41,45 @@
                                     <p class="error_message">{{ request.session.error_message }}</p>
                                     
                                     {% endif %}
-                                    <form class="row g-3 cool-form" method="post">
+                                    <form class="row g-3 cool-form mt-4"  method="post">
                                       {% csrf_token %}
                                         <input type="hidden" class="form-control" value={{ request.user.email }} name="username">
                                       <div class="col-md-12">
                                         <div class="form-floating mb-2">
-
                                           <input type="text" class="form-control" id="roleName" name="role_name" placeholder="Enter Role">
                                           <label for="roleName">Role Name</label>
                                         </div>
                                       </div>
 
+                                            <div class="col-md-12">
+                                            <div class="permission-management">
+                                                  <h2>Permissions</h2>
+                                                  <div class="select-all-container">
+                                                    <input type="checkbox" id="select-all">
+                                                    <label for="select-all" id="select-all-label">Select All</label>
+                                                  </div>
+
+                                             <div class="container">
+                                              <div class="row">
+                                                <div class="col">
+                                                  <ul class="permission-list">
+                                                    {% for permission in permission_name %}
+                                                      {% if permission != 'manage_permissions' %}
+                                                      <li>
+                                                        <input type="checkbox" id="{{permission}}" name="permissions" value="{{ permission }}">
+                                                        <label for="{{permission}}">{{ permission }}</label>
+                                                      </li>
+                                                      {% if forloop.counter|divisibleby:10 and not forloop.last %}
+                                                        </ul></div><div class="col"><ul class="permission-list">
+                                                      {% endif %}
+                                                    {% endif %}
+                                                    {% endfor %}
+                                                  </ul>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            </div>
+                                            </div>
                                       <div class="col-md-12">
                                         <div class="form-floating mb-2">
                                           <select name="status" class="form-control" id="roleStatus">
@@ -62,6 +90,20 @@
                                           <label for="roleStatus">Status</label>
                                         </div>
                                       </div>
+
+                                        <div class="col-md-12">
+                                        <div class="form-floating mb-2">
+                                          <select name="roleTop" class="form-control" id="roleTop">
+                                            {% for role in role_list %}
+                                              <option value="{{ role.id }}">{{ role }}</option>
+                                            {% endfor %}
+                                              <option value="Self"> Self </option>
+                                          </select>
+                                          <label for="roleTop">Top Role</label>
+                                        </div>
+                                      </div>
+
+
 
                                       <div class="form-actions col-12 mb-2">
                                         <div class="text-right">
@@ -88,6 +130,16 @@
     {% endblock %}
 
     {% block js %}
+<script>
+    $(document).ready(function() {
+    $('#select-all').change(function() {
+        var isChecked = $(this).prop('checked');
+        // Update permission checkboxes and label text
+        $('input[name="permissions"]').prop('checked', isChecked);
+        $('#select-all-label').text(isChecked ? 'Deselect All' : 'Select All');
+    });
+});
+</script>
     <script>
       const UserTypefor = document.getElementById('userType');
       const user_opion = document.getElementById('user_list');
@@ -115,12 +167,5 @@
           });
       });
     </script>
-<!-- 
-<script>
-    // Execute JavaScript code to remove the message after a certain period or user interaction
-    document.querySelector('.success-message').addEventListener('change', function() {
-        this.remove(); // Remove the element from the DOM
 
-    });
-</script> -->
 {% endblock %}

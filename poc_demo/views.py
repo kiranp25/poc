@@ -114,7 +114,10 @@ def get_data_for(request, usertype):
     user_info = dict()
     # branch_list = cl_Branch.objects.filter(branch_name=request.POST.get('branch_list')).first()
     # needs to change with role_belongs_to from Roles models.
-    user_type_id = Roles.objects.get(name=flow[usertype])
+    if usertype in flow:
+        user_type_id = Roles.objects.get(name=flow[usertype])
+    else:
+        user_type_id = Roles.objects.get(name=usertype)
     users = User.objects.filter(role=user_type_id).all()
     user_dict = dict()
     for data in users:
@@ -299,7 +302,7 @@ def add_customer(request):
                                 <li><strong> Contact Email: </strong>{request.POST['contact_email']} </li></ul>
                                 <p> This customer was added by: [Added By: {request.user.email}]</p>
                                 <p> Thank you for keeping our customer records up-to-date.</p>
-                                <p> Best regards, <br>[Your Company Name] </p>'''
+                                <p> Best regards, <br></p>'''
 
                 else:
                     messages.error(request, f'Customer name should not be blank.', extra_tags="danger")
@@ -319,7 +322,7 @@ def add_customer(request):
 def add_user(request):
     flow = {"Admin": ['Admin', 'Approval', 'Sales'], "Approval": ['Sales'], "Sales": ''}
     user = User.objects.all()
-    roles = Roles.objects.all()
+    roles = Roles.objects.filter(status="1")
     sts = status_choice
     context = {}
     context['users'] = [i.first_name for i in user]
@@ -340,7 +343,7 @@ def add_user(request):
                                     'add_product', 'edit_product', 'add_remark']
                 approval_permission = ['edit_poc', 'edit_demo', 'approved_status', 'add_remark']
                 support_permission = ['add_remark']
-                Belongs_to = User.objects.get(id=request.POST['Belongs_to'])
+
                 usertype = Roles.objects.get(name=request.POST['usertype'])
                 if usertype.name == 'Support':
                     permissions_to_skip = ['delete', 'edit']  # Permissions Support shouldn't have
@@ -353,7 +356,14 @@ def add_user(request):
                 password = request.POST['password']
                 status = request.POST.get('status')
                 new_user = User.objects.create(first_name=first_name, last_name=last_name, email=email,
-                                               username=username, Belongs_to=Belongs_to, role=usertype, Status=status)
+                                               username=username,  role=usertype, Status=status)
+
+                if request.POST['Belongs_to'] != "Self":
+                    Belongs_to = User.objects.get(id=request.POST['Belongs_to'])
+                    new_user.Belongs_to=Belongs_to
+                else :
+                    new_user.Belongs_to= new_user
+                new_user.save()
                 new_user.set_password(password)
                 if usertype.name == 'Approval':
                     for permission_nm in approval_permission:
@@ -367,24 +377,31 @@ def add_user(request):
                     for permission_nm in support_permission:
                         permission, _ = CustomPermission.objects.get_or_create(name=permission_nm)
                         new_user.permissions.add(permission)
-                html_message = f'''A new user has been added.<br>
+                else:
+                    roleuser = Roles.objects.get(id=usertype.id)
+                    get_roles_permissions = roleuser.permissions.all()
+                    for permission_nm in get_roles_permissions:
+                        permission, _ = CustomPermission.objects.get_or_create(name=permission_nm)
+                        new_user.permissions.add(permission)
+
+                html_message = f'''Welcome {first_name} {last_name}, for journey with us. <br>
                                 Name: {first_name} {last_name} <br>
                                 Email: {email}<br>
                                 Username: {username}<br>
                                 User Type: {usertype.name}<br>
-                                Status: {status}'''
-                mail_for_action(f'New User Added: {new_user.email}',
+                               '''
+                mail_for_action(f'Thank You for Join with us: {first_name} {last_name}',
                                 html_message,
                                 [new_user.Belongs_to.email, new_user.email])
 
                 list_dict = {'poc': Poc_model, 'demo': Demo_model, 'fstatus': Feature_status,
-                             'dstatus': Demo_Feature_status, 'user': User
-                    , 'premark': Poc_remark, 'dremark': Demo_remark, 'pfeature': Feature, 'dfeature': Demo_feature}
+                             'dstatus': Demo_Feature_status, 'user': User,
+                             'premark': Poc_remark, 'dremark': Demo_remark,
+                             'pfeature': Feature, 'dfeature': Demo_feature}
                 new_user.save()
-
                 messages.success(request, 'User added successfully.')
         except Exception as e:
-            messages.error(request, f'User not added', extra_tags="danger")
+            messages.error(request, f'User not added {e}', extra_tags="danger")
         return redirect('add_users')
     return render(request, 'poc_demo/add_user.html', context)
 
@@ -443,16 +460,23 @@ def edit_user(request, id):
                 approval_permission = ['edit_poc', 'edit_demo', 'approved_status', 'edit_feature', 'delete_feature',
                                        'add_feature', 'add_remark']
                 support_permission = ['add_remark']
-
                 user.first_name = request.POST['first_name']
                 user.last_name = request.POST['last_name']
                 user.email = request.POST['email']
-                if request.POST['Belongs_to'] != 'None':
-                    user.Belongs_to = User.objects.get(id=request.POST['Belongs_to'])
+                user.username = request.POST['email']
+
                 new_role = Roles.objects.get(name=request.POST['usertype'])
                 user.role = new_role
                 user.Status = request.POST.get('status')
-                user.permissions.clear()
+
+                if request.POST['Belongs_to'] != "Self":
+                    Belongs_to = User.objects.get(id=request.POST['Belongs_to'])
+                    user.Belongs_to=Belongs_to
+                else :
+                    user.Belongs_to = user
+
+                if new_role.name != 'Admin':
+                    user.permissions.clear()
                 if new_role.name == 'Approval':
                     for permission_nm in approval_permission:
                         permission, _ = CustomPermission.objects.get_or_create(name=permission_nm)
@@ -465,14 +489,20 @@ def edit_user(request, id):
                     for permission_nm in support_permission:
                         permission, _ = CustomPermission.objects.get_or_create(name=permission_nm)
                         user.permissions.add(permission)
+                else:
+                    get_roles_permissions = new_role.permissions.all()
+                    for permission_nm in get_roles_permissions:
+                        permission, _ = CustomPermission.objects.get_or_create(name=permission_nm)
+                        user.permissions.add(permission)
                 user.save()
-
                 messages.success(request, f'User: {user.email} updated successfully.')
+                return redirect('edit_user', id=id)
         except Exception as e:
             messages.error(request, f'User: {user.email} not updated.', extra_tags="danger")
             return redirect('view_users')
     context = {'user': user, 'roles': roles, 'status': sts, 'all_user': all_user,
                'permission_names': list(request.user.permissions.values_list('name', flat=True))}
+
     return render(request, 'poc_demo/edit_user.html', context)
 
 
@@ -519,21 +549,38 @@ def add_role(request):
     sts = status_choice
     context['status'] = sts
     context['permission_names'] = list(request.user.permissions.values_list('name', flat=True))
+    context['permission_name'] = CustomPermission.objects.all().order_by('id')
+    role_list = Roles.objects.all()
+    context['role_list'] = role_list
     if request.method == 'POST':
         result = dict()
         try:
-            # if check Roles available and then create
-            # Belongs_to = Users.objects.get(name=request.POST['Belongs_to'])  
             Role_name = (request.POST['role_name']).strip()
             existing = Roles.objects.filter(name=Role_name.lower()).first()
             if existing:
                 messages.error(request, f"Role: {Role_name} already Exist!",
                                extra_tags="danger")
             else:
+
                 status = request.POST.get('status')
                 new_role = Roles(name=Role_name, status=status)
                 new_role.save()
-                messages.success(request, f"Role: {request.POST['role_name']} added successfully.")
+                if request.POST.get('roleTop'):
+                    if request.POST['roleTop'] != 'Self':
+                        new_role.role_belongs_to = request.POST['roleTop']
+                    else:
+                        new_role.role_belongs_to = new_role
+                new_role.save()
+                msg = f"Role: {request.POST['role_name']} added successfully."
+                permissions = request.POST.getlist('permissions')
+                if permissions:
+                    new_role.permissions.clear()
+                    for permission_name in permissions:
+                        if permission_name != "manage_permissions":
+                            permission, _ = CustomPermission.objects.get_or_create(name=permission_name)
+                            new_role.permissions.add(permission)
+                    msg += f'Permission added for {new_role.name}'
+                messages.success(request, msg)
         except Exception as e:
             messages.error(request, f"Role: {request.POST['role_name']} not added.", extra_tags="danger")
         return redirect('add_role')
@@ -553,6 +600,7 @@ def view_roles(request):
 @user_has_permission('edit_role')
 @login_required(login_url='loginpage')
 def edit_role(request, id):
+    role_list = Roles.objects.all()
     try:
         # .exclude(pk=user.id)
         role = get_object_or_404(Roles, pk=id)
@@ -565,12 +613,26 @@ def edit_role(request, id):
             else:
                 role.name = request.POST['role_name']
                 role.status = request.POST.get('status')
+                if request.POST.get('roleTop'):
+                    role.role_belongs_to = Roles.objects.get(id=request.POST['roleTop'])
                 role.save()
-                messages.success(request, f"Role: {request.POST['role_name']} updated.")
+                msg = f"Role: {request.POST['role_name']} updated."
+                permissions = request.POST.getlist('permissions')
+                if permissions:
+                    role.permissions.clear()
+                    for permission_name in permissions:
+                        if permission_name != "manage_permissions":
+                            permission, _ = CustomPermission.objects.get_or_create(name=permission_name)
+                            role.permissions.add(permission)
+                    msg += f'Permission added for {role.name}'
+                messages.success(request, msg)
+                return redirect('edit_role', id=id)
     except Exception as e:
-        messages.error(request, f"Role {request.POST['role_name']} not updated.", extra_tags="danger")
+        messages.error(request, f"Role {request.POST['role_name']} not updated.{e}", extra_tags="danger")
+        return redirect('edit_role', id=id)
     context = {'role': role, 'status': status_choice, 'roles_defined': roles_defined,
-               'permission_names': list(request.user.permissions.values_list('name', flat=True))}
+               'permission_names': list(request.user.permissions.values_list('name', flat=True)),
+               'permission_name': CustomPermission.objects.all().order_by('id'), 'role_list': role_list}
     return render(request, 'poc_demo/edit_role.html', context)
 
 
@@ -841,12 +903,13 @@ def edit_poc(request, id):
             allow = True
 
         if request.method == 'POST' and allow and edit_allow:
-            datetime_object = datetime.strptime(request.POST['Timeline_date'], "%Y-%m-%d")
-            if get_poc.Timeline != datetime_object.date():
-                get_changes.append(f"Timeline changed {get_poc.Timeline} to {request.POST['Timeline_date']}")
-                new_remarks_list.append({'poc_id': get_poc,
-                                         'remarks': f"Timeline changed {get_poc.Timeline} to {request.POST['Timeline_date']}",
-                                         'status': get_poc.status, 'added_by': request.user})
+            if request.POST.get('Timeline_date'):
+                datetime_object = datetime.strptime(request.POST['Timeline_date'], "%Y-%m-%d")
+                if get_poc.Timeline != datetime_object.date():
+                    get_changes.append(f"Timeline changed {get_poc.Timeline} to {request.POST['Timeline_date']}")
+                    new_remarks_list.append({'poc_id': get_poc,
+                                             'remarks': f"Timeline changed {get_poc.Timeline} to {request.POST['Timeline_date']}",
+                                             'status': get_poc.status, 'added_by': request.user})
             if request.POST.get('poc_type'):
                 if get_poc.poc_type != request.POST.get('poc_type'):
                     get_changes.append('Project Type')
@@ -922,8 +985,8 @@ def edit_poc(request, id):
                     status = Status.objects.get(name=request.POST['status'])
                 else:
                     status = get_poc.status
-
-            get_poc.Timeline = request.POST['Timeline_date']
+            if request.POST.get('Timeline_date'):
+                get_poc.Timeline = request.POST['Timeline_date']
             if request.POST.get('poc_type'):
                 get_poc.poc_type = request.POST.get('poc_type')
             if request.POST.get('kt_given'):
@@ -977,7 +1040,7 @@ def edit_poc(request, id):
             Poc_remark.objects.bulk_create([Poc_remark(**data) for data in new_remarks_list])
             messages.success(request, f"Project {get_poc.poc_type} updated.")
     except Exception as e:
-        messages.error(request, f"Project {get_poc.poc_type} not updated.", extra_tags="danger")
+        messages.error(request, f"Project {get_poc.poc_type} not updated. {e}", extra_tags="danger")
     return redirect('view_poc_detail', id=id)
 
 
@@ -1075,13 +1138,12 @@ def view_poc_detail(request, id):
             edit_allow = True
             is_edit = True
             is_support = True
-
             if poc.status.name == 'Pending':
                 is_edit = False
-
         if request.user.role.name == 'Admin':
             is_support = True
             is_allowed = True
+            is_edit = True
 
     elif request.user.role.name in ['Support']:
         if poc.assign_to == request.user:
@@ -1165,10 +1227,10 @@ def view_poc_detail(request, id):
             html_message += '</ul>'
 
             if request.user.role.name == "Approval":
-                list_mail.append(request.user.email)
+                list_mail.extend([get_poc.added_by.email,get_poc.assign_to.email])
 
             else:
-                list_mail.extend([request.user.email, request.user.Belongs_to.email])
+                list_mail.extend([request.user.Belongs_to.email, get_poc.assign_to.email])
             Poc_remark.objects.bulk_create([Poc_remark(**data) for data in new_remarks_list])
             mail_for_action(f'Project Remarks Added! for {get_poc.poc_type}', html_message,
                             list_mail)
@@ -1317,8 +1379,12 @@ def delete_user(request, id):
 @login_required(login_url='loginpage')
 def delete_status(request, id):
     try:
-        Status.objects.get(pk=id).delete()
-        messages.success(request, 'Status deleted.')
+        sts = Status.objects.get(pk=id)
+        if sts.name.lower() in ['active', 'inactive', 'pending', 'rejected', 'approved']:
+            messages.error(request, f'Status can`t deleted. no permission for delete {sts.name} status!', extra_tags = 'warning')
+        else:
+            sts.delete()
+            messages.success(request, 'Status deleted.')
     except Exception as e:
         messages.error(request, f'Status not deleted.', extra_tags='danger')
     return redirect('view_status')
@@ -1491,7 +1557,7 @@ def view_demo_detail(request, id):
     html_feture_sts_only = ''' '''
     html = ''' '''
 
-    if request.user.role.name == 'Sales' and request.user == poc.added_by:
+    if request.user.role.name == 'Sales' and request.user == demo.added_by:
         if demo.status.name == 'Rejected':
             edit_allow = True
             is_support = True
@@ -1570,10 +1636,10 @@ def view_demo_detail(request, id):
                 html_message += '</li>'
             html_message += '</ul>'
             if request.user.role.name == "Approval":
-                list_mail.append(request.user.email)
+                list_mail.extend([get_poc.added_by.email, get_poc.assign_to.email])
 
             else:
-                list_mail.extend([request.user.email, request.user.Belongs_to.email])
+                list_mail.extend([request.user.Belongs_to.email, get_poc.assign_to.email])
             mail_for_action(f'Project Remarks Added! for Demo', html_message,
                             list_mail)
 

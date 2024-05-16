@@ -45,8 +45,15 @@
 
                       <div class="col-md-12 mb-2">
                         <div class="form-floating">
-                          <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" placeholder="Email" required>
+                          <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" placeholder="Email" onkeyup="copyText()" required>
                           <label for="email">Email</label>
+                        </div>
+                      </div>
+
+                      <div class="col-md-12 mb-2" hidden>
+                        <div class="form-floating">
+                          <input type="email" class="form-control" id="username" name="username" value="{{ user.username }}" placeholder="username">
+                          <label for="email">Username</label>
                         </div>
                       </div>
 
@@ -117,6 +124,10 @@
     {%endblock %}
     {% block js %}  
     <script>
+      function copyText() {
+          var sourceText = document.getElementById("email").value;
+          document.getElementById("username").value = sourceText;
+        }
       const UserTypefor = document.getElementById('userType');
       const user_opion = document.getElementById('user_list');
   
@@ -137,7 +148,7 @@
             }
            }
           else{
-              text = text + "<option value = 'no data found' disabled>no data found </option>";    
+              text = text + "<option value = 'Self'>Self </option>";
           }
             if (data['error']){
               user_opion.innerHTML = data['error']; 
