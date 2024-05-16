@@ -161,11 +161,11 @@ class Roles(models.Model):
     name = models.CharField(max_length=30)
     status = models.CharField(max_length=30, choices=status_choice, default="1")
     # added_by = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, blank=True, null=True)
+    role_belongs_to = models.ForeignKey('self', on_delete=models.SET_NULL, blank=True, null=True)
+    permissions = models.ManyToManyField('CustomPermission', blank=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True)
 
-
-    # role_belongs_to = models.ForeignKey('self', on_delete=models.SET_NULL, blank=True, null=True)
     def __str__(self):
         return self.name
 

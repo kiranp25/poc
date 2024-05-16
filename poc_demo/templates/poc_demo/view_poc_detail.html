@@ -156,7 +156,7 @@
                                 </div>
                                 <div class="mb-3">
                                   <label for="Timeline_date_edit" class="form-label fw-bold">Timeline:</label>
-                                  <input type="date" class="form-control" id="Timeline_date_edit" name="Timeline_date" value="{{ data.Timeline|date:'Y-m-d' }}" disabled>
+                                  <input type="date" class="form-control" id="Timeline_date_edit" name="Timeline_date" value="{{ data.Timeline|date:'Y-m-d' }}"  disabled>
                                 </div>
                                 <div class="mb-3">
                                   <label for="status_edit" class="form-label fw-bold">Status:</label>
@@ -780,7 +780,7 @@ $(document).ready(function() {
     $('#status_edit').prop('disabled', false);
     $('#assign_edit').prop('disabled', false);
     $('#kt_given').prop('disabled', false);
-    $('#Timeline_date_edit').prop('disabled', false);
+    //$('#Timeline_date_edit').prop('disabled', false);
     $('#uploaded_file').prop('disabled', false);
     {% elif request.user.role.name == 'Admin' %}
     $('.form-control').prop('disabled', false);

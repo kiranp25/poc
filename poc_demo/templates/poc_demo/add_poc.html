@@ -80,10 +80,14 @@
                     <div class="form-floating mb-3">
                       <select class="form-select" name="CustomerName" id="floatingCustomerName" aria-label="CustomerName" required>
                       <option value="" selected disabled></option>
-                      {% for customer in customer %}
+                      {% if customer %}
+                        {% for customer in customer %}
 
                         <option value="{{ customer.id }}">{{ customer }}</option>
                         {% endfor %}
+                        {% else %}
+                        <option >No Customer Found</option>
+                        {% endif %}
                     </select>
                       <label for="floatingCustomerName">Customer Name</label>
                     </div>

@@ -40,28 +40,29 @@
 
   <div class="col-md-6">
     <div class="form-floating mb-2">
-      <input type="text" class="form-control" id="firstName" name="first_name" placeholder="First Name">
+      <input type="text" class="form-control" id="firstName" name="first_name" placeholder="First Name" required>
       <label for="firstName">First Name</label>
     </div>
   </div>
 
   <div class="col-md-6">
     <div class="form-floating mb-2">
-      <input type="text" class="form-control" id="lastName" name="last_name" placeholder="Last Name">
+      <input type="text" class="form-control" id="lastName" name="last_name" placeholder="Last Name" required>
       <label for="lastName">Last Name</label>
     </div>
   </div>
 
   <div class="col-md-12">
     <div class="form-floating mb-2">
-      <input type="email" class="form-control" id="email" name="email" placeholder="Email">
+      <input type="email" class="form-control" id="email" name="email" placeholder="Email" onkeyup="copyText()">
       <label for="email">Email</label>
     </div>
   </div>
 
-  <div class="col-md-12">
+
+  <div class="col-md-12" hidden>
     <div class="form-floating mb-2">
-      <input type="email" class="form-control" id="username" name="username" placeholder="Username">
+      <input type="email" class="form-control" id="username" name="username" placeholder="Username" >
       <label for="username">Username</label>
     </div>
   </div>
@@ -136,6 +137,11 @@
     {% block js %}  
 
     <script>
+        function copyText() {
+          var sourceText = document.getElementById("email").value;
+          document.getElementById("username").value = sourceText;
+        }
+
       const UserTypefor = document.getElementById('userType');
       const user_opion = document.getElementById('user_list');
   
@@ -156,7 +162,7 @@
             }
            }
           else{
-              text = text + "<option value = 'no data found' disabled>no data found </option>";    
+              text = text + "<option value = 'Self'>Self </option>";
           }
             if (data['error']){
               user_opion.innerHTML = data['error']; 

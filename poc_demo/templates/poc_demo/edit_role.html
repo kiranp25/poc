@@ -36,6 +36,35 @@
     </div>
 
     <div class="col-lg-12 mb-2">
+      <div class="permission-management">
+      <h2>Permissions</h2>
+      <div class="select-all-container">
+        <input type="checkbox" id="select-all">
+        <label for="select-all" id="select-all-label">Select All</label>
+      </div>
+
+ <div class="container">
+  <div class="row">
+    <div class="col">
+      <ul class="permission-list">
+        {% for permission in permission_name %}
+          <li>
+            <input type="checkbox" id="{{permission}}" name="permissions" value="{{ permission }}"
+              {% if permission in role.permissions.all %}checked{% endif %} >
+            <label for="{{permission}}">{{ permission }}</label>
+          </li>
+          {% if forloop.counter|divisibleby:10 and not forloop.last %}
+            </ul></div><div class="col"><ul class="permission-list">
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+      </div>
+      </div>
+    </div>
+
+    <div class="col-lg-12 mb-2">
       <div class="form-floating">
         <select name="status" class="form-control" id="roleStatus" required>
           {% for id, sts in status %}
@@ -46,6 +75,18 @@
         <div class="invalid-feedback">Please select a status.</div>
       </div>
     </div>
+
+      <div class="col-md-12">
+                                        <div class="form-floating mb-2">
+                                          <select name="roleTop" class="form-control" id="roleTop">
+                                            {% for roled in role_list %}
+                                              <option value="{{ roled.id }}" {% if role.role_belongs_to == roled %} selected {% endif %}>{{ roled }}</option>
+                                            {% endfor %}
+                                          </select>
+                                          <label for="roleTop">Top Role</label>
+                                        </div>
+                                      </div>
+
 
     <div class="col-12 text-center mt-4">
       <button type="submit" class="btn btn-primary btn-lg" onclick="return confirm('Do you want to save changes?')">Save Changes <i class="ft-thumbs-up position-right"></i></button>
@@ -68,6 +109,17 @@
       </div>
     </div>
     {%endblock %}
-    {% block js %}  
+    {% block js %}
+
+<script>
+    $(document).ready(function() {
+    $('#select-all').change(function() {
+        var isChecked = $(this).prop('checked');
+        // Update permission checkboxes and label text
+        $('input[name="permissions"]').prop('checked', isChecked);
+        $('#select-all-label').text(isChecked ? 'Deselect All' : 'Select All');
+    });
+});
+</script>
     {% endblock %}
 
