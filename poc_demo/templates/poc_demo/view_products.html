@@ -19,54 +19,55 @@
   
                   <div class="text-center"><h1>Products</h1>
                   </div>
-    
-                <section id="form-control-repeater">
-
-                <div class="container">
-                  <div class="row">
-
-                <div class="col-sm-12  text-end">
-                    <a href="{% url 'add_product' %}" class="btn btn-primary btn-sm m-2">Add Product</a>
-                </div>
+<section id="form-control-repeater">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12 text-end">
+                <a href="{% url 'add_product' %}" class="btn btn-primary btn-sm m-2">Add Product</a>
             </div>
-                  <table class="datatable table table-striped table-bordered">
-                    <thead>
-                      <tr>
+        </div>
+        <div class="table-responsive">
+            <table class="datatable table table-striped table-bordered">
+                <thead>
+                    <tr>
                         <th scope="col">Name</th>
                         <th scope="col">Status</th>
                         <th scope="col">Created at</th>
                         <th scope="col">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% if products %}
-                      
-                        {% for product in products %}
-                        <tr>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if products %}
+                    {% for product in products %}
+                    <tr>
                         <td>{{ product.Product_name }}</td>
                         <td>
-                          {% for key ,val in status %}
-                        {% if key == product.status %}
-                        {{ val }}
-                        {% endif %}
-                        {% endfor %}
+                            {% for key, val in status %}
+                            {% if key == product.status %}
+                            {{ val }}
+                            {% endif %}
+                            {% endfor %}
                         </td>
                         <td>{{ product.created_at }}</td>
                         <td>
-                          <a href="{% url 'edit_product' product.id %}" class="btn btn-primary btn-sm ">Edit</a>
-                          <a href="#" onclick="return confirmDelete('{% url 'delete_product' product.id %}')" class="btn btn-danger btn-sm ms-1">Delete</a>
+                            <a href="{% url 'edit_product' product.id %}" class="btn btn-primary m-2">Edit</a>
+                            <a href="#" onclick="return confirmDelete('{% url 'delete_product' product.id %}')" class="btn btn-danger  m-2">Delete</a>
                         </td>
-                      </tr>
-                        {% endfor %}
-                      
-                      {% else %}
-                      <tr><td colspan="4">data not found</td></tr>
-                      {% endif %}
-                     
-                    </tbody>
-                  </table>
-                </div>
-                </section>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="4">Data not found</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+
+
                 </div>
         </div>
       </div>

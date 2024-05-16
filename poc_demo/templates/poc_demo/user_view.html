@@ -19,74 +19,73 @@
 
                 <!-- Form control repeater section start -->
                 <div class="text-center text-muted"><h1>Users</h1></div>
-                <section id="form-control-repeater">
-                  <div class="container">
-                    <div class="row">
-
-                <div class="col-sm-12  text-end">
-                    {% if 'add_user' in permission_names %}
-                    <a href="{% url 'add_users' %}" class="btn btn-primary btn-sm m-2">Add User</a>
-                    {% endif %}
-                </div>
+                  <section id="form-control-repeater">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12 text-end">
+                {% if 'add_user' in permission_names %}
+                <a href="{% url 'add_users' %}" class="btn btn-primary btn-sm m-2">Add User</a>
+                {% endif %}
             </div>
-                      <table class="datatable table table-striped table-bordered">
-                        <thead>
-                          <tr>
-                            <th scope="col">Username</th>
-                            <th scope="col">Email</th>
-                            <th scope="col">First Name</th>
-                            <th scope="col">Last Name</th>
-                            <th scope="col">Status</th>
-                            <th scope="col">Role</th>
-                            <th scope="col">Belongs To</th>
-                            <th scope="col">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {% if users %}
-                          {% for user in users %}
-                          <tr>
-                            <td>{{ user.username }}</td>
-                            <td>{{ user.email }}</td>
-                            <td>{{ user.first_name }}</td>
-                            <td>{{ user.last_name }}</td>
-                            <td>
-                              {% for key, val in status %}
-                              {% if key == user.Status %}
-                                {{ val }}
-                              {% endif %}
-                              {% endfor %}
-                            </td>
-                            <td>{{ user.role }}</td>
-                            <td>{{ user.Belongs_to }}</td>
-<td>
-  <div class="btn-group btn-group-sm" role="group">
-    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-      Actions
-    </button>
-    <ul class="dropdown-menu">
-      <li><a href="{% url 'manage_permissions' user.id %}" class="dropdown-item">Edit Permissions</a></li>
-      <li><a href="{% url 'edit_user' user.id %}" class="dropdown-item">Edit User</a></li>
-      {% if user.role.name != "Admin" %}
-        <li><a href="#" onclick="return confirmDelete('{% url 'delete_user' user.id %}')" class="dropdown-item text-danger">Delete User</a></li>
-      {% endif %}
-      <li><a href="{% url 'change_password' user.id %}" class="dropdown-item">Change Password</a></li>
-    </ul>
-  </div>
-</td>
-                          </tr>
-                          {% endfor %}
-                          {% else %}
-                          <tr>
-                            <td colspan="8" class="text-center">No users found.</td>
-                          </tr>
-                          {% endif %}
-                        </tbody>
-                      </table>
-                  </div>
-                </section>
-                    
-                
+        </div>
+        <div class="table-responsive">
+            <table class="datatable table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th scope="col">Username</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">First Name</th>
+                        <th scope="col">Last Name</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Role</th>
+                        <th scope="col">Belongs To</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if users %}
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.first_name }}</td>
+                        <td>{{ user.last_name }}</td>
+                        <td>
+                            {% for key, val in status %}
+                            {% if key == user.Status %}
+                            {{ val }}
+                            {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td>{{ user.role }}</td>
+                        <td>{{ user.Belongs_to }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Actions
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a href="{% url 'manage_permissions' user.id %}" class="dropdown-item">Edit Permissions</a></li>
+                                    <li><a href="{% url 'edit_user' user.id %}" class="dropdown-item">Edit User</a></li>
+                                    {% if user.role.name != "Admin" %}
+                                    <li><a href="#" onclick="return confirmDelete('{% url 'delete_user' user.id %}')" class="dropdown-item text-danger">Delete User</a></li>
+                                    {% endif %}
+                                    <li><a href="{% url 'change_password' user.id %}" class="dropdown-item">Change Password</a></li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center">No users found.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
 
 
               </div>          

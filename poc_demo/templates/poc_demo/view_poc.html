@@ -1,6 +1,7 @@
 {% extends "poc_demo/base.html" %}
 {% block poc_content %}  
 {% load static %}
+
 <div class="app-content content">
     <div class="content-wrapper">
       <div class="content-header row">
@@ -8,137 +9,120 @@
     <div class="content-body">
         <!-- Zero configuration table -->
     <section id="configuration">
-        <div class="row">
-            
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h4 class="card-title">Projects list</h4>
-                        <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
-                        <div class="col-md-2 ms-auto mt-2" style="margin-left: 100px;">
-
-                            {% if 'add_poc' in permission_names %}
-                             <div class="text-end">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Projects list</h4>
+                    <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
+                    <div class="col-md-2 ms-auto mt-2 text-end">
+                        {% if 'add_poc' in permission_names %}
+                        <div class="text-end">
                             <a href="{% url 'add_poc' %}" class="btn btn-primary btn-sm m-2">Add Project</a>
-                            </div>
-                            {% endif %}
-                            <form method="get" id="filter-form" class="form-inline">
+                        </div>
+                        {% endif %}
+                        <form method="get" id="filter-form" class="form-inline">
                             <input type="text" name="search" placeholder="Search.." id="search" class="form-control ms-auto" value="{{ search_query }}">
-                          </form></div>
+                        </form>
                     </div>
-                    <div class="card-content collapse show">
-                        <div class="card-body card-dashboard">
-                            <table id = 'my_poc_view' class="table table-striped table-bordered zero-configuration">
+                </div>
+                <div class="card-content collapse show">
+                    <div class="card-body card-dashboard">
+                        <div class="table-responsive">
+                            <table id="my_poc_view" class="table table-striped table-bordered zero-configuration">
                                 <thead>
                                     <tr>
                                         <th>Customer Name</th>
                                         <th>Product Name</th>
-                                        <!-- <th>Features</th>
-                                        <th>Remarks</th> -->
-                                        <th> Detail </th>
-                                        <th> Type </th>
+                                        <th>Detail</th>
+                                        <th>Type</th>
                                         <th>Requested Date</th>
                                         <th>Timeline</th>
                                         <th>Status</th>
                                         <th>Added By</th>
                                         <th>Assign To</th>
-                                        {% if  request.user.role.name  == 'Approval' or request.user.role.name  == 'Sales'  %}
+                                        {% if request.user.role.name == 'Approval' or request.user.role.name == 'Sales' %}
                                         <th>Request</th>
                                         {% endif %}
-
-
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% if not page.object_list %}
-                                    <tr> <td colspan="10"><h5 style="text-align:center">No data found</h5></td> </tr>
+                                    <tr>
+                                        <td colspan="10"><h5 style="text-align:center">No data found</h5></td>
+                                    </tr>
                                     {% endif %}
                                     {% for i in page.object_list %}
                                     <tr>
-                                        <td>{{i.Customer_name}}</td>
-                                        <td>{{i.Product_name}}</td>
+                                        <td>{{ i.Customer_name }}</td>
+                                        <td>{{ i.Product_name }}</td>
                                         <td><a href="{% url 'view_poc_detail' i.id %}" class="btn btn-primary" value="">View</a></td>
-                                        <td>{{i.poc_type}}</td>
-                                        <td>{{i.Requested_date}}</td>
-                                        <td>{{i.Timeline}}</td>
-                                        <td>{{i.status}}</td>
-                                        <td>{{i.added_by}}</td>
-                                        <td >{% if i.assign_to %}
-
-                                            <p class="text-success">{{i.assign_to}}</p>
-
-                                        {% else %}
-                                            <p class="text-danger"> Not Assigned </p>
-                                        {% endif %}
+                                        <td>{{ i.poc_type }}</td>
+                                        <td>{{ i.Requested_date }}</td>
+                                        <td>{{ i.Timeline }}</td>
+                                        <td>{{ i.status }}</td>
+                                        <td>{{ i.added_by }}</td>
+                                        <td>
+                                            {% if i.assign_to %}
+                                            <p class="text-success">{{ i.assign_to }}</p>
+                                            {% else %}
+                                            <p class="text-danger">Not Assigned</p>
+                                            {% endif %}
                                         </td>
-
-                                        {% if  request.user.role.name  == 'Sales' %}
+                                        {% if request.user.role.name == 'Sales' %}
                                         <td>
                                             {% if i.status.name == 'Pending' %}
-                                                {%if i.added_by.Belongs_to == request.user.Belongs_to %}
-                                                <a class="btn btn-info">Waiting For Confirmation</a>
-                                                {% else %}
-                                                <a class="btn btn-secondary">Pending</a>
-                                                {% endif %}
+                                            {% if i.added_by.Belongs_to == request.user.Belongs_to %}
+                                            <a class="btn btn-info">Waiting For Confirmation</a>
+                                            {% else %}
+                                            <a class="btn btn-secondary">Pending</a>
+                                            {% endif %}
                                             {% elif i.status.name == 'Rejected' %}
-                                                <a class="btn btn-warning">Rejected</a>
+                                            <a class="btn btn-warning">Rejected</a>
                                             {% elif i.status.name != 'Rejected' %}
-                                                <a class="btn btn-primary">Approved</a>
+                                            <a class="btn btn-primary">Approved</a>
                                             {% endif %}
                                         </td>
                                         {% endif %}
-
-                                        {% if  request.user.role.name  == 'Approval' %}
+                                        {% if request.user.role.name == 'Approval' %}
                                         <td>
                                             {% if i.status.name == 'Pending' %}
                                             {% if "approved_status" in permission_names and i.added_by.Belongs_to == request.user %}
-
-                                                <a onclick="return confirmApprove('{% url 'approved_status' i.id %}?param1=Accepted&param2=POC')" class="btn btn-primary" value="">Approve</a>
-                                                <a class="btn btn-danger" data-bs-toggle="modal" id ='{{i.id}}' data-bs-target="#centeredModal" onclick="set_id(this.id)">Reject</a>
-
+                                            <a onclick="return confirmApprove('{% url 'approved_status' i.id %}?param1=Accepted&param2=POC')" class="btn btn-primary" value="">Approve</a>
+                                            <a class="btn btn-danger" data-bs-toggle="modal" id="{{ i.id }}" data-bs-target="#centeredModal" onclick="set_id(this.id)">Reject</a>
                                             {% else %}
-                                                <a class="btn btn-secondary">Pending</a>
+                                            <a class="btn btn-secondary">Pending</a>
                                             {% endif %}
                                             {% elif i.status.name == 'Rejected' %}
-                                                <a class="btn btn-warning">Rejected</a>
+                                            <a class="btn btn-warning">Rejected</a>
                                             {% elif i.status.name != 'Rejected' %}
-                                                <a class="btn btn-primary">Approved</a>
+                                            <a class="btn btn-primary">Approved</a>
                                             {% endif %}
                                         </td>
                                         {% endif %}
                                     </tr>
                                     {% endfor %}
-                                
-                                    </tbody>
-                                <!-- <tfoot>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Position</th>
-                                        <th>Office</th>
-                                        <th>Age</th>
-                                        <th>Start date</th>
-                                        <th>Salary</th>
-                                    </tr>
-                                </tfoot> -->
+                                </tbody>
                             </table>
-                            <div class="paginator" align='center'>
-                                <span style="color:black">Page {{page.number}} of {{page.paginator.num_pages}}</span>
-                                <div class="pages">                  
+                        </div>
+                        <div class="paginator" align="center">
+                            <span style="color:black">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+                            <div class="pages">
                                 {% if page.has_previous %}
-                                <a href="?page={{page.previous_page_number}}">Previous</a>
+                                <a href="?page={{ page.previous_page_number }}">Previous</a>
                                 {% endif %}
                                 {% if page.has_next %}
-                                <a href="?page={{page.next_page_number}}">Next</a>
+                                <a href="?page={{ page.next_page_number }}">Next</a>
                                 {% endif %}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-            </div>
-        </div>
+    </div>
+</section>
 
-    </section>
 
   <div class="modal fade" id="centeredModal" tabindex="-1" aria-labelledby="centeredModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">

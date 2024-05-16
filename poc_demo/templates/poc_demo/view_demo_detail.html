@@ -222,43 +222,46 @@
                         </form>
                       </div>
                       <div class="col-md-6" id="Remarks_div">
-                        <div class="card shadow-sm rounded-3 p-3 mt-2 bg-light">
-                          <div class="row">
-                            <div class="col-sm-6">
-                              <h5 class="card-title mb-3 text-primary">Remarks</h5>
-                            </div>
-                            <div class="col-sm-6 text-end">
-                              {% if data.status.name != 'InActive' %}
-                              {% if 'add_remark' in permission_names %}
-                                {% if is_support %}
-                              <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#centeredModal" id="{{data.id}}"  {% if request.user.role.name  == "Support" and  data.status.name == 'Pending' %}hidden {% endif %}>
-                                <i class="fas fa-plus"></i> Add Remarks
-                                {% endif %}
-                                {% endif %}
-                              {% endif %}
-                              </button>
-                            </div>
-                          </div>
-                          <table class="table table-striped table-hover table-bordered datatable" id="demo_remark_table">
-                            <thead>
-                              <tr>
-                                <th scope="col">Remarks</th>
-                                <th scope="col">Remark By</th>
-                                <th scope="col">Date</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {% for remark in data.demo_r_related.all %}
-                              <tr>
-                                <td>{{ remark.remarks }}</td>
-                                <td>{{ remark.added_by }}</td>
-                                <td>{{ remark.created_at }}</td>
-                              </tr>
-                              {% endfor %}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
+    <div class="card shadow-sm rounded-3 p-3 mt-2 bg-light">
+        <div class="row">
+            <div class="col-sm-6">
+                <h5 class="card-title mb-3 text-primary">Remarks</h5>
+            </div>
+            <div class="col-sm-6 text-end">
+                {% if data.status.name != 'InActive' %}
+                {% if 'add_remark' in permission_names %}
+                {% if is_support %}
+                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#centeredModal" id="{{data.id}}" {% if request.user.role.name == "Support" and data.status.name == 'Pending' %}hidden {% endif %}>
+                    <i class="fas fa-plus"></i> Add Remarks
+                </button>
+                {% endif %}
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover table-bordered datatable" id="demo_remark_table">
+                <thead>
+                    <tr>
+                        <th scope="col">Remarks</th>
+                        <th scope="col">Remark By</th>
+                        <th scope="col">Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for remark in data.demo_r_related.all %}
+                    <tr>
+                        <td>{{ remark.remarks }}</td>
+                        <td>{{ remark.added_by }}</td>
+                        <td>{{ remark.created_at }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
                     </div>
                     <!-- end -->
         </div>
@@ -269,103 +272,107 @@
       <div id = 'delete_feature_div'></div>
 
       <div class="col-md-6">
-        <div class="card shadow-sm rounded-3 p-3 mt-2 bg-light">
-          <div class="row" id="Feature_div">
+    <div class="card shadow-sm rounded-3 p-3 mt-2 bg-light">
+        <div class="row" id="Feature_div">
             <div class="col-sm-6">
-              <h5 class="card-title mb-3 text-primary">Features</h5>
+                <h5 class="card-title mb-3 text-primary">Features</h5>
             </div>
             <div class="col-sm-6 text-end">
-
-              {% if data.status.name != 'InActive' %}
-               {% if 'add_feature' in permission_names %}
+                {% if data.status.name != 'InActive' %}
+                {% if 'add_feature' in permission_names %}
                 {% if is_allowed %}
-              <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addFeatureModal" id="{{data.id}}" >
-                <i class="fas fa-plus"></i> Add Feature
-              </button>
-              {% endif %}
+                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addFeatureModal" id="{{data.id}}">
+                    <i class="fas fa-plus"></i> Add Feature
+                </button>
                 {% endif %}
-              {% endif %}
+                {% endif %}
+                {% endif %}
             </div>
-          </div>
-          <table class="table table-striped table-hover table-bordered datatable" id="poc_data_table_feature">
-            <thead>
-              <tr>
-                <th scope="col">Feature</th>
-                <th scope="col">Timeline</th>
-<!--                <th scope="col">Status</th>-->
-                <th scope="col">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for feature in data.demo_f_related.all %}
-              <tr>
-                <td>{{ feature.features_list }}</td>
-                <td>{{ feature.timeline }}</td>
-<!--                <td>{{ feature.status }}</td>-->
-                <td>
-                  <div class="d-flex justify-content-between">
-                    <button class="btn btn-sm btn-primary new-btns " data-toggle="tooltip" data-placement="top" title="View" id="fet_{{ feature.id }}" value="{{ feature.id }}">
-                      View Remarks
-                    </button>
-                    {% if "edit_feature" in permission_names and is_allowed %}
-                    <button class="btn btn-sm btn-primary"  data-bs-toggle="modal" data-toggle="tooltip" data-placement="top" title="Edit" id="{{ feature.id }}_update_feture" value="{{ feature.id }}" onclick="update_feature(this,'{{ feature.features_list }}','{{ feature.timeline|date:'Y-m-d' }}','{{ feature.status }}')" data-bs-target="#centeredModalupdatefeature">
-                    <i class="ri-edit-circle-fill" alt="update"></i>
-                    </button>
-                    {% endif %}
-                    {% if request.user.role.name in permission_for_ADD_STATUS or is_support %}
-                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" value="{{ feature.id }}" onclick="update_sts(this)" data-bs-target="#centeredModalupdate" {% if request.user.role.name  == "Support" and  data.status.name == 'Pending' %}hidden {% endif %}>
-                      <i class="ri-file-add-line"></i>Remark
-                    </button>
-                    {% endif %}
-                    {% if "delete_feature" in permission_names and is_allowed %}
-                    <a class="btn btn-sm btn-danger delete-feature" data-id="{{ feature.id }}" href="#">
-                      <i class="ri-delete-bin-line"></i>
-                      </a>
-                      {% endif %}
-                  </div>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
         </div>
-      </div>
-      <div class="col-md-6">
-        <div class="card">
-          <div class="card-header">
-            <h4 class="card-title">Feature Remarks Details   </h4>
-            <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
-          </div>
-          <div class="card-content collapse show">
-            <div id="featurestsdetatil" class="card-body card-dashboard">
-              <span id="hide_sp"> Click on view Remarks for specific feature</span>
-              {% for feature in data.demo_f_related.all %}
-              <div class="feature-container" id="featurestsdetatil_{{feature.id}}" style="display: none;">
-                <h4> Feature - {{ feature.features_list }}</h4>
-                <table class="table table-striped table-hover table-bordered datatable" id="my-feature-table_{{ feature.id }}">  <thead>
-                <tr>
-                  <th>Status</th>
-                  <th>Added By</th>
-                  <th>Added At</th>
-                </tr>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover table-bordered datatable" id="poc_data_table_feature">
+                <thead>
+                    <tr>
+                        <th scope="col">Feature</th>
+                        <th scope="col">Timeline</th>
+                        <!-- <th scope="col">Status</th> -->
+                        <th scope="col">Actions</th>
+                    </tr>
                 </thead>
-                  <tbody>
-                  {% for dt in feature.demo_feature_related.all %}
-                  <tr>
-                    <td>{{ dt.status }}</td>
-                    <td>{{ dt.added_by }}</td>
-                    <td>{{ dt.created_at }}</td>
-                  </tr>
-                  {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-              {% endfor %}
-            </div>
-          </div>
+                <tbody>
+                    {% for feature in data.demo_f_related.all %}
+                    <tr>
+                        <td>{{ feature.features_list }}</td>
+                        <td>{{ feature.timeline }}</td>
+                        <!-- <td>{{ feature.status }}</td> -->
+                        <td>
+                            <div class="d-flex justify-content-between">
+                                <button class="btn btn-sm btn-primary new-btns m-2" data-toggle="tooltip" data-placement="top" title="View" id="fet_{{ feature.id }}" value="{{ feature.id }}">
+                                    View Remarks
+                                </button>
+                                {% if "edit_feature" in permission_names and is_allowed %}
+                                <button class="btn btn-sm btn-primary m-2" data-bs-toggle="modal" data-toggle="tooltip" data-placement="top" title="Edit" id="{{ feature.id }}_update_feture" value="{{ feature.id }}" onclick="update_feature(this,'{{ feature.features_list }}','{{ feature.timeline|date:'Y-m-d' }}','{{ feature.status }}')" data-bs-target="#centeredModalupdatefeature">
+                                    <i class="ri-edit-circle-fill" alt="update"></i>
+                                </button>
+                                {% endif %}
+                                {% if request.user.role.name in permission_for_ADD_STATUS or is_support %}
+                                <button class="btn btn-sm btn-primary m-2" data-bs-toggle="modal" value="{{ feature.id }}" onclick="update_sts(this)" data-bs-target="#centeredModalupdate" {% if request.user.role.name == "Support" and data.status.name == 'Pending' %}hidden {% endif %}>
+                                    <i class="ri-file-add-line"></i>Remark
+                                </button>
+                                {% endif %}
+                                {% if "delete_feature" in permission_names and is_allowed %}
+                                <a class="btn btn-sm btn-danger delete-feature m-2" data-id="{{ feature.id }}" href="#">
+                                    <i class="ri-delete-bin-line"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-      </div>
     </div>
+</div>
+
+      <div class="col-md-6">
+    <div class="card">
+        <div class="card-header">
+            <h4 class="card-title">Feature Remarks Details</h4>
+            <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
+        </div>
+        <div class="card-content collapse show">
+            <div id="featurestsdetatil" class="card-body card-dashboard">
+                <span id="hide_sp">Click on view Remarks for specific feature</span>
+                {% for feature in data.demo_f_related.all %}
+                <div class="feature-container table-responsive" id="featurestsdetatil_{{feature.id}}" style="display: none;">
+                    <h4>Feature - {{ feature.features_list }}</h4>
+                    <table class="table table-striped table-hover table-bordered datatable" id="my-feature-table_{{ feature.id }}">
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Added By</th>
+                                <th>Added At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dt in feature.demo_feature_related.all %}
+                            <tr>
+                                <td>{{ dt.status }}</td>
+                                <td>{{ dt.added_by }}</td>
+                                <td>{{ dt.created_at }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+    </div>
+
     </section>
 
 
