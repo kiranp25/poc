@@ -20,54 +20,58 @@
                                   
                   <div class="text-center"><h1>Roles</h1>
                   </div>
+                    <section id="form-control-repeater">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12 text-end">
+                <a href="{% url 'add_role' %}" class="btn btn-primary btn-sm m-2">Add Role</a>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="datatable table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th scope="col">Role Name</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Created At</th>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if roles %}
+                    {% for role in roles %}
+                    <tr>
+                        <td>{{ role.name }}</td>
+                        <td>
+                            {% for key, val in status %}
+                            {% if key == role.status %}
+                            {{ val }}
+                            {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td>{{ role.created_at }}</td>
+                        <td>
+                            <a href="{% url 'edit_role' role.id %}" class="btn btn-primary m-2">Edit</a>
+                            {% if role.name != 'Admin' %}
+                            <a href="#" onclick="return confirmDelete('{% url 'delete_role' role.id %}')" class="btn btn-danger m-2">Delete</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="4">Data not found</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
 
                     
-                <section id="form-control-repeater">
-                  <div class="container">
-                    <div class="row">
 
-                <div class="col-sm-12  text-end">
-                    <a href="{% url 'add_role' %}" class="btn btn-primary btn-sm m-2">Add Role</a>
-                </div>
-            </div>
-                      <table class=" datatable table table-striped table-bordered">   
-                      <thead>
-                        <tr>
-                          <th scope="col">Role Name</th>
-                          <th scope="col">Status</th>
-                          <th scope="col">Created At</th>
-                          <th scope="col">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {% if roles %}
-                        {% for role in roles %}
-                          <tr>
-                            
-                            <td>{{ role.name }}</td>
-                            <td>
-                              {% for key, val in status %}
-                                {% if key == role.status %}
-                                  {{ val }}
-                                {% endif %}
-                              {% endfor %}
-                            </td>
-                            <td>{{ role.created_at }}</td>
-                            <td>
-                              <a href="{% url 'edit_role' role.id %}" class="btn btn-primary btn-sm">Edit</a>
-                              {% if  role.name != 'Admin' %}
-                              <a href="#" onclick="return confirmDelete('{% url 'delete_role' role.id %}')" class="btn btn-danger btn-sm ms-1">Delete</a>
-                              {% endif %}
-                            </td>
-                          </tr>
-                        {% endfor %}
-                        {% else %}
-                      <tr><td colspan="8">data not found</td></tr>
-                      {% endif %}
-                      </tbody>
-                    </table>
-                </div>
-                </section>
         </div>
       </div>
     </div>

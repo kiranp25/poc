@@ -12,6 +12,8 @@ from datetime import datetime
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
 import threading
+from django.db.models import Prefetch
+
 
 User = get_user_model()
 app_name = 'POC_DEMO'
@@ -1123,7 +1125,10 @@ def view_poc_detail(request, id):
     is_edit = False
     is_allowed = False
     permission_names = list(request.user.permissions.values_list('name', flat=True))
-    poc = Poc_model.objects.prefetch_related('poc_f_related', 'poc_r_related').get(id=id)
+    poc = Poc_model.objects.prefetch_related(
+    Prefetch('poc_f_related', queryset=Feature.objects.order_by('-created_at')),
+    Prefetch('poc_r_related', queryset=Poc_remark.objects.order_by('-created_at'))
+).get(id=id)
     if request.user.role.name == 'Sales' and request.user == poc.added_by:
         if poc.status.name == 'Rejected':
             edit_allow = True
@@ -1183,27 +1188,7 @@ def view_poc_detail(request, id):
 
     permission_for_delete = ['Admin', 'Sales']
     permission_for_ADD_STATUS = ['Admin', 'Sales', 'Approval', 'Support']
-    html_feture_only = ''' '''
-    html_feture_sts_only = ''' '''
-    html = ''' '''
     type_poc = poc_choice
-
-    for feature in poc.poc_f_related.all():
-        elated_objects_count = feature.feature_related.count() + 1
-        for data in feature.feature_related.all().order_by('-created_at'):
-            html += f'''
-                    <tr>
-                    <td>{data.status}</td>
-                      <td>{data.added_by}</td>
-                      <td>{data.created_at}</td>
-                      </tr>'''
-            html_feture_sts_only += f'''
-                    <tr>
-                     <td>{feature.features_list}</td>
-                    <td>{data.status}</td>
-                      <td>{data.added_by}</td>
-                      <td>{data.created_at}</td>
-                      </tr>'''
     all_active_product = Product.objects.all()
     status_list = Status.objects.all()
     customer = Customer.objects.filter(status='Active')
@@ -1246,12 +1231,9 @@ def view_poc_detail(request, id):
             pass
     return render(request, 'poc_demo/view_poc_detail.html', {'data': poc,
                                                              'status': status_list,
-                                                             'html': html,
                                                              'product': all_active_product,
                                                              'permition': [1, 2, 3],
                                                              "assign_to": assign_to,
-                                                             "html_feture_sts_only": html_feture_sts_only,
-                                                             "html_feture_only": html_feture_only,
                                                              "permission_for_edit": permission_for_edit,
                                                              "permission_for_ADD_STATUS": permission_for_ADD_STATUS,
                                                              "permission_for_delete": permission_for_delete,
@@ -1525,7 +1507,8 @@ def view_demo(request):
                 Q(Timeline__icontains=search_query) |
                 Q(added_by__username__icontains=search_query) |
                 Q(Product_name__Product_name__icontains=search_query) |
-                Q(status__name__icontains=search_query)
+                Q(status__name__icontains=search_query) |
+                Q(assign_to__username__icontains=search_query)
             )
 
     paginator = Paginator(all_active_product, 10)
@@ -1548,10 +1531,10 @@ def view_demo_detail(request, id):
     permission_for_edit = ['Admin', 'Sales', 'Approval']
     permission_for_delete = ['Admin', 'Sales', 'Approval']
     permission_for_ADD_STATUS = ['Admin', 'Sales', 'Approval', 'Support']
-    demo = Demo_model.objects.prefetch_related('demo_f_related', 'demo_r_related').get(id=id)
-    html_feture_only = ''' '''
-    html_feture_sts_only = ''' '''
-    html = ''' '''
+    demo = Demo_model.objects.prefetch_related(
+    Prefetch('demo_f_related', queryset=Demo_feature.objects.order_by('-created_at')),
+    Prefetch('demo_r_related', queryset=Demo_remark.objects.order_by('-created_at'))
+    ).get(id=id)
 
     if request.user.role.name == 'Sales' and request.user == demo.added_by:
         if demo.status.name == 'Rejected':
@@ -1595,22 +1578,6 @@ def view_demo_detail(request, id):
     if demo.documentation.name:
         document = demo.documentation.name.split("/")[1]
 
-    for feature in demo.demo_f_related.all():
-        elated_objects_count = feature.demo_feature_related.count() + 1
-        for data in feature.demo_feature_related.all().order_by('-created_at'):
-            html += f'''
-                    <tr>
-                    <td>{data.status}</td>
-                      <td>{data.added_by}</td>
-                      <td>{data.created_at}</td>
-                      </tr>'''
-            html_feture_sts_only += f'''
-                    <tr>
-                     <td>{feature.features_list}</td>
-                    <td>{data.status}</td>
-                      <td>{data.added_by}</td>
-                      <td>{data.created_at}</td>
-                      </tr>'''
     all_active_product = Product.objects.all()
     status_list = Status.objects.all()
     customer = Customer.objects.filter(status='Active')
@@ -1650,12 +1617,9 @@ def view_demo_detail(request, id):
             pass
     return render(request, 'poc_demo/view_demo_detail.html', {'data': demo,
                                                               'status': status_list,
-                                                              'html': html,
                                                               'product': all_active_product,
                                                               'permition': [1, 2, 3],
                                                               "assign_to": assign_to,
-                                                              "html_feture_sts_only": html_feture_sts_only,
-                                                              "html_feture_only": html_feture_only,
                                                               "permission_for_edit": permission_for_edit,
                                                               "permission_for_ADD_STATUS": permission_for_ADD_STATUS,
                                                               "permission_for_delete": permission_for_delete,
