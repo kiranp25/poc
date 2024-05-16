@@ -312,7 +312,7 @@
                     <i class="ri-edit-circle-fill" alt="update"></i>
                     </button>
                     {% endif %}
-                    {% if request.user.role.name in permission_for_ADD_STATUS and is_support %}
+                    {% if request.user.role.name in permission_for_ADD_STATUS or is_support %}
                     <button class="btn btn-sm btn-primary" data-bs-toggle="modal" value="{{ feature.id }}" onclick="update_sts(this)" data-bs-target="#centeredModalupdate" {% if request.user.role.name  == "Support" and  data.status.name == 'Pending' %}hidden {% endif %}>
                       <i class="ri-file-add-line"></i>Remark
                     </button>

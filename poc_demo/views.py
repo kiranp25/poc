@@ -1151,8 +1151,14 @@ def view_poc_detail(request, id):
             is_edit = False
             is_support = True
     else:
+        lists = request.user.permissions.all()
+        ls = []
+        for listss in lists:
+            print(listss)
+            ls.append(listss.name)
+        if "add_remark" in ls:
+            is_support = True
         edit_allow = False
-        is_support = False
         is_edit = False
 
     document = ''
@@ -1508,17 +1514,7 @@ def add_demo(request):
 @login_required(login_url='loginpage')
 def view_demo(request):
     permission_names = list(request.user.permissions.values_list('name', flat=True))
-    if request.user.role_id == 1:
-        all_active_product = Demo_model.objects.prefetch_related('demo_f_related', 'demo_r_related').all()
-    elif request.user.role_id == 3:
-        all_active_product = Demo_model.objects.filter(added_by__Belongs_to=request.user.id).prefetch_related(
-            'demo_f_related', 'demo_r_related').all()
-    elif request.user.role_id == 2:
-        all_active_product = Demo_model.objects.filter(added_by=request.user.id).prefetch_related('demo_f_related',
-                                                                                                  'demo_r_related').all()
-    elif request.user.role_id == 4:
-        all_active_product = Demo_model.objects.filter(assign_to=request.user.id).prefetch_related('demo_f_related',
-                                                                                                   'demo_r_related').all()
+    all_active_product = Demo_model.objects.prefetch_related('demo_f_related', 'demo_r_related').all()
     search_query = request.GET.get('search', '')
 
     if search_query:
@@ -1585,8 +1581,14 @@ def view_demo_detail(request, id):
             is_edit = False
             is_support = True
     else:
+        lists = request.user.permissions.all()
+        ls = []
+        for listss in lists:
+            print(listss)
+            ls.append(listss.name)
+        if "add_remark" in ls:
+            is_support = True
         edit_allow = False
-        is_support = False
         is_edit = False
 
     document = ''
@@ -1636,10 +1638,10 @@ def view_demo_detail(request, id):
                 html_message += '</li>'
             html_message += '</ul>'
             if request.user.role.name == "Approval":
-                list_mail.extend([get_poc.added_by.email, get_poc.assign_to.email])
+                list_mail.extend([get_demo.added_by.email, get_demo.assign_to.email])
 
             else:
-                list_mail.extend([request.user.Belongs_to.email, get_poc.assign_to.email])
+                list_mail.extend([request.user.Belongs_to.email, get_demo.assign_to.email])
             mail_for_action(f'Project Remarks Added! for Demo', html_message,
                             list_mail)
 
@@ -1659,7 +1661,10 @@ def view_demo_detail(request, id):
                                                               "permission_for_delete": permission_for_delete,
                                                               'customer': customer,
                                                               "permission_names": permission_names,
-                                                              "document": document
+                                                              "document": document,
+                                                              "is_allowed":is_allowed,
+                                                              "is_edit":is_edit,
+                                                              "is_support":is_support
                                                               })
 
 
