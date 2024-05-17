@@ -3,10 +3,17 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# pyc extensions
+*.pyc
 # C extensions
 *.so
-#ignore .pyc file
-*.pyc
+
+# Media folder
+media/
+
+# Migrations
+migrations/
+
 # Distribution / packaging
 .Python
 build/
