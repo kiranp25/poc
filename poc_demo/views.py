@@ -13,6 +13,7 @@ from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
 import threading
 from django.db.models import Prefetch
+from django.urls import reverse
 
 
 User = get_user_model()
@@ -21,8 +22,8 @@ app_name = 'Sales Management System'
 
 def mail_for_action(subject, message, recipient_list):
     try:
-        message += f'<br><br><footer> Send By {app_name}<br>Olatechs solution</footer>'
-        email_from = f"{settings.EMAIL_FROM_NAME};"
+        message += f'<br><br><footer> Regards, <br>SMS<br>Olatechs solution</footer>'
+        email_from = f"{settings.DEFAULT_FROM_EMAIL}"
         msg = EmailMessage(subject, message, email_from, recipient_list)
         msg.content_subtype = "html"  # Main content is now text/html
         threading.Thread(target=msg.send).start()
@@ -53,6 +54,7 @@ def user_has_permission(permission_name):
 
 @login_required(login_url='loginpage')
 def dahboard(request):
+
     permission_names = list(request.user.permissions.values_list('name', flat=True))
     user_types = request.user.role
     all_active_product = Product.objects.all()
@@ -326,6 +328,10 @@ def add_user(request):
     user = User.objects.all()
     roles = Roles.objects.filter(status="1")
     sts = status_choice
+    domain = request.get_host()
+    scheme = request.scheme
+    login_path = reverse('loginpage')
+    login_url = f"{scheme}://{domain}{login_path}"
     context = {}
     context['users'] = [i.first_name for i in user]
     user_type_dict = dict()
@@ -386,13 +392,13 @@ def add_user(request):
                         permission, _ = CustomPermission.objects.get_or_create(name=permission_nm)
                         new_user.permissions.add(permission)
 
-                html_message = f'''Welcome {first_name} {last_name}, for journey with us. <br>
-                                Name: {first_name} {last_name} <br>
+                html_message = f'''Welcome {first_name} {last_name}, to {app_name}.<br>
                                 Email: {email}<br>
-                                Username: {username}<br>
                                 User Type: {usertype.name}<br>
+                                Please click the following link to access the application<br> {login_url}
                                '''
-                mail_for_action(f'Thank You for Join with us: {first_name} {last_name}',
+
+                mail_for_action(f'Thank you for Join with us: {first_name} {last_name}',
                                 html_message,
                                 [new_user.Belongs_to.email, new_user.email])
 
@@ -801,18 +807,19 @@ def add_remarks(request, id):
             rid = request.POST['row_remark_id']
             get_poc = Poc_model.objects.get(pk=rid)
             new_remarks_list = []
+
             html_message = '<div> New remark added!'
             for remark in remarks:
                 html_message += '<ul>'
                 html_message += '<li>'
                 html_message += f'Remark: {remark}<br>'
-                html_message += '</li>'
+                html_message += f'</li>'
                 new_remarks_list.append(
                     {'poc_id': get_poc, 'remarks': remark, 'status': get_poc.status, 'added_by': added_by})
             html_message += f'</ul><br> above remark added to  project id {get_poc.id} <br> Added By: {added_by.email}</div>'
             list_mail = []
             if request.user.role.name == "Approval":
-                list_mail.append(request.user.email)
+                list_mail.extend([request.user.email,get_poc.added_by.email])
 
             else:
                 list_mail.extend([request.user.email, request.user.Belongs_to.email])
@@ -851,7 +858,7 @@ def add_feature(request, id):
             Added By: {added_by.email}.<br>'''
 
             if request.user.role.name == "Approval":
-                list_mail.append(request.user.email)
+                list_mail.extend([request.user.email,poc_ref.added_by.email])
 
             else:
                 list_mail.extend([request.user.email, request.user.Belongs_to.email])
@@ -1031,7 +1038,7 @@ def edit_poc(request, id):
 
             list_mail = []
             if request.user.role.name == "Approval":
-                list_mail.append(request.user.email)
+                list_mail.extend([request.user.email,get_poc.added_by.email])
 
             else:
                 list_mail.extend([request.user.email, request.user.Belongs_to.email])
@@ -1093,7 +1100,7 @@ def update_feature_detail(request):
             feature.save()
             list_mail = []
             if request.user.role.name == "Approval":
-                list_mail.append(request.user.email)
+                list_mail.extend([request.user.email,get_poc.added_by.email])
 
             else:
                 list_mail.extend([request.user.email, request.user.Belongs_to.email])
@@ -1785,7 +1792,7 @@ def edit_demo(request, id):
                 html_message += i
                 html_message += '<hr>'
             if request.user.role.name == "Approval":
-                list_mail.append(request.user.email)
+                list_mail.extend([request.user.email,get_demo.added_by.email])
 
             else:
                 list_mail.extend([request.user.email, request.user.Belongs_to.email])
@@ -1823,7 +1830,7 @@ def add_demo_remarks(request, id):
             messages.success(request, f'Demo remark added.')
             list_mail = []
             if request.user.role.name == "Approval":
-                list_mail.append(request.user.email)
+                list_mail.extend([request.user.email, get_demo.added_by.email])
 
             else:
                 list_mail.extend([request.user.email, request.user.Belongs_to.email])
@@ -1929,7 +1936,7 @@ def update_feature_detail_demo(request):
             feature.save()
             list_mail = []
             if request.user.role.name == "Approval":
-                list_mail.append(request.user.email)
+                list_mail.extend([request.user.email,get_demo.added_by.email])
 
             else:
                 list_mail.extend([request.user.email, request.user.Belongs_to.email])

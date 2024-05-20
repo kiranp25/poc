@@ -150,5 +150,6 @@ EMAIL_HOST = 'mail.supremecluster.com'
 EMAIL_USE_SSL = True
 EMAIL_PORT = 465
 EMAIL_HOST_USER = 'noreply@olatechs.com' #sender's email-id
-# EMAIL_FROM_NAME = ''
+# EMAIL_FROM_NAME = 'SMS'
+DEFAULT_FROM_EMAIL = 'SMS <noreply@olatechs.com>'
 EMAIL_HOST_PASSWORD = 'Pk2c6b0ZV-' #password associated with above email-id
