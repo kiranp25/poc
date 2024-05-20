@@ -16,13 +16,13 @@ from django.db.models import Prefetch
 
 
 User = get_user_model()
-app_name = 'POC_DEMO'
+app_name = 'Sales Management System'
 
 
 def mail_for_action(subject, message, recipient_list):
     try:
         message += f'<br><br><footer> Send By {app_name}<br>Olatechs solution</footer>'
-        email_from = settings.EMAIL_HOST_USER
+        email_from = f"{settings.EMAIL_FROM_NAME};"
         msg = EmailMessage(subject, message, email_from, recipient_list)
         msg.content_subtype = "html"  # Main content is now text/html
         threading.Thread(target=msg.send).start()
