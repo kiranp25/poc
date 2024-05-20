@@ -192,82 +192,24 @@
           <span>Dashboard</span>
         </a>
       </li><!-- End Dashboard Nav -->
-      {% if request.user.role.name == "Admin" %}
-      <li class="nav-item">
-        <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-menu-button-wide"></i><span>Add</span><i class="bi bi-chevron-down ms-auto"></i>
-        </a>
-        <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-          <li>
-            <a href="{% url 'add_users' %}">
-              <i class="bi bi-circle"></i><span>Add Users</span>
-            </a>
-          </li>
-          <li>
-            <a href="{% url 'add_status' %}">
-              <i class="bi bi-circle"></i><span>Add Status</span>
-            </a>
-          </li>
-          <li>
-            <a href="{% url 'add_role' %}">
-              <i class="bi bi-circle"></i><span>Add Roles</span>
-            </a>
-          </li>
-
-
-        </ul>
-      </li><!-- End Add admin section Nav -->
-
-
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" data-bs-target="#view-nav" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-menu-button-wide"></i><span>View</span><i class="bi bi-chevron-down ms-auto"></i>
-        </a>
-        <ul id="view-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-          <li>
-            <a href="{% url 'view_users' %}">
-              <i class="bi bi-circle"></i><span>View Users</span>
-            </a>
-          </li>
-          <li>
-            <a href="{% url 'view_status' %}">
-              <i class="bi bi-circle"></i><span>View Status</span>
-            </a>
-          </li>
-          <li>
-            <a href="{% url 'view_product' %}">
-              <i class="bi bi-circle"></i><span>View Products</span>
-            </a>
-          </li>
-          <li>
-            <a href="{% url 'view_roles' %}">
-              <i class="bi bi-circle"></i><span>View Roles</span>
-            </a>
-          </li>
-          
-        </ul>
-      </li><!-- End View admin section Nav -->
-      {% endif %}
-
 
       <li class="nav-item">
         <a class="nav-link" href="{% url 'view_poc' %}">
-          <i class="bi bi-grid"></i>
+          <i class="ri ri-apps-fill"></i>
           <span>Projects</span>
         </a>
       </li>
 
       <li class="nav-item">
         <a class="nav-link" href="{% url 'view_demo' %}">
-          <i class="bi bi-grid"></i>
+         <i class="ri ri-apps-line"></i>
           <span>Demo</span>
         </a>
       </li>
 
       <li class="nav-item">
         <a class="nav-link" href="{% url 'view_customer' %}">
-          <i class="bi bi-grid"></i>
+          <i class="bi  bi-person-badge-fill"></i>
           <span>Customer</span>
         </a>
       </li>
@@ -275,11 +217,32 @@
        {% if 'add_product' in permission_names %}
       <li class="nav-item">
         <a class="nav-link" href="{% url 'view_product' %}">
-          <i class="bi bi-grid"></i>
+          <i class="bx bxl-product-hunt"></i>
           <span>Product</span>
         </a>
       </li>
       {% endif %}
+
+      {% if request.user.role.name == "Admin" %}
+      <li class="nav-item">
+            <a href="{% url 'view_users' %}"  class="nav-link">
+              <i class="bi bi-people-fill"></i><span>Users</span>
+            </a>
+      <li>
+      <li class="nav-item">
+            <a href="{% url 'view_status' %} " class="nav-link">
+              <i class="bi bi-circle"></i><span>Status</span>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a href="{% url 'view_roles' %}" class="nav-link">
+              <i class="ri ri-user-5-fill"></i><span>Roles</span>
+            </a>
+          </li><!-- End View admin section Nav -->
+      {% endif %}
+
+
 
   </aside><!-- End Sidebar-->
   <main id="main" class="main">
