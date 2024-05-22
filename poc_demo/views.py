@@ -179,9 +179,14 @@ def add_poc(request):
             added_by = CustomUser.objects.get(id=request.user.id)
             Timeline = request.POST['timeline']
             remarks_list = ",".join(remarks)
-
             new_poc = Poc_model(Customer_name=customer_name, Product_name=product_name, status=status,
                                 added_by=added_by, Timeline=Timeline, poc_type=type_poc)
+            if request.FILES.get('uploaded_file'):
+                uploaded_file = request.FILES['uploaded_file']
+                if uploaded_file.name.endswith(('.zip', '.pdf')):
+                    ext = (uploaded_file.name).split(".")[-1]
+                    uploaded_file.name = f"{product_name.Product_name + '_' + type_poc + '_documentations'}.{ext}"
+                new_poc.documentation = uploaded_file
             new_poc.save()
             style = ''' <style>
             table {
@@ -886,6 +891,10 @@ def edit_poc(request, id):
         if request.user.role.name == 'Sales' and get_poc.status.name == 'Rejected' and request.user == get_poc.added_by:
             edit_allow = True
             support_is = True
+        elif request.user.role.name == 'Sales' and get_poc.status.name == 'Approved' and request.user == get_poc.added_by:
+            edit_allow = True
+            support_is = True
+
         elif request.user.role.name in ['Approval', 'Admin']:
             if request.user.id == get_poc.added_by.Belongs_to.id:
                 edit_allow = True
@@ -903,7 +912,7 @@ def edit_poc(request, id):
             messages.error(request, 'You have no permissions for edit')
 
         if request.user.role.name == 'Sales':
-            if get_poc.status.name == 'Rejected' or get_poc.status.name == 'Pending':
+            if get_poc.status.name == 'Rejected' or get_poc.status.name == 'Pending' or get_poc.status.name == 'Approved':
                 allow = True
             else:
                 allow = False
@@ -1131,16 +1140,18 @@ def view_poc_detail(request, id):
     is_support = False
     is_edit = False
     is_allowed = False
+    is_doc = False
     permission_names = list(request.user.permissions.values_list('name', flat=True))
     poc = Poc_model.objects.prefetch_related(
     Prefetch('poc_f_related', queryset=Feature.objects.order_by('-created_at')),
     Prefetch('poc_r_related', queryset=Poc_remark.objects.order_by('-created_at'))
 ).get(id=id)
     if request.user.role.name == 'Sales' and request.user == poc.added_by:
-        if poc.status.name == 'Rejected':
+        if poc.status.name == 'Rejected' or poc.status.name == 'Approved':
             edit_allow = True
             is_support = True
             is_edit = True
+            is_doc = True
         if poc.status.name not in ['Rejected', 'pending']:
             edit_allow = True
             is_support = True
@@ -1417,6 +1428,14 @@ def add_demo(request):
 
             new_demo = Demo_model(Customer_name=customer_name, Product_name=product_name, status=status,
                                   added_by=added_by, Timeline=Timeline)
+
+            if request.FILES.get('uploaded_file'):
+                uploaded_file = request.FILES['uploaded_file']
+                if uploaded_file.name.endswith(('.zip', '.pdf')):
+                    ext = (uploaded_file.name).split(".")[-1]
+                    uploaded_file.name = f"{product_name.Product_name + '_' + 'Demo' + '_documentations'}.{ext}"
+                new_demo.documentation = uploaded_file
+
             new_demo.save()
 
             demo_ref = Demo_model.objects.get(pk=new_demo.id)
@@ -1544,26 +1563,27 @@ def view_demo_detail(request, id):
     ).get(id=id)
 
     if request.user.role.name == 'Sales' and request.user == demo.added_by:
-        if demo.status.name == 'Rejected':
+        if demo.status.name == 'Rejected' or demo.status.name == 'Approved':
             edit_allow = True
             is_support = True
             is_edit = True
+            is_doc = True
         if demo.status.name not in ['Rejected', 'pending']:
             edit_allow = True
             is_support = True
 
     elif request.user.role.name in ['Approval', 'Admin']:
         if request.user.id == demo.added_by.Belongs_to.id:
+
             edit_allow = True
             is_edit = True
             is_support = True
-
             if demo.status.name == 'Pending':
                 is_edit = False
-
         if request.user.role.name == 'Admin':
             is_support = True
             is_allowed = True
+            is_edit = True
 
     elif request.user.role.name in ['Support']:
         if demo.assign_to == request.user:
@@ -1635,7 +1655,8 @@ def view_demo_detail(request, id):
                                                               "document": document,
                                                               "is_allowed":is_allowed,
                                                               "is_edit":is_edit,
-                                                              "is_support":is_support
+                                                              "is_support":is_support,
+                                                              "edit_allow": edit_allow
                                                               })
 
 
