@@ -62,11 +62,9 @@
                    
                             </div>
                             <div class="card-body">
-
-                                  <div class="card-content">
-
+                                <div class="card-content">
                                   <!-- Floating Labels Form -->
-              <form class="row g-3 cool-form" method="post">
+              <form class="row g-3 cool-form" method="post" enctype="multipart/form-data">
                 {% csrf_token %}     
 <!--                <div class="col-md-12">-->
 <!--                  <input type="hidden" class="form-control" value={{request.user.email}} name="username">-->
@@ -82,9 +80,14 @@
                     <div class="form-floating mb-3">
                       <select class="form-select" name="CustomerName" id="floatingCustomerName" aria-label="CustomerName" required>
                       <option value="" selected disabled></option>
-                      {% for customer in customer %}
+                      {% if customer %}
+                        {% for customer in customer %}
+
                         <option value="{{ customer.id }}">{{ customer }}</option>
                         {% endfor %}
+                        {% else %}
+                        <option >No Customer Found</option>
+                        {% endif %}
                     </select>
                       <label for="floatingCustomerName">Customer Name</label>
                     </div>
@@ -94,14 +97,29 @@
                     <div class="form-floating mb-3">
                       <select class="form-select" name="product_name" id="product_name" aria-label="product_name" required>
                         <option value="" disabled></option>
+                        {% if product_list %}
                         {% for product in product_list %}
 
                         <option value="{{product}}">{{product}}</option>
                         {% endfor %}
+                        {% else %}
+                        <option>No data Found</option>
+                        {% endif %}
                       </select>
                       <label for="product_name">Product Name</label>
                     </div>
                   </div>
+
+                  <div class="col-md-12">
+                    <div class="mb-3">
+                      <input type="file" id="uploaded_file" name="uploaded_file" class="form-control" accept=".zip,.pdf" >
+                                    <small class="text-muted">Upload Documents (Allowed file types: PDF, ZIP)</small><br>
+                    </div>
+                    <div id="link">
+            <a id="fileLink" href="#" target="_blank"></a>
+        </div>
+                  </div>
+
 
                 <div class="col-md-12">
                   <div class="col-md-12 Remark-repeater" id = 'Remark-repeater'>
@@ -222,4 +240,21 @@ document.getElementById("add_new_feature").addEventListener("click", function ()
   });
 
 </script>
+
+    <script>
+        document.getElementById('uploaded_file').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const fileURL = URL.createObjectURL(file);
+                const linkElement = document.getElementById('fileLink');
+                linkElement.href = fileURL;
+                linkElement.textContent = `Preview : ${file.name}`;
+                document.getElementById('link').style.display = 'block';
+            } else {
+                document.getElementById('link').style.display = 'none';
+            }
+        });
+    </script>
+
+
 {% endblock %}

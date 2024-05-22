@@ -119,7 +119,7 @@
                                    <input type="text" name="poc_type"  value="{{data.poc_type}}" readonly hidden>
                                    {% endif %}
                                  </div>
-                                {% if request.user.role.name == "Approval" %}
+                                {% if request.user.role.name == "Approval" or request.user.role.name == "Sales" %}
                                 <div class="mb-3">
                                     <label for="uploaded_file" class="form-label fw-bold">Upload Document:</label>
                                     <input type="file" id="uploaded_file" name="uploaded_file" class="form-control" accept=".zip,.pdf"  disabled>
@@ -127,7 +127,6 @@
                                   {% if request.user.role.name == 'Approval' %}
                                 <small class="text-muted">To replace the file, upload a new one:</small>
                               {% endif %}
-
 
                                 </div>
                                 {% endif %}
@@ -156,7 +155,7 @@
                                 </div>
                                 <div class="mb-3">
                                   <label for="Timeline_date_edit" class="form-label fw-bold">Timeline:</label>
-                                  <input type="date" class="form-control" id="Timeline_date_edit" name="Timeline_date" value="{{ data.Timeline|date:'Y-m-d' }}"  disabled>
+                                  <input type="date" class="form-control" id="Timeline_date_edit" name="Timeline_date" value="{{ data.Timeline|date:'Y-m-d' }}" disabled>
                                 </div>
                                 <div class="mb-3">
                                   <label for="status_edit" class="form-label fw-bold">Status:</label>
@@ -213,6 +212,11 @@
                                       <button type="button" class="btn btn-primary edit-btn">Edit</button>
                                       <button type="submit" class="btn btn-success save-btn" onclick="return confirm('Do you want to save changes?')" disabled>Save Changes</button>
                                   {% endif %}
+
+                                {% if is_doc and request.user.role.name == 'Sales' %}
+                                <button type="submit" class="btn btn-success save-btn" onclick="return confirm('Do you want to save changes?')" disabled>Save Changes</button>
+                                {% endif %}
+
                               {% endif %}
                                 {% endif %}
                             </div>
@@ -372,7 +376,6 @@
         </div>
     </div>
 </div>
-
     </div>
     </section>
 
@@ -611,18 +614,6 @@
     {% endblock %}
 
     {% block js %}
-<!--<script>-->
-<!--            new window.simpleDatatables.DataTable("#poc_remark_table", {-->
-<!--                columns: [-->
-<!--                     {-->
-<!--                        select: 2,-->
-<!--                        sort: "desc"-->
-<!--                    }-->
-
-<!--                ],-->
-<!--                responsive: true,-->
-<!--            })-->
-<!--        </script>-->
 <script>
   $(document).ready(function() {
     $('.delete-feature').click(function(event) {
@@ -796,8 +787,11 @@ $(document).ready(function() {
   // Enable editing on click of "Edit" button
   $('.edit-btn').click(function() {
     $(this).prop('disabled', true); // Disable "Edit" button on click
-    {% if request.user.role.name == 'Sales' %}
+    {% if request.user.role.name == 'Sales' and data.status.name != 'Approved' %}
     $('#Timeline_date_edit').prop('disabled', false); // Enable all input fields
+    $('#uploaded_file').prop('disabled', false);
+    {% elif request.user.role.name == 'Sales' and data.status.name == 'Approved' %}
+    $('#uploaded_file').prop('disabled', false);
     {% elif request.user.role.name == 'Approval'  %}
     $('#status_edit').prop('disabled', false);
     $('#assign_edit').prop('disabled', false);

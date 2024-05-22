@@ -121,8 +121,7 @@
                                    {% endif %}
                                  </div>
                                 {% endcomment %}
-
-                                {% if request.user.role.name == "Approval" %}
+                                {% if request.user.role.name == "Approval" or request.user.role.name == "Sales" %}
                                 <div class="mb-3">
                                     <label for="uploaded_file" class="form-label fw-bold">Upload Document:</label>
                                     <input type="file" id="uploaded_file" name="uploaded_file" class="form-control" accept=".zip,.pdf"  disabled>
@@ -211,10 +210,14 @@
                             <div class="text-end">
                               {% if data.status.name != 'InActive' %}
                                   {% if 'edit_demo' in permission_names  %}
+
                                      {% if is_edit and edit_allow %}
                                       <button type="button" class="btn btn-primary edit-btn">Edit</button>
                                       <button type="submit" class="btn btn-success save-btn" onclick="return confirm('Do you want to save changes?')" disabled>Save Changes</button>
                                   {% endif %}
+
+
+
                               {% endif %}
                                 {% endif %}
                             </div>
@@ -243,17 +246,17 @@
             <table class="table table-striped table-hover table-bordered datatable" id="demo_remark_table">
                 <thead>
                     <tr>
-                        <th scope="col">Remarks</th>
-                        <th scope="col">Remark By</th>
-                        <th scope="col">Date</th>
+                        <th scope="col" class="text-center">Remarks</th>
+                        <th scope="col" class="text-center">Remark By</th>
+                        <th scope="col" class="text-center">Date</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for remark in data.demo_r_related.all %}
                     <tr>
-                        <td>{{ remark.remarks }}</td>
-                        <td>{{ remark.added_by }}</td>
-                        <td>{{ remark.created_at }}</td>
+                        <td class="text-center">{{ remark.remarks }}</td>
+                        <td class="text-center">{{ remark.added_by }}</td>
+                        <td class="text-center">{{ remark.created_at }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -372,7 +375,6 @@
     </div>
 </div>
     </div>
-
     </section>
 
 
@@ -783,13 +785,16 @@ $(document).ready(function() {
   // Enable editing on click of "Edit" button
   $('.edit-btn').click(function() {
     $(this).prop('disabled', true); // Disable "Edit" button on click
-    {% if request.user.role.name == 'Sales' %}
+    {% if request.user.role.name == 'Sales' and data.status.name != 'Approved' %}
     $('#Timeline_date_edit').prop('disabled', false); // Enable all input fields
+    $('#uploaded_file').prop('disabled', false);
+    {% elif request.user.role.name == 'Sales' and data.status.name == 'Approved' %}
+    $('#uploaded_file').prop('disabled', false);
     {% elif request.user.role.name == 'Approval'  %}
     $('#status_edit').prop('disabled', false);
     $('#assign_edit').prop('disabled', false);
     $('#kt_given').prop('disabled', false);
-    $('#Timeline_date_edit').prop('disabled', false);
+    //$('#Timeline_date_edit').prop('disabled', false);
     $('#uploaded_file').prop('disabled', false);
     {% elif request.user.role.name == 'Admin' %}
     $('.form-control').prop('disabled', false);
