@@ -88,10 +88,10 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'pocdemo',
         'USER': 'root',
-        'PASSWORD': 'Admin@123',
-        'HOST': 'localhost',
-        # 'PASSWORD': 'Root@123',
-        # 'HOST': '137.59.55.195',
+        # 'PASSWORD': 'Admin@123',
+        # 'HOST': 'localhost',
+        'PASSWORD': 'Root@123',
+        'HOST': '137.59.55.195',
         'PORT':'3306'
     }
 }
@@ -135,15 +135,26 @@ TIME_ZONE =  'Asia/Kolkata'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
+########################## FOR LOCAL MACHINE ##########################
+# STATIC_URL = 'static/'
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
+# # Default primary key field type
+# # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Assuming BASE_DIR is set appropriately
-MEDIA_URL = '/media/'
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Assuming BASE_DIR is set appropriately
+# MEDIA_URL = '/media/'
+########################## FOR LOCAL MACHINE ##########################
+
+########################## FOR NGINX SERVER ##########################
+STATIC_URL = "/static_sms/"
+STATICFILES_DIRS=[ 
+    os.path.join(BASE_DIR, 'static')
+]
+MEDIA_URL = '/media_sms/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+########################## FOR NGINX SERVER ##########################
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'mail.supremecluster.com'
