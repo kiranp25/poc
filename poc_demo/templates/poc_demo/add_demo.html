@@ -112,7 +112,7 @@
 
                   <div class="col-md-12">
                     <div class="mb-3">
-                      <input type="file" id="uploaded_file" name="uploaded_file" class="form-control" accept=".zip,.pdf" >
+                      <input type="file" id="uploaded_file" name="uploaded_file" class="form-control" accept=".zip,.pdf" multiple>
                                     <small class="text-muted">Upload Documents (Allowed file types: PDF, ZIP)</small><br>
                     </div>
                     <div id="link">
@@ -242,18 +242,37 @@ document.getElementById("add_new_feature").addEventListener("click", function ()
 </script>
 
     <script>
-        document.getElementById('uploaded_file').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const fileURL = URL.createObjectURL(file);
-                const linkElement = document.getElementById('fileLink');
-                linkElement.href = fileURL;
-                linkElement.textContent = `Preview : ${file.name}`;
-                document.getElementById('link').style.display = 'block';
-            } else {
-                document.getElementById('link').style.display = 'none';
-            }
-        });
+    document.getElementById('uploaded_file').addEventListener('change', function(event) {
+    const files = event.target.files;
+    const linkContainer = document.getElementById('link');
+    linkContainer.innerHTML = ''; // Clear previous links
+
+    if (files.length > 0) {
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const fileURL = URL.createObjectURL(file);
+
+            // Create a link element for the file
+            const linkElement = document.createElement('a');
+            linkElement.href = fileURL;
+            linkElement.textContent = `Preview: ${file.name}`;
+            linkElement.target = "_blank"; // Open the link in a new tab
+
+            // Append the link element to the container
+            linkContainer.appendChild(linkElement);
+
+            // Add a line break for clarity
+            linkContainer.appendChild(document.createElement('br'));
+        }
+
+        // Show the container
+        linkContainer.style.display = 'block';
+    } else {
+        // Hide the container if no files are selected
+        linkContainer.style.display = 'none';
+    }
+});
+
     </script>
 
 
