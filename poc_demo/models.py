@@ -1,3 +1,5 @@
+import os.path
+
 from django.db import models
 import uuid
 from datetime import datetime
@@ -48,6 +50,24 @@ class CustomUser(AbstractUser):
     permissions = models.ManyToManyField(CustomPermission)
 
 
+class DemoDocument(models.Model):
+    demo = models.ForeignKey('Demo_model', related_name='documents', on_delete=models.CASCADE)
+    file = models.FileField(upload_to='uploads/')
+    added_by = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, blank=True, null=True)
+
+    def filename(self):
+        return os.path.basename(self.file.name)
+
+
+class PocDocument(models.Model):
+    poc = models.ForeignKey('Poc_model', related_name='documents', on_delete=models.CASCADE)
+    file = models.FileField(upload_to='uploads/')
+    added_by = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, blank=True, null=True)
+
+    def filename(self):
+        return os.path.basename(self.file.name)
+
+
 class Poc_model(models.Model):
     Ref_id = models.CharField(max_length=36, unique=True, default=generate_reference_id)
     Customer_name = models.ForeignKey('Customer', on_delete=models.SET_NULL, blank=True, null=True,
@@ -64,7 +84,8 @@ class Poc_model(models.Model):
     description = models.TextField(default=None, blank=True, null=True)
     poc_type = models.CharField(max_length=30, choices=poc_choice, default="POC")
     kt_given = models.BooleanField(default=False)
-    documentation = models.FileField(upload_to='uploads/')
+    # documentation = models.FileField(upload_to='uploads/')
+    documentation = models.ManyToManyField(PocDocument, blank=True, related_name='pocs')
 
 
 class Poc_remark(models.Model):
@@ -124,7 +145,7 @@ class Demo_model(models.Model):
     demo_type = models.CharField(max_length=30, choices=poc_choice, default="DEMO")
     description = models.TextField(default=None, blank=True, null=True)
     kt_given = models.BooleanField(default=False)
-    documentation = models.FileField(upload_to='uploads/')
+    documentation = models.ManyToManyField(DemoDocument, blank=True, related_name='demos')
 
 
 class Demo_feature(models.Model):

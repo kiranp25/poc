@@ -1,5 +1,3 @@
-
-
 {% extends "poc_demo/base.html" %}
 
 {% block poc_content %}  
@@ -147,7 +145,8 @@
   
       UserTypefor.addEventListener('change', () => {
         const selectedUser = UserTypefor.value;
-        fetch(`/get_data_for/${selectedUser}`)
+        const url = `{% url 'get_data_for' 'usertype' %}`.replace('usertype', selectedUser);
+        fetch(url)
           .then(response => response.json())
           .then(data => {
             let text =''

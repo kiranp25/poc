@@ -70,17 +70,9 @@ urlpatterns = [
     path('password-reset-complete/',
          PasswordResetCompleteView.as_view(template_name='poc_demo/password_reset_complete.html'),
          name='password_reset_complete'),
+    path('pocdocument/<int:pk>/', views.pocdocument_delete, name='pocdocument_delete'),
+    path('demodocument/<int:pk>/', views.demodocument_delete, name='demodocument_delete'),
 
-
-    
-
-    
-
-    
-
-
-    
-    
 ]
 
 

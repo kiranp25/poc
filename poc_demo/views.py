@@ -1,3 +1,5 @@
+import time
+import os
 from django.shortcuts import render, redirect, HttpResponse, get_object_or_404
 from .models import *
 from django.http import JsonResponse
@@ -14,7 +16,6 @@ from django.core.mail import send_mail, EmailMessage
 import threading
 from django.db.models import Prefetch
 from django.urls import reverse
-
 
 User = get_user_model()
 app_name = 'Sales Management System'
@@ -54,7 +55,6 @@ def user_has_permission(permission_name):
 
 @login_required(login_url='loginpage')
 def dahboard(request):
-
     permission_names = list(request.user.permissions.values_list('name', flat=True))
     user_types = request.user.role
     all_active_product = Product.objects.all()
@@ -181,13 +181,24 @@ def add_poc(request):
             remarks_list = ",".join(remarks)
             new_poc = Poc_model(Customer_name=customer_name, Product_name=product_name, status=status,
                                 added_by=added_by, Timeline=Timeline, poc_type=type_poc)
-            if request.FILES.get('uploaded_file'):
-                uploaded_file = request.FILES['uploaded_file']
-                if uploaded_file.name.endswith(('.zip', '.pdf')):
-                    ext = (uploaded_file.name).split(".")[-1]
-                    uploaded_file.name = f"{product_name.Product_name + '_' + type_poc + '_documentations'}.{ext}"
-                new_poc.documentation = uploaded_file
+
             new_poc.save()
+
+            if request.FILES.get('uploaded_file'):
+                files = request.FILES.getlist('uploaded_file')
+                if files:
+                    for file in files:
+                        if file.name.endswith(('.zip', '.pdf')):
+                            ext = (file.name).split(".")[-1]
+                            file.name = f"{new_poc.Product_name.Product_name}_{new_poc.poc_type}_documentations_{new_poc.id}_{new_poc.updated_at}.{ext}"
+                            PocDocument.objects.create(poc=new_poc, file=file, added_by=request.user)
+            # if request.FILES.get('uploaded_file'):
+            #     uploaded_file = request.FILES['uploaded_file']
+            #     if uploaded_file.name.endswith(('.zip', '.pdf')):
+            #         ext = (uploaded_file.name).split(".")[-1]
+            #         uploaded_file.name = f"{product_name.Product_name + '_' + type_poc + '_documentations'}.{ext}"
+            #     new_poc.documentation = uploaded_file
+
             style = ''' <style>
             table {
               border-collapse: collapse;
@@ -369,13 +380,13 @@ def add_user(request):
                 password = request.POST['password']
                 status = request.POST.get('status')
                 new_user = User.objects.create(first_name=first_name, last_name=last_name, email=email,
-                                               username=username,  role=usertype, Status=status)
+                                               username=username, role=usertype, Status=status)
 
                 if request.POST['Belongs_to'] != "Self":
                     Belongs_to = User.objects.get(id=request.POST['Belongs_to'])
-                    new_user.Belongs_to=Belongs_to
-                else :
-                    new_user.Belongs_to= new_user
+                    new_user.Belongs_to = Belongs_to
+                else:
+                    new_user.Belongs_to = new_user
                 new_user.save()
                 new_user.set_password(password)
                 if usertype.name == 'Approval':
@@ -484,8 +495,8 @@ def edit_user(request, id):
 
                 if request.POST['Belongs_to'] != "Self":
                     Belongs_to = User.objects.get(id=request.POST['Belongs_to'])
-                    user.Belongs_to=Belongs_to
-                else :
+                    user.Belongs_to = Belongs_to
+                else:
                     user.Belongs_to = user
 
                 if new_role.name != 'Admin':
@@ -824,7 +835,7 @@ def add_remarks(request, id):
             html_message += f'</ul><br> above remark added to  project id {get_poc.id} <br> Added By: {added_by.email}</div>'
             list_mail = []
             if request.user.role.name == "Approval":
-                list_mail.extend([request.user.email,get_poc.added_by.email])
+                list_mail.extend([request.user.email, get_poc.added_by.email])
 
             else:
                 list_mail.extend([request.user.email, request.user.Belongs_to.email])
@@ -863,7 +874,7 @@ def add_feature(request, id):
             Added By: {added_by.email}.<br>'''
 
             if request.user.role.name == "Approval":
-                list_mail.extend([request.user.email,poc_ref.added_by.email])
+                list_mail.extend([request.user.email, poc_ref.added_by.email])
 
             else:
                 list_mail.extend([request.user.email, request.user.Belongs_to.email])
@@ -1014,18 +1025,28 @@ def edit_poc(request, id):
                 if request.POST['assign_edit'] != 'None':
                     get_poc.assign_to = User.objects.get(pk=request.POST.get('assign_edit'))
 
-            if request.FILES.get('uploaded_file'):
-                uploaded_file = request.FILES['uploaded_file']
+            # if request.FILES.get('uploaded_file'):
+            #     uploaded_file = request.FILES['uploaded_file']
+            #     if uploaded_file.name.endswith(('.zip', '.pdf')):
+            #         ext = (uploaded_file.name).split(".")[-1]
+            #         uploaded_file.name = f"{get_poc.Product_name.Product_name + '_' + get_poc.poc_type + '_documentations'}.{ext}"
+            #         get_poc.documentation = uploaded_file
+            #         new_remarks_list.append({'poc_id': get_poc,
+            #                                  'remarks': f"New document uploaded for project. Name :{uploaded_file.name}",
+            #                                  'status': get_poc.status, 'added_by': request.user})
+            #         get_changes.append(
+            #             f"New documentation uploaded for project.<br> Name : <b>{uploaded_file.name}</b>")
+
+            files = request.FILES.getlist('uploaded_file')
+            for uploaded_file in files:
                 if uploaded_file.name.endswith(('.zip', '.pdf')):
                     ext = (uploaded_file.name).split(".")[-1]
-                    uploaded_file.name = f"{get_poc.Product_name.Product_name + '_' + get_poc.poc_type + '_documentations'}.{ext}"
-                    get_poc.documentation = uploaded_file
+                    uploaded_file.name = f"{get_poc.Product_name.Product_name}_{get_poc.poc_type}_documentations_{get_poc.id}_{get_poc.updated_at}.{ext}"
+                    PocDocument.objects.create(poc=get_poc, file=uploaded_file, added_by=request.user)
                     new_remarks_list.append({'poc_id': get_poc,
-                                             'remarks': f"New document uploaded for project. Name :{uploaded_file.name}",
+                                             'remarks': f"New document uploaded for project. Name: {uploaded_file.name}",
                                              'status': get_poc.status, 'added_by': request.user})
-                    get_changes.append(
-                        f"New documentation uploaded for project.<br> Name : <b>{uploaded_file.name}</b>")
-
+                    get_changes.append(f"New documentation uploaded for project. Name: <b>{uploaded_file.name}</b>")
             message = '<ul>'
             for i in get_changes:
                 message += f'<li>{i}</li><hr>'
@@ -1047,7 +1068,7 @@ def edit_poc(request, id):
 
             list_mail = []
             if request.user.role.name == "Approval":
-                list_mail.extend([request.user.email,get_poc.added_by.email])
+                list_mail.extend([request.user.email, get_poc.added_by.email])
 
             else:
                 list_mail.extend([request.user.email, request.user.Belongs_to.email])
@@ -1109,7 +1130,7 @@ def update_feature_detail(request):
             feature.save()
             list_mail = []
             if request.user.role.name == "Approval":
-                list_mail.extend([request.user.email,get_poc.added_by.email])
+                list_mail.extend([request.user.email, get_poc.added_by.email])
 
             else:
                 list_mail.extend([request.user.email, request.user.Belongs_to.email])
@@ -1143,9 +1164,9 @@ def view_poc_detail(request, id):
     is_doc = False
     permission_names = list(request.user.permissions.values_list('name', flat=True))
     poc = Poc_model.objects.prefetch_related(
-    Prefetch('poc_f_related', queryset=Feature.objects.order_by('-created_at')),
-    Prefetch('poc_r_related', queryset=Poc_remark.objects.order_by('-created_at'))
-).get(id=id)
+        Prefetch('poc_f_related', queryset=Feature.objects.order_by('-created_at')),
+        Prefetch('poc_r_related', queryset=Poc_remark.objects.order_by('-created_at'))
+    ).get(id=id)
     if request.user.role.name == 'Sales' and request.user == poc.added_by:
         if poc.status.name == 'Rejected' or poc.status.name == 'Approved':
             edit_allow = True
@@ -1236,7 +1257,7 @@ def view_poc_detail(request, id):
             html_message += '</ul>'
 
             if request.user.role.name == "Approval":
-                list_mail.extend([get_poc.added_by.email,get_poc.assign_to.email])
+                list_mail.extend([get_poc.added_by.email, get_poc.assign_to.email])
 
             else:
                 list_mail.extend([request.user.Belongs_to.email, get_poc.assign_to.email])
@@ -1387,7 +1408,8 @@ def delete_status(request, id):
     try:
         sts = Status.objects.get(pk=id)
         if sts.name.lower() in ['active', 'inactive', 'pending', 'rejected', 'approved']:
-            messages.error(request, f'Status can`t deleted. no permission for delete {sts.name} status!', extra_tags = 'warning')
+            messages.error(request, f'Status can`t deleted. no permission for delete {sts.name} status!',
+                           extra_tags='warning')
         else:
             sts.delete()
             messages.success(request, 'Status deleted.')
@@ -1429,15 +1451,15 @@ def add_demo(request):
             new_demo = Demo_model(Customer_name=customer_name, Product_name=product_name, status=status,
                                   added_by=added_by, Timeline=Timeline)
 
-            if request.FILES.get('uploaded_file'):
-                uploaded_file = request.FILES['uploaded_file']
-                if uploaded_file.name.endswith(('.zip', '.pdf')):
-                    ext = (uploaded_file.name).split(".")[-1]
-                    uploaded_file.name = f"{product_name.Product_name + '_' + 'Demo' + '_documentations'}.{ext}"
-                new_demo.documentation = uploaded_file
-
             new_demo.save()
-
+            if request.FILES.get('uploaded_file'):
+                files = request.FILES.getlist('uploaded_file')
+                if files:
+                    for file in files:
+                        if file.name.endswith(('.zip', '.pdf')):
+                            ext = (file.name).split(".")[-1]
+                            file.name = f"{new_demo.Product_name.Product_name}_demo_documentations_{new_demo.id}_{new_demo.updated_at}.{ext}"
+                            DemoDocument.objects.create(demo=new_demo, file=file, added_by=request.user)
             demo_ref = Demo_model.objects.get(pk=new_demo.id)
             new_feature_list = []
             for j in features_list:
@@ -1558,8 +1580,8 @@ def view_demo_detail(request, id):
     permission_for_delete = ['Admin', 'Sales', 'Approval']
     permission_for_ADD_STATUS = ['Admin', 'Sales', 'Approval', 'Support']
     demo = Demo_model.objects.prefetch_related(
-    Prefetch('demo_f_related', queryset=Demo_feature.objects.order_by('-created_at')),
-    Prefetch('demo_r_related', queryset=Demo_remark.objects.order_by('-created_at'))
+        Prefetch('demo_f_related', queryset=Demo_feature.objects.order_by('-created_at')),
+        Prefetch('demo_r_related', queryset=Demo_remark.objects.order_by('-created_at'))
     ).get(id=id)
 
     if request.user.role.name == 'Sales' and request.user == demo.added_by:
@@ -1653,9 +1675,9 @@ def view_demo_detail(request, id):
                                                               'customer': customer,
                                                               "permission_names": permission_names,
                                                               "document": document,
-                                                              "is_allowed":is_allowed,
-                                                              "is_edit":is_edit,
-                                                              "is_support":is_support,
+                                                              "is_allowed": is_allowed,
+                                                              "is_edit": is_edit,
+                                                              "is_support": is_support,
                                                               "edit_allow": edit_allow
                                                               })
 
@@ -1675,6 +1697,9 @@ def edit_demo(request, id):
         if request.user.role.name == 'Sales' and get_demo.status.name == 'Rejected' and request.user == get_demo.added_by:
             edit_allow = True
             support_is = True
+        elif request.user.role.name == 'Sales' and get_demo.status.name == 'Approved' and request.user == get_demo.added_by:
+            edit_allow = True
+            support_is = True
         elif request.user.role.name in ['Approval', 'Admin']:
             if request.user.id == get_demo.added_by.Belongs_to.id:
                 edit_allow = True
@@ -1692,7 +1717,7 @@ def edit_demo(request, id):
             messages.error(request, 'You have no permissions for edit')
 
         if request.user.role.name == 'Sales':
-            if get_demo.status.name == 'Rejected' or get_demo.status.name == 'Pending':
+            if get_demo.status.name == 'Rejected' or get_demo.status.name == 'Pending' or get_demo.status.name == 'Approved':
                 allow = True
             else:
                 allow = False
@@ -1701,12 +1726,13 @@ def edit_demo(request, id):
             allow = True
 
         if request.method == 'POST' and allow and edit_allow:
-            datetime_object = datetime.strptime(request.POST['Timeline_date'], "%Y-%m-%d")
-            if get_demo.Timeline != datetime_object.date():
-                get_changes.append(f"Timeline changed {get_demo.Timeline} to {request.POST['Timeline_date']}")
-                new_remarks_list.append({'demo_id': get_demo,
-                                         'remarks': f"Timeline changed {get_demo.Timeline} to {request.POST['Timeline_date']}",
-                                         'status': get_demo.status, 'added_by': request.user})
+            if request.POST.get('Timeline_date'):
+                datetime_object = datetime.strptime(request.POST['Timeline_date'], "%Y-%m-%d")
+                if get_demo.Timeline != datetime_object.date():
+                    get_changes.append(f"Timeline changed {get_demo.Timeline} to {request.POST['Timeline_date']}")
+                    new_remarks_list.append({'demo_id': get_demo,
+                                             'remarks': f"Timeline changed {get_demo.Timeline} to {request.POST['Timeline_date']}",
+                                             'status': get_demo.status, 'added_by': request.user})
             if request.POST.get('demo_type'):
                 if get_demo.demo_type != request.POST.get('demo_type'):
                     get_changes.append(f"Project Type changed {get_demo.demo_type} to {request.POST.get('demo_type')}")
@@ -1777,7 +1803,7 @@ def edit_demo(request, id):
                                 f'Project Request for Approve :- by {request.user.email}',
                                 list_mail)
             else:
-                if request.POST['status']:
+                if request.POST.get('status'):
                     status = Status.objects.get(name=request.POST['status'])
                 else:
                     status = get_demo.status
@@ -1786,7 +1812,8 @@ def edit_demo(request, id):
             #     get_poc.Product_name = product_name
 
             # get_poc.Customer_name = Customer.objects.get(id=request.POST['Customer_name'])
-            get_demo.Timeline = request.POST['Timeline_date']
+            if request.POST.get('Timeline_date'):
+                get_demo.Timeline = request.POST['Timeline_date']
             # if request.POST.get('poc_type'):
             #     get_demo.poc_type = request.POST.get('poc_type')
             if request.POST.get('kt_given'):
@@ -1796,24 +1823,24 @@ def edit_demo(request, id):
                 if request.POST['assign_edit'] != 'None':
                     get_demo.assign_to = User.objects.get(pk=request.POST.get('assign_edit'))
 
-            if request.FILES.get('uploaded_file'):
-                uploaded_file = request.FILES['uploaded_file']
+            files = request.FILES.getlist('uploaded_file')
+            get_demo.save()
+            for uploaded_file in files:
                 if uploaded_file.name.endswith(('.zip', '.pdf')):
                     ext = (uploaded_file.name).split(".")[-1]
-                    uploaded_file.name = f"{get_demo.Product_name.Product_name + '_' + get_demo.demo_type + '_documentations'}.{ext}"
-                    get_demo.documentation = uploaded_file
+                    uploaded_file.name = f"{get_demo.Product_name.Product_name}_demo_documentations_{get_demo.id}__{get_demo.updated_at}.{ext}"
+                    DemoDocument.objects.create(demo=get_demo, file=uploaded_file, added_by=request.user)
                     new_remarks_list.append({'demo_id': get_demo,
-                                             'remarks': f"New Documentation Uploaded To Project. Name :{uploaded_file.name}",
+                                             'remarks': f"New document uploaded for Demo Name: {uploaded_file.name}",
                                              'status': get_demo.status, 'added_by': request.user})
-                    get_changes.append(f"Project Documents Uploaded: {uploaded_file.name}")
-            get_demo.save()
+                    get_changes.append(f"New documentation uploaded for Demo. Name: <b>{uploaded_file.name}</b>")
             list_mail = []
             html_message = ''
             for i in get_changes:
                 html_message += i
                 html_message += '<hr>'
             if request.user.role.name == "Approval":
-                list_mail.extend([request.user.email,get_demo.added_by.email])
+                list_mail.extend([request.user.email, get_demo.added_by.email])
 
             else:
                 list_mail.extend([request.user.email, request.user.Belongs_to.email])
@@ -1822,7 +1849,7 @@ def edit_demo(request, id):
             Demo_remark.objects.bulk_create([Demo_remark(**data) for data in new_remarks_list])
             messages.success(request, 'Demo successfully updated.')
     except Exception as e:
-        messages.error(request, f"Demo not updated.", extra_tags="danger")
+        messages.error(request, f"Demo not updated. {e}", extra_tags="danger")
     return redirect('view_demo_detail', id=id)
 
 
@@ -1957,7 +1984,7 @@ def update_feature_detail_demo(request):
             feature.save()
             list_mail = []
             if request.user.role.name == "Approval":
-                list_mail.extend([request.user.email,get_demo.added_by.email])
+                list_mail.extend([request.user.email, get_demo.added_by.email])
 
             else:
                 list_mail.extend([request.user.email, request.user.Belongs_to.email])
@@ -2164,3 +2191,45 @@ def manage_permissions(request, id):
         return redirect('manage_permissions', id)
     # If GET request or form not submitted, render the permissions form
     return render(request, 'poc_demo/permissions.html', context)
+
+
+def pocdocument_delete(request, pk):
+    document = get_object_or_404(PocDocument, pk=pk)
+    nm = document.file.name
+    poc_id = document.poc_id
+    file_path = document.file.path
+    try:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        document.delete()
+        Poc_remark.objects.create(
+            poc_id=document.poc,
+            remarks=f"File {nm} deleted",
+            status=document.poc.status,
+            added_by=request.user
+        )
+        messages.success(request, "File Deleted.")
+    except Exception as e:
+        messages.error(request, f"File not Deleted {e}", extra_tags='danger')
+    return redirect('view_poc_detail', poc_id)
+
+def demodocument_delete(request, pk):
+    document = get_object_or_404(DemoDocument, pk=pk)
+    nm = document.file.name
+    demo_id = document.demo_id
+    file_path = document.file.path
+    try:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        document.delete()
+        Demo_remark.objects.create(
+            demo_id=document.demo,
+            remarks=f"File {nm} deleted",
+            status=document.demo.status,
+            added_by=request.user
+        )
+        messages.success(request, "File Deleted.")
+    except Exception as e:
+        print("eee", e)
+        messages.error(request, f"File not Deleted {e}", extra_tags='danger')
+    return redirect('view_demo_detail', demo_id)
