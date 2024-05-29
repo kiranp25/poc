@@ -72,7 +72,7 @@ urlpatterns = [
          name='password_reset_complete'),
     path('pocdocument/<int:pk>/', views.pocdocument_delete, name='pocdocument_delete'),
     path('demodocument/<int:pk>/', views.demodocument_delete, name='demodocument_delete'),
-
+    path('check_file/', views.check_file, name='check_file'),
 ]
 
 

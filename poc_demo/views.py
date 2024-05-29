@@ -16,6 +16,7 @@ from django.core.mail import send_mail, EmailMessage
 import threading
 from django.db.models import Prefetch
 from django.urls import reverse
+import json
 
 User = get_user_model()
 app_name = 'Sales Management System'
@@ -184,14 +185,18 @@ def add_poc(request):
 
             new_poc.save()
 
+            file_list = ''
+
             if request.FILES.get('uploaded_file'):
                 files = request.FILES.getlist('uploaded_file')
                 if files:
                     for file in files:
                         if file.name.endswith(('.zip', '.pdf')):
                             ext = (file.name).split(".")[-1]
-                            file.name = f"{new_poc.Product_name.Product_name}_{new_poc.poc_type}_documentations_{new_poc.id}_{new_poc.updated_at}.{ext}"
-                            PocDocument.objects.create(poc=new_poc, file=file, added_by=request.user)
+                            # file.name = f"{new_poc.Product_name.Product_name}_{new_poc.poc_type}_documentations_{new_poc.id}_{new_poc.updated_at}.{ext}"
+
+                            new_file_obj = PocDocument.objects.create(poc=new_poc, file=file, added_by=request.user)
+                            file_list += f'{new_file_obj.file.name}'
             # if request.FILES.get('uploaded_file'):
             #     uploaded_file = request.FILES['uploaded_file']
             #     if uploaded_file.name.endswith(('.zip', '.pdf')):
@@ -243,7 +248,15 @@ def add_poc(request):
               <tr>
                 <td>Status</td>
                 <td>{status.name}</td>  </tr>
-              <tr>
+              <tr>"""
+
+            if file_list:
+                html_message += f"""<tr>
+                <td>Files List</td>
+                <td>{file_list}</td>
+                </tr>"""
+
+            html_message += f"""
                 <td>Timeline</td>
                 <td>{Timeline}</td>
               </tr>
@@ -1041,12 +1054,13 @@ def edit_poc(request, id):
             for uploaded_file in files:
                 if uploaded_file.name.endswith(('.zip', '.pdf')):
                     ext = (uploaded_file.name).split(".")[-1]
-                    uploaded_file.name = f"{get_poc.Product_name.Product_name}_{get_poc.poc_type}_documentations_{get_poc.id}_{get_poc.updated_at}.{ext}"
-                    PocDocument.objects.create(poc=get_poc, file=uploaded_file, added_by=request.user)
+                    # uploaded_file.name = f"{get_poc.Product_name.Product_name}_{get_poc.poc_type}_documentations_{get_poc.id}_{get_poc.updated_at}.{ext}"
+                    new_file_obj = PocDocument.objects.create(poc=get_poc, file=uploaded_file, added_by=request.user)
+                    file_name = new_file_obj.file.name.split('/')[1]
                     new_remarks_list.append({'poc_id': get_poc,
-                                             'remarks': f"New document uploaded for project. Name: {uploaded_file.name}",
+                                             'remarks': f"New document uploaded for project. Name: {file_name}",
                                              'status': get_poc.status, 'added_by': request.user})
-                    get_changes.append(f"New documentation uploaded for project. Name: <b>{uploaded_file.name}</b>")
+                    get_changes.append(f"New documentation uploaded for project. Name: <b>{file_name}</b>")
             message = '<ul>'
             for i in get_changes:
                 message += f'<li>{i}</li><hr>'
@@ -1452,14 +1466,16 @@ def add_demo(request):
                                   added_by=added_by, Timeline=Timeline)
 
             new_demo.save()
+            file_list = ''
             if request.FILES.get('uploaded_file'):
                 files = request.FILES.getlist('uploaded_file')
                 if files:
                     for file in files:
                         if file.name.endswith(('.zip', '.pdf')):
                             ext = (file.name).split(".")[-1]
-                            file.name = f"{new_demo.Product_name.Product_name}_demo_documentations_{new_demo.id}_{new_demo.updated_at}.{ext}"
-                            DemoDocument.objects.create(demo=new_demo, file=file, added_by=request.user)
+                            # file.name = f"{new_demo.Product_name.Product_name}_demo_documentations_{new_demo.id}_{new_demo.updated_at}.{ext}"
+                            new_file_obj = DemoDocument.objects.create(demo=new_demo, file=file, added_by=request.user)
+                            file_list += f'{new_file_obj.file.name}'
             demo_ref = Demo_model.objects.get(pk=new_demo.id)
             new_feature_list = []
             for j in features_list:
@@ -1520,7 +1536,14 @@ def add_demo(request):
                                 <td>Status</td>
                                 <td>{status.name}</td>  </tr>
                               <tr>
-                                <td>Timeline</td>
+                              """
+            if file_list:
+                html_message += f"""<tr>
+                <td>Files List</td>
+                <td>{file_list}</td>
+                </tr>"""
+
+            html_message += f"""<td>Timeline</td>
                                 <td>{Timeline}</td>
                               </tr>
                             </table>
@@ -1828,12 +1851,13 @@ def edit_demo(request, id):
             for uploaded_file in files:
                 if uploaded_file.name.endswith(('.zip', '.pdf')):
                     ext = (uploaded_file.name).split(".")[-1]
-                    uploaded_file.name = f"{get_demo.Product_name.Product_name}_demo_documentations_{get_demo.id}__{get_demo.updated_at}.{ext}"
-                    DemoDocument.objects.create(demo=get_demo, file=uploaded_file, added_by=request.user)
+                    # uploaded_file.name = f"{get_demo.Product_name.Product_name}_demo_documentations_{get_demo.id}__{get_demo.updated_at}.{ext}"
+                    new_file_obj = DemoDocument.objects.create(demo=get_demo, file=uploaded_file, added_by=request.user)
+                    file_name = new_file_obj.file.name.split('/')[1]
                     new_remarks_list.append({'demo_id': get_demo,
-                                             'remarks': f"New document uploaded for Demo Name: {uploaded_file.name}",
+                                             'remarks': f"New document uploaded for Demo Name: {file_name}",
                                              'status': get_demo.status, 'added_by': request.user})
-                    get_changes.append(f"New documentation uploaded for Demo. Name: <b>{uploaded_file.name}</b>")
+                    get_changes.append(f"New documentation uploaded for Demo. Name: <b>{file_name}</b>")
             list_mail = []
             html_message = ''
             for i in get_changes:
@@ -2213,6 +2237,7 @@ def pocdocument_delete(request, pk):
         messages.error(request, f"File not Deleted {e}", extra_tags='danger')
     return redirect('view_poc_detail', poc_id)
 
+
 def demodocument_delete(request, pk):
     document = get_object_or_404(DemoDocument, pk=pk)
     nm = document.file.name
@@ -2233,3 +2258,15 @@ def demodocument_delete(request, pk):
         print("eee", e)
         messages.error(request, f"File not Deleted {e}", extra_tags='danger')
     return redirect('view_demo_detail', demo_id)
+
+
+def check_file(request):
+    print('###################')
+    if request.method == 'POST':
+        data = json.loads(request.body.decode('utf-8'))
+        filename = data.get('filename')
+        print('******************', filename)
+        file_path = os.path.join(settings.MEDIA_ROOT, 'uploads', filename)
+        file_exists = os.path.exists(file_path)
+        return JsonResponse({'exists': file_exists})
+    return JsonResponse({'exists': False})
