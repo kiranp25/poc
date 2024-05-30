@@ -124,8 +124,9 @@
 
                   <div class="col-md-12">
                     <div class="mb-3">
-                      <input type="file" id="uploaded_file" name="uploaded_file" class="form-control" accept=".zip,.pdf" multiple>
+                      <input type="file" id="uploaded_file" name="uploaded_file" class="form-control" accept=".zip,.pdf"   onchange="verifyFileExist()" multiple>
                                     <small class="text-muted">Upload Documents (Allowed file types: PDF, ZIP)</small><br>
+                         <span id="file-error" style="color:red"></span>
                     </div>
                     <div id="link">
             <a id="fileLink" href="#" target="_blank"></a>
@@ -286,6 +287,35 @@ document.getElementById("add_new_feature").addEventListener("click", function ()
 });
 
     </script>
+<script>
+    function verifyFileExist() {
+            const input = document.getElementById('uploaded_file');
+            const files = input.files;
+            const errorElement = document.getElementById('file-error');
+            errorElement.textContent = '';
 
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '{% url "check_file" %}', true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}');
+
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState == 4 && xhr.status == 200) {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.exists) {
+                            errorElement.textContent += `File "${file.name}" already exists.File name will be renamed, `;
+                           // input.value = ''; // Clear the input
+                            return; // Stop checking further files
+                        }
+                    }
+                };
+
+                const data = JSON.stringify({ 'filename': file.name });
+                xhr.send(data);
+            }
+        }
+</script>
 
 {% endblock %}
